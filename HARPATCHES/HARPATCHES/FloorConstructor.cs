@@ -1,16 +1,9 @@
-﻿using System;
+﻿using RimWorld;
+using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
-using System.Threading.Tasks;
-using HarmonyLib;
-using RimWorld;
-using UnityEngine;
-using Verse.AI;
 using Verse;
 
 namespace AvaliMod
@@ -125,7 +118,7 @@ namespace AvaliMod
                             string res = cS.Substring(cS.IndexOf("AddDesCat_") + "AddDesCat_".Length, (cS.IndexOf("[ENDDESNAME]") - ("[ENDDESNAME]".Length - 2)) - cS.IndexOf("AddDesCat_"));
                             if (DefDatabase<DesignationCategoryDef>.AllDefs.Any(cat => cat.defName == res))
                             {
-                                if(!toUpdateDesignationCatDefs.Contains(DefDatabase<DesignationCategoryDef>.AllDefs.Where(cat => cat.defName == res).ToList()[0]))
+                                if (!toUpdateDesignationCatDefs.Contains(DefDatabase<DesignationCategoryDef>.AllDefs.Where(cat => cat.defName == res).ToList()[0]))
                                 {
                                     toUpdateDesignationCatDefs.Add(DefDatabase<DesignationCategoryDef>.AllDefs.Where(cat => cat.defName == res).ToList()[0]);
                                 }
@@ -159,7 +152,7 @@ namespace AvaliMod
                     //How vanilla RW sets up some stuff
 
                     //Blueprint
-                    ThingDef thingDef= new ThingDef()
+                    ThingDef thingDef = new ThingDef()
                     {
                         category = ThingCategory.Ethereal,
                         label = "Unspecified blueprint",
@@ -267,7 +260,7 @@ namespace AvaliMod
                             }
                         }
                     }
-                   
+
                     if (def.tags.Any(str => str.Contains("removeFromResearch")))
                     {
                         List<string> tags = def.tags.Where(x => x.Contains("removeFromResearch_") && !x.NullOrEmpty()).ToList();
@@ -286,7 +279,7 @@ namespace AvaliMod
                             }
                             catch
                             {
-                                
+
                             }
                         }
                     }
@@ -316,17 +309,17 @@ namespace AvaliMod
                 def.ResolveReferences();
 
             }
-           
+
             foreach (DesignatorDropdownGroupDef def in toUpdateDropdownDesDefs)
             {
                 def.PostLoad();
                 def.ResolveReferences();
-                
+
             }
             Log.Message($"[RimVali Core/FloorConstructor] Updated {toUpdateDesignationCatDefs.Count} designation categories & {toUpdateDropdownDesDefs.Count} dropdown designations.");
             //We need to do this or RW has a fit
             WealthWatcher.ResetStaticData();
-           
+
             Log.Message($"[RimVali Core/FloorConstructor] Built  {floorsMade.Count} floors from {materials.Count} materials.");
         }
     }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 using Verse;
 
 namespace RimValiCore
@@ -12,6 +13,7 @@ namespace RimValiCore
         public RimValiCoreMod(ModContentPack content) : base(content)
         {
             RimValiUtility.dir = content.RootDir.ToString();
+          
         }
     }
 }

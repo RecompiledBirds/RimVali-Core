@@ -1,26 +1,29 @@
 ﻿using RimWorld;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
-using System.IO;
-using Verse;
 using System;
-using RimWorld.Planet;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Reflection;
+using UnityEngine;
+using Verse;
 
 namespace RimValiCore
 {
-    
+
     public static class RimValiUtility
     {
-        public static string build = "Kesuni 1.0.0";
-        public static string modulesFound = "Modules:\n";
+        #region Pawn
+        public static bool Alive(this Pawn pawn)
+        {
+            return !pawn.Dead;
+        }
 
-
-
-
+        public static bool IsOfRace(this Pawn pawn, ThingDef race) => pawn.def.defName == race.defName;
+        #endregion
 
         //private static readonly bool enableDebug = LoadedModManager.GetMod<RimValiMod>().GetSettings<RimValiModSettings>().enableDebugMode;
+
+        #region asset and shader loading
         public static string dir;
         public static void AssetBundleFinder(DirectoryInfo info)
         {
@@ -50,8 +53,7 @@ namespace RimValiCore
             Log.Message(assetBundle.GetAllAssetNames()[0], false);
             return assetBundle;
         }
-
-
+        #endregion
         public static Dictionary<Trait, int> Traits(this Pawn pawn)
         {
             IEnumerable<Trait> traits = pawn.story.traits.allTraits;
@@ -62,7 +64,7 @@ namespace RimValiCore
             }
             return traitDataToReturn;
         }
-
+        #region room stuff
         public static float GetRoomQuality(this Pawn pawn)
         {
             Room room = pawn.GetRoom();
@@ -80,7 +82,15 @@ namespace RimValiCore
             }
             return false;
         }
-    
+        #endregion
+
+        #region Reflection stuff
+        public static void SetFieldType<T>(string fieldName, T obj, Type type, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
+        {
+            obj.GetType().GetField(fieldName, flags).ChangeType<T>();
+        }
+
+
         public static MethodInfo GetMethod<T>(string methodName, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
         {
             ParameterModifier modifer;
@@ -88,23 +98,23 @@ namespace RimValiCore
         }
         public static MethodInfo GetMethod<T>(string methodName, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic, ParameterModifier[] modifiers = null)
         {
-            return typeof(T).GetMethod(methodName, flags,null,null,modifiers);
+            return typeof(T).GetMethod(methodName, flags, null, null, modifiers);
         }
         public static void InvokeMethod<T>(string name, T obj, object[] parameters, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
         {
             ParameterModifier pMod = new ParameterModifier(parameters.Count());
-            for(int a = 0; a<parameters.Count()-1; a++)
+            for (int a = 0; a < parameters.Count() - 1; a++)
             {
                 pMod[a] = true;
             }
             ParameterModifier[] mods = { pMod };
             obj.GetType().InvokeMember(name, flags, null, obj, parameters, mods, null, null);
         }
-       
-      /*  public static void InvokeMethod<T>(string name, T obj, object[] parameters, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
-        {
-            GetMethod<T>(name, flags)?.Invoke(obj, parameters);
-        }*/
+
+        /*  public static void InvokeMethod<T>(string name, T obj, object[] parameters, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
+          {
+              GetMethod<T>(name, flags)?.Invoke(obj, parameters);
+          }*/
         public static void InvokeMethod<T>(string name, T obj, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
         {
             GetMethod<T>(name, flags)?.Invoke(obj, new object[1]);
@@ -124,28 +134,35 @@ namespace RimValiCore
         {
             return (T)typeof(T).GetProperty(propName, flags).GetValue(obj);
         }
-      
 
 
 
-     
+        #endregion
+
+        #region finding pawns of races and factions
+
+        public static IEnumerable<Pawn> AllPawnsOfFactionSpawned(Faction faction) => PawnsFinder.All_AliveOrDead.Where(pawn => pawn.Faction == faction && pawn.Spawned);
+        public static IEnumerable<Pawn> AllPawnsOfFactionSpawned(FactionDef faction) => PawnsFinder.All_AliveOrDead.Where(pawn => pawn.Faction.def == faction && pawn.Spawned);
+        public static int PawnOfRaceCount(this Faction faction, ThingDef race) => PawnsOfRaceInFaction(faction, race).Count();
         public static IEnumerable<Pawn> AllPawnsOfRaceOnMap(List<ThingDef> races, Map map) => map.mapPawns.AllPawns.Where(x => races.Contains(x.def));
 
         public static IEnumerable<Pawn> AllPawnsOfRaceOnMap(ThingDef race, Map map) => map.mapPawns.AllPawns.Where(x => x.def == race);
 
 
-        public static IEnumerable<Pawn> AllPawnsOfRaceInWorld(List<ThingDef> races)=> PawnsFinder.All_AliveOrDead.Where(pawn => !pawn.Dead && races.Contains(pawn.def));
+        public static IEnumerable<Pawn> AllPawnsOfRaceInWorld(List<ThingDef> races) => PawnsFinder.All_AliveOrDead.Where(pawn => !pawn.Dead && races.Contains(pawn.def));
         public static IEnumerable<Pawn> AllPawnsOfRaceInWorld(ThingDef race) => PawnsFinder.All_AliveOrDead.Where(pawn => !pawn.Dead && pawn.def == race);
         public static IEnumerable<Pawn> AllPawnsOfRaceInWorld(ThingDef race, Faction faction) => PawnsFinder.All_AliveOrDead.Where(pawn => !pawn.Dead && pawn.Faction == faction && pawn.def == race);
 
+        public static bool FactionHasRace(this Faction faction, ThingDef race) => PawnOfRaceCount(faction, race) > 0;
 
         public static IEnumerable<Pawn> AllPawnsOfRaceInMapAndFaction(Pawn pawn) => CheckAllPawnsInMapAndFaction(pawn.Map, pawn.Faction).Where(x => x.def == pawn.def);
 
         public static IEnumerable<Pawn> AllPawnsOfRaceInMapAndFaction(ThingDef race, Map map, Faction faction) => CheckAllPawnsInMapAndFaction(map, faction).Where(x => x.def == race);
 
+        public static IEnumerable<Pawn> PawnsOfRaceInFaction(this Faction faction, ThingDef race) => FetchPawnsSpawnedOnAllMaps().Where(x => IsOfRace(x, race) && x.Faction == faction);
 
         //public static IEnumerable<Pawn> CheckAllPawnsInMapAndFaction(Map map, Faction faction) => PawnsFinder.AllMaps_SpawnedPawnsInFaction(faction).Where(x => x.Map == map);
-        public static IEnumerable<Pawn> CheckAllPawnsInMapAndFaction(Map map, Faction faction) => map.mapPawns.AllPawns.Where(x=>x.Faction==faction);
+        public static IEnumerable<Pawn> CheckAllPawnsInMapAndFaction(Map map, Faction faction) => map.mapPawns.AllPawns.Where(x => x.Faction == faction);
 
         public static List<Pawn> FetchPawnsOnAllMaps()
         {
@@ -157,7 +174,7 @@ namespace RimValiCore
                 {
                     return m[0].mapPawns.AllPawns;
                 }
-                foreach(Map map in m)
+                foreach (Map map in m)
                 {
                     val.AddRange(map.mapPawns.AllPawns);
                 }
@@ -170,7 +187,7 @@ namespace RimValiCore
             val.AddRange(Find.WorldPawns.AllPawnsAliveOrDead);
             return val;
         }
-        
+
         public static List<Pawn> FetchPawnsSpawnedOnAllMaps()
         {
             List<Pawn> val = new List<Pawn>();
@@ -188,33 +205,7 @@ namespace RimValiCore
             }
             return val;
         }
-        public static bool IsOfRace(Pawn pawn, ThingDef race) => pawn.def.defName == race.defName;
+        #endregion
 
-
-
-
-
-
-        public static void RemovePackRelationIfDead(Pawn pawn, List<Pawn> packmates, PawnRelationDef relationDef)
-        {
-            foreach (Pawn packmate in packmates)
-            {
-                if (packmate.DestroyedOrNull())
-                {
-                    pawn.relations.RemoveDirectRelation(relationDef, packmate);
-                }
-            }
-        }
-
-
-        public static int PawnOfRaceCount(Faction faction, ThingDef race) => PawnsOfRaceInFaction(race, faction).Count();
-
-        public static IEnumerable<Pawn> PawnsOfRaceInFaction(ThingDef race, Faction faction) => FetchPawnsSpawnedOnAllMaps().Where(x => IsOfRace(x, race) && x.Faction==faction);
-
-
-        public static bool FactionHasRace(ThingDef race, Faction faction) => PawnOfRaceCount(faction, race) > 0;
-
-        
-        
     }
 }

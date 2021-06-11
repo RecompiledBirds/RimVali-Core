@@ -3,7 +3,7 @@ using Verse;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-
+//using RimValiCore.RimValiPlants;
 namespace RimValiCore.RVR
 {
     public class RimValiRaceDef : ThingDef
@@ -15,19 +15,30 @@ namespace RimValiCore.RVR
         public Main mainSettings = new Main();
         public bool useHumanRecipes = true;
         public RVRRaceInsertion raceInsertion = new RVRRaceInsertion();
+
+        //Thoughts
         public List<ReplaceableThoughts> replaceableThoughts = new List<ReplaceableThoughts>();
         public cannibalismThoughts cannibalismThoughts = new cannibalismThoughts();
+        public bool canHavethoughts = true;
+
+
         public List<BodyTypeDef> bodyTypes = new List<BodyTypeDef>();
 
         public butcherAndHarvestThoughts butcherAndHarvestThoughts = new butcherAndHarvestThoughts();
         public ThingDef corpseToUse = null;
         public ThingDef meatToUse = null;
+        public List<ThingCategoryDef> corpseThingCategories = null;
 
         
+        //public plantClass RimValiPlant;
 
         public override void ResolveReferences()
         {
-           
+            if (corpseThingCategories != null) {
+                race.corpseDef.thingCategories = new List<ThingCategoryDef>();
+                race.corpseDef.thingCategories.AddRange(corpseThingCategories);
+                
+            }
             if (corpseToUse != null) {
                 race.corpseDef.statBases = new List<StatModifier>() { };
                 
@@ -72,26 +83,13 @@ namespace RimValiCore.RVR
             }
             return false;
         }
-        public ThoughtDef getEatenThought(ThingDef race, bool raw = true, bool cannibal = false)
+        public ThoughtDef getEatenThought(ThingDef race, bool raw = true, bool cannibal = false)=> cannibalismThoughts.thoughts.Any(x => x.race == race) ? raw ? cannibal ? cannibalismThoughts.thoughts.First(x => x.race == race).ateRawCannibal : cannibalismThoughts.thoughts.First(x => x.race == race).ateRaw : cannibal ? cannibalismThoughts.thoughts.First(x => x.race == race).ateCookedCannibal : cannibalismThoughts.thoughts.First(x => x.race == race).ateCooked : butcherAndHarvestThoughts.careAboutUndefinedRaces ? raw ? cannibal ? ThoughtDefOf.AteHumanlikeMeatDirectCannibal : ThoughtDefOf.AteHumanlikeMeatDirect : cannibal ? ThoughtDefOf.AteHumanlikeMeatAsIngredientCannibal : ThoughtDefOf.AteHumanlikeMeatAsIngredient : null;
+
+        public ThoughtDef getEatenThoughtFromIngestible(ThingDef ingestible, bool raw = false, bool cannibal = false)
         {
-            if (cannibalismThoughts.thoughts.Any(x => x.race == race))
+            if (getAllCannibalThoughtRaces().Any(race=>race.race.meatDef==ingestible))
             {
-                if (raw)
-                {
-                    if (cannibal)
-                    {
-                        return cannibalismThoughts.thoughts.First(x => x.race == race).ateRawCannibal;
-                    }
-                    return cannibalismThoughts.thoughts.First(x => x.race == race).ateRaw;
-                }
-                else
-                {
-                    if (cannibal)
-                    {
-                        return cannibalismThoughts.thoughts.First(x => x.race == race).ateCookedCannibal;
-                    }
-                    return cannibalismThoughts.thoughts.First(x => x.race == race).ateCooked;
-                }
+                return getEatenThought(getAllCannibalThoughtRaces().Where(race => race.race.meatDef == ingestible).ToList()[0],raw,cannibal);
             }
             return null;
         }

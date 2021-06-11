@@ -20,7 +20,7 @@ namespace RimValiCore.HARTweaks
 
         {
             var harmony = new Harmony("Rimvali.HarPatches");
-            Log.Message("Starting HAR patches. [RimVali Compatiblity]");
+            Log.Message("[RimVali Core/Compatiblity] Starting HAR patches.");
             try
             {
                 //The only one actually related to rimvali.
@@ -29,13 +29,13 @@ namespace RimValiCore.HARTweaks
                 //The rest is all RVR stuff.
                 harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "BaseHeadOffsetAt"), null, new HarmonyMethod(typeof(HeadOffsetPatch), "setPos"));
                 harmony.Patch(AccessTools.Method(typeof(Corpse), "ButcherProducts"), new HarmonyMethod(typeof(ButcherPatch), "Patch"));
-                harmony.Patch(AccessTools.Method(typeof(BodyPatch), "Patch"), new HarmonyMethod(typeof(BodyGenPatch), "Patch"));
-                Log.Message($"Patches completed: {harmony.GetPatchedMethods().Count()}");
+               // harmony.Patch(AccessTools.Method(typeof(BodyPatch), "Patch"), new HarmonyMethod(typeof(BodyGenPatch), "Patch"));
+                Log.Message($"[RimVali Core/Compatiblity] Patches completed: {harmony.GetPatchedMethods().Count()}");
                 RestrictionsPatch.AddRestrictions();
             }
             catch (Exception error)
             {
-                Log.Error("Patches failed! [RimVali Compatiblity]");
+                Log.Error("[RimVali Core/Compatiblity] Patches failed!");
                 Log.Error(error.Message);
                 try
                 {
@@ -43,7 +43,7 @@ namespace RimValiCore.HARTweaks
                 }
                 catch(Exception error2)
                 {
-                    Log.Error("Backup restrictions attempt failed. \n Error: "+error2.Message);
+                    Log.Error("[RimVali Core/Compatiblity] Backup restrictions attempt failed. \n Error: " + error2.Message);
                 }
             }
         }
@@ -52,6 +52,7 @@ namespace RimValiCore.HARTweaks
     {
         public static void Patch(ref Pawn pawn)
         {
+           
             Pawn p2 = pawn;
             if (pawn.def is RimValiRaceDef rimValiRace)
             {
@@ -61,14 +62,14 @@ namespace RimValiCore.HARTweaks
                     if ((pawn.story.adulthood != null && DefDatabase<RVRBackstory>.AllDefs.Where(x => x.defName == p2.story.adulthood.identifier).Count() > 0))
                     {
                         RVRBackstory story = DefDatabase<RVRBackstory>.AllDefs.Where(x => x.defName == p2.story.adulthood.identifier).FirstOrDefault();
-                        BodyPatch.SetBody(story, ref pawn);
+                       // BodyPatch.SetBody(story, ref pawn);
                         return;
                     }
                     else if (DefDatabase<RVRBackstory>.AllDefs.Where(x => x.defName == p2.story.childhood.identifier).Count() > 0)
                     {
                         
                         RVRBackstory story = DefDatabase<RVRBackstory>.AllDefs.Where(x => x.defName == p2.story.childhood.identifier).FirstOrDefault();
-                        BodyPatch.SetBody(story, ref pawn);
+                     //   BodyPatch.SetBody(story, ref pawn);
                         return;
                     }
                     else
@@ -89,33 +90,15 @@ namespace RimValiCore.HARTweaks
             }
             else
             {
-                if (pawn.def.GetType() != typeof(ThingDef_AlienRace))
+                if (!(pawn.def is ThingDef_AlienRace))
                 {
-                    List<BodyTypeDef> getAllAvalibleBodyTypes = new List<BodyTypeDef>();
-                    //getAllAvalibleBodyTypes.AddRange((IEnumerable<BodyTypeDef>)Restrictions.bodyTypeRestrictions.Where(x => x.Value.Contains(p2.def)));
-                    if (Restrictions.bodyDefs.ContainsKey(p2.def))
-                    {
-                        getAllAvalibleBodyTypes.AddRange(Restrictions.bodyDefs[p2.def]);
-                    }
-                    if (getAllAvalibleBodyTypes.NullOrEmpty())
-                    {
-                        getAllAvalibleBodyTypes.AddRange(new List<BodyTypeDef> { BodyTypeDefOf.Fat, BodyTypeDefOf.Hulk, BodyTypeDefOf.Thin });
-                    }
-                    if (pawn.gender == Gender.Female)
-                    {
-                        getAllAvalibleBodyTypes.Add(BodyTypeDefOf.Female);
-                    }
-                    else
-                    {
-                        getAllAvalibleBodyTypes.Add(BodyTypeDefOf.Male);
-                    }
-                    pawn.story.bodyType = getAllAvalibleBodyTypes.RandomElement();
+                    if (pawn.story.bodyType == null || !BodyPatch.bTypes(pawn).Contains(pawn.story.bodyType)) { pawn.story.bodyType = BodyPatch.bTypes(pawn).RandomElement(); };
                 }
                 else
                 {
                     AlienRace.HarmonyPatches.GenerateBodyTypePostfix(ref pawn);
                 }
-                Log.Message($"Pawn bodytype: {pawn.story.bodyType}, class: {pawn.def.thingClass}");
+                
             }
         }
     }

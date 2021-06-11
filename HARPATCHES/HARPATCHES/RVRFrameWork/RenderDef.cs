@@ -171,6 +171,29 @@ namespace RimValiCore.RVR
 
         }
         #endregion
+        public List<BaseTex> getTexList()
+        {
+            List<BaseTex> texture = new List<BaseTex>();
+            texture.AddRange(textures);
+            texture.AddRange(hediffTextures);
+            texture.AddRange(backstoryTextures);
+            texture.AddRange(hediffStoryTextures);
+            return texture;
+        }
+
+        public List<string> findAllTextures()
+        {
+            List<string> paths = new List<string>();
+            foreach(BaseTex tex in getTexList())
+            {
+                paths.Add(tex.tex);
+                if (tex.femaleTex != null)
+                {
+                    paths.Add(tex.femaleTex);
+                }
+            }
+            return paths;
+        }
         public List<BaseTex> textures;
         public string rottingTex;
         public string dessicatedTex;
@@ -225,15 +248,15 @@ namespace RimValiCore.RVR
 
         #region general show check
 
-        public bool CanShow(Pawn pawn, RotDrawMode mode)
+        public bool CanShow(Pawn pawn, RotDrawMode mode, bool portrait = false)
         {
             if ((mode == RotDrawMode.Rotting && !showsIfRotted) || (mode == RotDrawMode.Dessicated && !showsIfDessicated))
             {
                 return false;
             }
-            return CanShow(pawn);
+            return CanShow(pawn,portrait);
         }
-        public bool CanShow(Pawn pawn)
+        public bool CanShow(Pawn pawn, bool portrait =false)
         {
             IEnumerable<BodyPartRecord> bodyParts = pawn.health.hediffSet.GetNotMissingParts();
             //Log.Message(bodyParts.Any(x => x.def.defName.ToLower() == "left lower ear" || x.untranslatedCustomLabel.ToLower() == "left lower ear".ToLower()).ToString());
@@ -241,9 +264,12 @@ namespace RimValiCore.RVR
             {
                 if (bodyPart==null || bodyParts.Any(x => x.def.defName.ToLower() == bodyPart.ToLower() || x.Label.ToLower() == bodyPart.ToLower()) )
                 {
-                    if (!this.showsInBed && pawn.InBed() && !pawn.CurrentBed().def.building.bed_showSleeperBody)
+                    if (!portrait)
                     {
-                        return false;
+                        if ((!this.showsInBed && pawn.InBed() && !pawn.CurrentBed().def.building.bed_showSleeperBody))
+                        {
+                            return false;
+                        }
                     }
                     return true;
                   

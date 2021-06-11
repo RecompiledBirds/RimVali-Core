@@ -9,13 +9,7 @@ namespace RimValiCore.RVR
 {
     public class DyeComp : HediffComp
     {
-        public DyeCompProps Props
-        {
-            get
-            {
-                return (DyeCompProps)this.props;
-            }
-        }
+        public DyeCompProps Props=> (DyeCompProps)this.props;
 
         public Dictionary<string, ColorSet> oldColors = new Dictionary<string, ColorSet>();
         public List<string> colorKey = new List<string>();
@@ -45,19 +39,9 @@ namespace RimValiCore.RVR
                         {
                             oldColors.Add(set, new ColorSet(colorComp.colors[set].colorOne, colorComp.colors[set].colorTwo, colorComp.colors[set].colorThree, colorComp.colors[set].dyeable));
 
-                            if (Props.changesFirstColor)
-                            {
-
-                                colorComp.colors[set].colorOne = Props.colors.firstColor.NewRandomizedColor();
-                            }
-                            if (Props.changesSecondColor)
-                            {
-                                colorComp.colors[set].colorTwo = Props.colors.secondColor.NewRandomizedColor();
-                            }
-                            if (Props.changesThirdColor)
-                            {
-                                colorComp.colors[set].colorThree = Props.colors.thirdColor.NewRandomizedColor();
-                            }
+                            if (Props.changesFirstColor){colorComp.colors[set].colorOne = Props.colors.firstColor.NewRandomizedColor();}
+                            if (Props.changesSecondColor){colorComp.colors[set].colorTwo = Props.colors.secondColor.NewRandomizedColor();}
+                            if (Props.changesThirdColor){colorComp.colors[set].colorThree = Props.colors.thirdColor.NewRandomizedColor();}
                         }
                     }
                     else if(Props.targetsSpecifcSets != true)
@@ -66,19 +50,9 @@ namespace RimValiCore.RVR
                         {
                             oldColors.Add(set, new ColorSet(colorComp.colors[set].colorOne, colorComp.colors[set].colorTwo, colorComp.colors[set].colorThree, colorComp.colors[set].dyeable));
 
-                            if (Props.changesFirstColor)
-                            {
-
-                                colorComp.colors[set].colorOne = Props.colors.firstColor.NewRandomizedColor();
-                            }
-                            if (Props.changesSecondColor)
-                            {
-                                colorComp.colors[set].colorTwo = Props.colors.secondColor.NewRandomizedColor();
-                            }
-                            if (Props.changesThirdColor)
-                            {
-                                colorComp.colors[set].colorThree = Props.colors.thirdColor.NewRandomizedColor();
-                            }
+                            if (Props.changesFirstColor){colorComp.colors[set].colorOne = Props.colors.firstColor.NewRandomizedColor();}
+                            if (Props.changesSecondColor){colorComp.colors[set].colorTwo = Props.colors.secondColor.NewRandomizedColor();}
+                            if (Props.changesThirdColor){colorComp.colors[set].colorThree = Props.colors.thirdColor.NewRandomizedColor();}
                         }
                     }
                 }

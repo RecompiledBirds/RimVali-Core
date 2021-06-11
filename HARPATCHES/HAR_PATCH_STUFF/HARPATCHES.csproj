@@ -20,7 +20,7 @@
     <DebugSymbols>false</DebugSymbols>
     <DebugType>none</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\RimValiCore\HAR_PATCHES\</OutputPath>
+    <OutputPath>..\..\..\RimValiCore\Assemblies\HARPATCHES\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -117,6 +117,7 @@
     <ProjectReference Include="..\HARPATCHES\RimVali Core.csproj">
       <Project>{c26a8b61-8b01-4a81-835d-42b2fb8c3a65}</Project>
       <Name>RimVali Core</Name>
+      <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
