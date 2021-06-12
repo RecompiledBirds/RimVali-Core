@@ -12,7 +12,7 @@ namespace RimValiCore.RVR
 {
 
     #region Restrictions and patching
-    //Eventually I want to switch from dictionaries to this
+    //Eventually I want to switch from dictionaries to this, and potentially keep a dictionary of restriction types and and objects instead. Eg. Dictionary<Type,RestrictionObject> restrictions
     public class RestrictionObject<T, V>
     {
         public T obj;
@@ -34,29 +34,20 @@ namespace RimValiCore.RVR
     [StaticConstructorOnStartup]
     public static class Restrictions
     {
-        // Token: 0x060000E9 RID: 233 RVA: 0x00006CD0 File Offset: 0x00004ED0
+     
         public static bool checkRestrictions<T, V>(Dictionary<T, List<V>> pairs, T item, V race, bool keyNotInReturn = true)
         {
-            bool flag = pairs.ContainsKey(item);
-            if (flag)
+            if (pairs.ContainsKey(item))
             {
-                bool flag2 = pairs[item] != null;
-                if (flag2)
-                {
-                    bool flag3 = pairs[item].Contains(race);
-                    if (flag3)
-                    {
-                        return true;
-                    }
-                }
+                if (!pairs[item].NullOrEmpty() && pairs[item].Contains(race)){return true;}
             }
-            bool flag4 = !pairs.ContainsKey(item);
-            return flag4 && keyNotInReturn;
+            return !pairs.ContainsKey(item) && keyNotInReturn;
         }
 
         // Token: 0x060000EA RID: 234 RVA: 0x00006D2C File Offset: 0x00004F2C
         public static bool AddRestriction<T, V>(ref Dictionary<T, List<V>> pairs, T item, V race)
         {
+
             bool flag = !pairs.ContainsKey(item);
             if (flag)
             {
@@ -1059,7 +1050,7 @@ namespace RimValiCore.RVR
         [HarmonyPostfix]
         public static void CanGetPatch(Pawn pawn, ThoughtDef def, bool checkIfNullified, ref bool __result)
         {
-            __result = __result && (pawn.def is RimValiRaceDef rDef ?  rDef.canHavethoughts && !(!rDef.restrictions.thoughtBlacklist.NullOrEmpty() && rDef.restrictions.thoughtBlacklist.Contains(def)) : (!Restrictions.thoughtRestrictions.EnumerableNullOrEmpty() && (Restrictions.thoughtRestrictions.ContainsKey(def) && !Restrictions.thoughtRestrictions[def].Contains(pawn.def))));
+            __result = __result && (pawn.def is RimValiRaceDef rDef ? rDef.canHavethoughts && !(!rDef.restrictions.thoughtBlacklist.NullOrEmpty() && rDef.restrictions.thoughtBlacklist.Contains(def)) : Restrictions.checkRestrictions(Restrictions.thoughtRestrictions, def, pawn.def));
         }
     }
     [HarmonyPatch(typeof(MemoryThoughtHandler), "GetFirstMemoryOfDef")]
