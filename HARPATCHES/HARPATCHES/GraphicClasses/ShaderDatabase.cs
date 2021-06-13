@@ -12,20 +12,14 @@ namespace RimValiCore
         static AvaliShaderDatabase()
         {
             string dir = RimValiUtility.dir;
-
-            Log.Message(dir);
             string path = dir + "/RimValiAssetBundles/shader";
             AssetBundle bundle = RimValiUtility.shaderLoader(path);
             Tricolor = (Shader)bundle.LoadAsset("assets/resources/materials/avalishader.shader");
-            if (!(Tricolor == null))
-            {
-                Log.Message(Tricolor.name);
-                Log.Message("Load worked!");
-            }
+            lookup.Add(Tricolor.name, Tricolor);
         }
 
         public static Shader Tricolor;
-        public static Dictionary<string, Shader> lookup;
+        public static Dictionary<string, Shader> lookup = new Dictionary<string, Shader>();
 
         public static Shader DefaultShader
         {

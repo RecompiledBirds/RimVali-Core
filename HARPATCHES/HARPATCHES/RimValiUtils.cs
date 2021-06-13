@@ -34,7 +34,7 @@ namespace RimValiCore
                     AssetBundle bundle = AssetBundle.LoadFromFile(file.FullName);
                     if (!(bundle == null))
                     {
-                        Log.Message("RimVali loaded bundle: " + bundle.name);
+                   
                         UnityEngine.Shader[] shaders = bundle.LoadAllAssets<UnityEngine.Shader>();
                     }
                     else
@@ -48,9 +48,8 @@ namespace RimValiCore
         public static AssetBundle shaderLoader(string info)
         {
             AssetBundle assetBundle = AssetBundle.LoadFromFile(info);
-            Log.Message("-----------------------------------------");
-            Log.Message("Loaded bundle: " + assetBundle.name);
-            Log.Message(assetBundle.GetAllAssetNames()[0], false);
+       
+          
             return assetBundle;
         }
         #endregion
@@ -121,13 +120,18 @@ namespace RimValiCore
         }
         public static T GetVar<T>(string fieldName, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic, object obj = null)
         {
-            T val = default(T);
-            if ((T)typeof(T).GetField(fieldName, flags).GetValue(obj) != null)
-            {
-                val = (T)typeof(T).GetField(fieldName, flags).GetValue(obj);
-            }
+            
 
-            return val;
+            return (T)obj.GetType().GetField(fieldName, flags).GetValue(obj);
+        }
+
+        public static bool SetVar<T>(string fieldName, T val,BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic,object obj = null)
+        {
+
+            obj.GetType().GetField(fieldName, flags).SetValue(obj,val);
+
+
+            return true;
         }
 
         public static T GetProp<T>(string propName, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic, object obj = null)

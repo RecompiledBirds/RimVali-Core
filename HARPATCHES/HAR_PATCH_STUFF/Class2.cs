@@ -29,7 +29,7 @@ namespace RimValiCore.HARTweaks
                 //The rest is all RVR stuff.
                 harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "BaseHeadOffsetAt"), null, new HarmonyMethod(typeof(HeadOffsetPatch), "setPos"));
                 harmony.Patch(AccessTools.Method(typeof(Corpse), "ButcherProducts"), new HarmonyMethod(typeof(ButcherPatch), "Patch"));
-               // harmony.Patch(AccessTools.Method(typeof(BodyPatch), "Patch"), new HarmonyMethod(typeof(BodyGenPatch), "Patch"));
+                harmony.Patch(AccessTools.Method(typeof(BodyPatch), "Patch"), new HarmonyMethod(typeof(BodyGenPatch), "Patch"));
                 Log.Message($"[RimVali Core/Compatiblity] Patches completed: {harmony.GetPatchedMethods().Count()}");
                 RestrictionsPatch.AddRestrictions();
             }
@@ -62,14 +62,14 @@ namespace RimValiCore.HARTweaks
                     if ((pawn.story.adulthood != null && DefDatabase<RVRBackstory>.AllDefs.Where(x => x.defName == p2.story.adulthood.identifier).Count() > 0))
                     {
                         RVRBackstory story = DefDatabase<RVRBackstory>.AllDefs.Where(x => x.defName == p2.story.adulthood.identifier).FirstOrDefault();
-                       // BodyPatch.SetBody(story, ref pawn);
+                        BodyPatch.SetBody(story, ref pawn);
                         return;
                     }
                     else if (DefDatabase<RVRBackstory>.AllDefs.Where(x => x.defName == p2.story.childhood.identifier).Count() > 0)
                     {
                         
                         RVRBackstory story = DefDatabase<RVRBackstory>.AllDefs.Where(x => x.defName == p2.story.childhood.identifier).FirstOrDefault();
-                     //   BodyPatch.SetBody(story, ref pawn);
+                        BodyPatch.SetBody(story, ref pawn);
                         return;
                     }
                     else
@@ -79,7 +79,7 @@ namespace RimValiCore.HARTweaks
                         pawn.story.bodyType = rimValiRace.bodyTypes.RandomElement();
 
                     }
-
+                    return;
                 }
                 catch (Exception e)
                 {
@@ -88,17 +88,14 @@ namespace RimValiCore.HARTweaks
                     Patch(ref pawn);
                 }
             }
+            else if(pawn.def is ThingDef_AlienRace alienRace)
+            {
+                AlienRace.HarmonyPatches.GenerateBodyTypePostfix(ref pawn);
+                return;
+            }
             else
             {
-                if (!(pawn.def is ThingDef_AlienRace))
-                {
-                    if (pawn.story.bodyType == null || !BodyPatch.bTypes(pawn).Contains(pawn.story.bodyType)) { pawn.story.bodyType = BodyPatch.bTypes(pawn).RandomElement(); };
-                }
-                else
-                {
-                    AlienRace.HarmonyPatches.GenerateBodyTypePostfix(ref pawn);
-                }
-                
+                if (pawn.story.bodyType == null || !BodyPatch.bTypes(pawn).Contains(pawn.story.bodyType)) { pawn.story.bodyType = BodyPatch.bTypes(pawn).RandomElement(); };
             }
         }
     }
@@ -160,7 +157,7 @@ namespace RimValiCore.HARTweaks
     {
         public static void AddRestrictions()
         {
-            Log.Message("[RVR]: HAR is loaded, merging race restrictions.");
+            Log.Message("[RimValiCore/RVR]: HAR is loaded, merging race restrictions.");
             //I ended up using the same method of storing restrictions that HAR does to make this easier.
             foreach (AlienRace.ThingDef_AlienRace raceDef in DefDatabase<AlienRace.ThingDef_AlienRace>.AllDefs.Where<AlienRace.ThingDef_AlienRace>(x => x is AlienRace.ThingDef_AlienRace))
             {

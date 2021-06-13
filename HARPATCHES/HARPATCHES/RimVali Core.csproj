@@ -110,9 +110,11 @@
     <Compile Include="RVRFrameWork\RenderDef.cs" />
     <Compile Include="RVRFrameWork\Renders.cs" />
     <Compile Include="RVRFrameWork\ThingDef.cs" />
+    <Compile Include="Ships\patches.cs" />
     <Compile Include="Ships\ShipComp.cs" />
     <Compile Include="ThingComps\Cloning\StorageComp.cs" />
     <Compile Include="ThingComps\DrawTexComp.cs" />
+    <Compile Include="ThingComps\FuelConsumer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

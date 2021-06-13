@@ -647,6 +647,7 @@ namespace RimValiCore.RVR
             if (story.bodyType != null) { pawn.story.bodyType = story.bodyType; }
             else { pawn.story.bodyType = rimValiRace.bodyTypes.RandomElement(); }
 
+
         }
         [HarmonyPostfix]
         public static void Patch(ref Pawn pawn)
@@ -1199,7 +1200,7 @@ namespace RimValiCore.RVR
     {
 
 
-        public static bool CanWearHeavyRestricted(ThingDef def, Pawn pawn) => Restrictions.checkRestrictions(Restrictions.equipmentRestrictions, def, pawn.def, pawn.def is RimValiRaceDef rDef ? !rDef.restrictions.canOnlyUseApprovedApparel : true) || Restrictions.checkRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, pawn.def is RimValiRaceDef rDef2 ? !rDef2.restrictions.canOnlyUseApprovedApparel : false);
+        public static bool CanWearHeavyRestricted(ThingDef def, Pawn pawn) => pawn.def is RimValiRaceDef rDef ? Restrictions.checkRestrictions(Restrictions.equipmentRestrictions, def, pawn.def, !rDef.restrictions.canOnlyUseApprovedApparel) || Restrictions.checkRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, false) : Restrictions.checkRestrictions(Restrictions.equipmentRestrictions, def, pawn.def, true) || Restrictions.checkRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, false); //Restrictions.checkRestrictions(Restrictions.equipmentRestrictions, def, pawn.def, pawn.def is RimValiRaceDef rDef ? !rDef.restrictions.canOnlyUseApprovedApparel : true) || Restrictions.checkRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, pawn.def is RimValiRaceDef rDef2 ? !rDef2.restrictions.canOnlyUseApprovedApparel : false);
         [HarmonyPostfix]
         public static void equipable(ref bool __result, Thing thing, Pawn pawn, ref string cantReason)
         {
@@ -1921,7 +1922,7 @@ namespace RimValiCore.RVR
                 {
                     renders[pawn] = new RSet() { mode = bodyDrawType, renderer = __instance };
                 }
-                if (!portrait)
+                if (!portrait && pawn.def is RimValiRaceDef def)
                 {
                     Rot4 rot = __instance.graphics.pawn.Rotation;
                     // angle = pawn.Graphic.DrawRotatedExtraAngleOffset;
@@ -1991,7 +1992,7 @@ namespace RimValiCore.RVR
                             Mesh mesh2 = __instance.graphics.HairMeshSet.MeshAt(headFacing);
                             for (int j = 0; j < apparelGraphics.Count; j++)
                             {
-                                if (apparelGraphics[j].sourceApparel.def.apparel.LastLayer == ApparelLayerDefOf.Overhead)
+                                if (apparelGraphics[j].sourceApparel.def.apparel.LastLayer == ApparelLayerDefOf.Overhead && pawn.def is RimValiRaceDef rDef)
                                 {
                                     if (!apparelGraphics[j].sourceApparel.def.apparel.hatRenderedFrontOfFace)
                                     {
