@@ -983,20 +983,20 @@ namespace RimValiCore.RVR
     }
     #endregion
     #region Cannibalism patch
-  /*  [HarmonyPatch(typeof(FoodUtility), "ThoughtsFromIngesting")]
+    [HarmonyPatch(typeof(FoodUtility), "ThoughtsFromIngesting")]
     public static class IngestingPatch
     {
 
-      //  [HarmonyPostfix]
-        public static void Patch(Pawn ingester, Thing foodSource, ThingDef foodDef, ref List<ThoughtDef> __result)
+        [HarmonyPostfix]
+        public static void Patch(Pawn ingester, Thing foodSource, ThingDef foodDef, ref List<FoodUtility.ThoughtFromIngesting> __result)
         {
-
+            
             bool cannibal = ingester.story.traits.HasTrait(TraitDefOf.Cannibal);
             if (ingester.def is RimValiRaceDef rDef)
             {
                 for (int a = 0; a < __result.Count - 1; a++)
                 {
-                    ThoughtDef t = __result[a];
+                    ThoughtDef t = __result[a].thought;
                     #region raw
                     if (t == ThoughtDefOf.AteHumanlikeMeatDirectCannibal || t == ThoughtDefOf.AteHumanlikeMeatDirect)
                     {
@@ -1004,7 +1004,10 @@ namespace RimValiCore.RVR
                         if (r != null)
                         {
                             if (rDef.getEatenThought(r, true, cannibal) != null)
-                                __result[a] = rDef.getEatenThought(r, true, cannibal);
+                                __result[a] = new FoodUtility.ThoughtFromIngesting
+                                {
+                                    thought = rDef.getEatenThought(r, true, cannibal)
+                                };
                             else if (!rDef.butcherAndHarvestThoughts.careAboutUndefinedRaces)
                             {
                                 __result.RemoveAt(a);
@@ -1023,9 +1026,8 @@ namespace RimValiCore.RVR
                                 ThingDef ing = foodSource.TryGetComp<CompIngredients>().ingredients[b];
                                 if (rDef.getEatenThought(ing.ingestible.sourceDef, false, cannibal) != null)
                                 {
-                                    __result.Replace(
-                                                     cannibal ? ThoughtDefOf.AteHumanlikeMeatAsIngredientCannibal : ThoughtDefOf.AteHumanlikeMeatAsIngredient,
-                                                     rDef.getEatenThought(ing.ingestible.sourceDef, false, cannibal));
+                                    int pos = __result.FindIndex(x => cannibal ? x.thought == ThoughtDefOf.AteHumanlikeMeatAsIngredientCannibal : x.thought == ThoughtDefOf.AteHumanlikeMeatAsIngredient);
+                                    __result[pos] = new FoodUtility.ThoughtFromIngesting { thought = rDef.getEatenThought(ing.ingestible.sourceDef, false, cannibal) };
                                 }
                             }
                         }
@@ -1037,7 +1039,7 @@ namespace RimValiCore.RVR
             }
         }
     }
-  */
+  
     #endregion
 
     #region Thought patches
@@ -1175,10 +1177,20 @@ namespace RimValiCore.RVR
     [HarmonyPatch(typeof(RaceProperties), "CanEverEat", new[] { typeof(ThingDef) })]
     public static class FoodPatch
     {
+        static Dictionary<RaceProperties, ThingDef> cachedDefs = new Dictionary<RaceProperties, ThingDef>();
         [HarmonyPostfix]
         public static void EdiblePatch(ref bool __result, RaceProperties __instance, ThingDef t)
         {
-            ThingDef pawn = DefDatabase<ThingDef>.AllDefs.First(x => x.race == __instance);
+            ThingDef pawn;
+            if (cachedDefs.NullOrEmpty() || !cachedDefs.ContainsKey(__instance))
+            {
+                pawn = DefDatabase<ThingDef>.AllDefs.First(x => x.race == __instance);
+                cachedDefs.Add(__instance, pawn);
+            }
+            else
+            {
+                pawn = cachedDefs[__instance];
+            }
             if (pawn != null && !Restrictions.checkRestrictions(Restrictions.consumableRestrictions, t, pawn) && !Restrictions.checkRestrictions(Restrictions.consumableRestrictionsWhiteList, t, pawn))
             {
                 JobFailReason.Is(pawn.label + " " + "CannotEatRVR".Translate(pawn.label.Named("RACE")));
@@ -1190,38 +1202,40 @@ namespace RimValiCore.RVR
     }
     #endregion
     #region Apparel Equipping
-    //Cant patch CanEquip, apparently. This still works though.
-   [HarmonyPatch(typeof(EquipmentUtility), "CanEquip", new[] { typeof(Thing),typeof(Pawn)})]
+   [HarmonyPatch(typeof(EquipmentUtility), "CanEquip",new[] { typeof(Thing),typeof(Pawn)})]
     public static class ApparelPatch
     {
 
         public static bool CanWearHeavyRestricted(ThingDef def, Pawn pawn) => pawn.def is RimValiRaceDef rDef ? Restrictions.checkRestrictions(Restrictions.equipmentRestrictions, def, pawn.def, !rDef.restrictions.canOnlyUseApprovedApparel)|| Restrictions.checkRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, false): Restrictions.checkRestrictions(Restrictions.equipmentRestrictions, def, pawn.def, true) || Restrictions.checkRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, false); //Restrictions.checkRestrictions(Restrictions.equipmentRestrictions, def, pawn.def, pawn.def is RimValiRaceDef rDef ? !rDef.restrictions.canOnlyUseApprovedApparel : true) || Restrictions.checkRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, pawn.def is RimValiRaceDef rDef2 ? !rDef2.restrictions.canOnlyUseApprovedApparel : false);
        [HarmonyPostfix]
-        public static void equipable(ref bool __result, Thing thing, Pawn pawn, ref string cantReason, bool checkBonded = true)
+        public static void equipable(ref bool __result, Thing thing, Pawn pawn/*, ref string cantReason, bool checkBonded*/)
         {
-            __result = __result && CanWearHeavyRestricted(thing.def, pawn);
-            if (thing.def.IsApparel&&__result==false)
+            if (thing.def.IsApparel)
             {
-             
-                cantReason = "CannotWearRVR".Translate(pawn.def.label.Named("RACE"));
+                __result = __result && CanWearHeavyRestricted(thing.def, pawn);
+                if (!__result)
+                {
+
+                   // cantReason = "CannotWearRVR".Translate(pawn.def.label.Named("RACE"));
+                }
             }
            
         }
     }
     #endregion
     #region Construction
-    [HarmonyPatch(typeof(GenConstruct), "CanConstruct")]
+    [HarmonyPatch(typeof(GenConstruct), "CanConstruct", new[] { typeof(Thing),typeof(Pawn),typeof(WorkTypeDef),typeof(bool)})]
     //This was confusing at first, but it works.
     public static class ConstructPatch
     {
         [HarmonyPostfix]
-        public static void constructable(Thing t, Pawn p, bool checkSkills,bool forced,ref bool __result)
+        public static void constructable(Thing t, Pawn pawn, WorkTypeDef workType,bool forced,ref bool __result)
         {
             //Log.Message(t.def.ToString());
-            if (!Restrictions.checkRestrictions<BuildableDef, string>(Restrictions.buildingRestrictions, t.def.entityDefToBuild, p.def.defName))
+            if (!Restrictions.checkRestrictions<BuildableDef, string>(Restrictions.buildingRestrictions, t.def.entityDefToBuild, pawn.def.defName))
             {
                 __result = false;
-                JobFailReason.Is(p.def.label + " " + "CannotBuildRVR".Translate(p.def.label.Named("RACE")));
+                JobFailReason.Is(pawn.def.label + " " + "CannotBuildRVR".Translate(pawn.def.label.Named("RACE")));
             }
             __result = true && __result;
 
@@ -1334,55 +1348,7 @@ namespace RimValiCore.RVR
         }
     }
     #endregion
-    #region Portraits patch
-    //Render renderables the correct way in the portrait. 
-    //[HarmonyPatch(typeof(PortraitRenderer), "RenderPortrait")]
-    static class RenderPatch
-    {
-       // [HarmonyPostfix]
-        static void Portrait(PawnRenderer __instance)
-        {
-            Vector3 zero = Vector3.zero;
-            float angle;
-            if (__instance.graphics.pawn.Dead || __instance.graphics.pawn.Downed)
-            {
-                angle = 85f;
-                zero.x -= 0.18f;
-                zero.z -= 0.18f;
-            }
-            else
-            {
-                angle = 0f;
-            }
-            try
-            {
-
-
-                Pawn pawn = __instance.graphics.pawn;
-                if (RenderPatchTwo.renders.ContainsKey(pawn))
-                {
-                    RenderPatchTwo.RSet s = RenderPatchTwo.renders[pawn];
-
-                    if (!pawn.Dead && !pawn.Downed)
-                    {
-                        RenderPatchTwo.RenderBodyPartsPortrait(angle, Vector3.zero, __instance, Rot4.South, s.mode);
-
-                    }
-                    else
-                    {
-                        RenderPatchTwo.RenderBodyPartsPortrait(angle, new Vector3(-0.2f, 0, -0.2f), __instance, Rot4.South, s.mode);
-                    }
-                }
-            }
-            catch (Exception error)
-            {
-                //Achivement get! How did we get here?
-                Log.Error("Something has gone terribly wrong! Error: \n" + error.Message);
-            }
-
-        }
-    }
-    #endregion
+ 
 
     public static class ColorInfo
     {
@@ -1774,12 +1740,14 @@ namespace RimValiCore.RVR
         [HarmonyPostfix]
         static void RenderPawnInternal(Vector3 rootLoc, float angle, bool renderBody, Rot4 bodyFacing, RotDrawMode bodyDrawType, PawnRenderFlags flags, PawnRenderer __instance)
         {
+            if (!(__instance.graphics.pawn.def is RimValiRaceDef))
+                return;
+
             void Render()
             {
-                
+                bool portrait = flags.HasFlag(PawnRenderFlags.Portrait);
 
-                if (!(__instance.graphics.pawn.def is RimValiRaceDef))
-                    return;
+                
 
                 Pawn pawn = __instance.graphics.pawn;
 
@@ -1813,7 +1781,7 @@ namespace RimValiCore.RVR
                     }
 
                 }
-                RenderBodyParts(true, angle, rootLoc, __instance, rot, bodyDrawType);
+                RenderBodyParts(portrait, angle, rootLoc, __instance, rot, bodyDrawType);
                 if (pawn.Spawned && !pawn.Dead)
                 {
                    pawn.stances.StanceTrackerDraw();
