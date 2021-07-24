@@ -11,13 +11,68 @@ using Verse.Sound;
 
 namespace RimValiCore.Ships
 {
+    #region caravan maker
+	public class ShipArrivalAction_MakeCaravan : TransportPodsArrivalAction_FormCaravan
+    {
+		public ShipArrivalAction_MakeCaravan(Thing pod, string arrivalMsg)
+        {
+			this.pod = pod;
+			this.arrivalMessageKey = arrivalMsg;
+        }
+		public override void Arrived(List<ActiveDropPodInfo> pods, int tile)
+        {
+			tmpPawns.Clear();
+			for (int i = 0; i < pods.Count; i++)
+			{
+				ThingOwner innerContainer = pods[i].innerContainer;
+				for (int j = innerContainer.Count - 1; j >= 0; j--)
+				{
+					Pawn pawn = innerContainer[j] as Pawn;
+					if (pawn != null)
+					{
+						tmpPawns.Add(pawn);
+						innerContainer.Remove(pawn);
+					}
+				}
+			}
+			int startingTile;
+			if (!GenWorldClosest.TryFindClosestPassableTile(tile, out startingTile))
+			{
+				startingTile = tile;
+			}
+			Caravan caravan = CaravanMaker.MakeCaravan(tmpPawns, Faction.OfPlayer, startingTile, true);
+			for (int k = 0; k < pods.Count; k++)
+			{
+				tmpContainedThings.Clear();
+				tmpContainedThings.AddRange(pods[k].innerContainer);
+				for (int l = 0; l < tmpContainedThings.Count; l++)
+				{
+					pods[k].innerContainer.Remove(tmpContainedThings[l]);
+					CaravanInventoryUtility.GiveThing(caravan, tmpContainedThings[l]);
+				}
+			}
+			Log.Message(pod.def.defName);
+			//pod.TryGetComp<CompTransporter>().innerContainer.RemoveAll(x=>true);
+			CaravanInventoryUtility.GiveThing(caravan, pod);
+			tmpPawns.Clear();
+			tmpContainedThings.Clear();
+			Messages.Message(this.arrivalMessageKey.Translate(), caravan, MessageTypeDefOf.TaskCompletion, true);
+		}
+		private static List<Pawn> tmpPawns = new List<Pawn>();
 
+		// Token: 0x04007CF4 RID: 31988
+		private static List<Thing> tmpContainedThings = new List<Thing>();
+		private string arrivalMessageKey = "MessageTransportPodsArrived";
+		Thing pod;
+	}
+    #endregion
     #region launchable
     public class ShipLauncherProps : CompProperties_Launchable
     {
         public bool mustBeConnectedToFuelingPort = false;
         public ShipLauncherProps()
         {
+			
             this.compClass = typeof(ShipLaunchable);
         }
     }
@@ -27,16 +82,19 @@ namespace RimValiCore.Ships
 	public class ShipLaunchable : CompLaunchable
     {
 
-		public static new IEnumerable<FloatMenuOption> GetOptionsForTile(int tile, IEnumerable<IThingHolder> pods, Action<int, TransportPodsArrivalAction> launchAction)
+		public new IEnumerable<FloatMenuOption> GetOptionsForTile(int tile, IEnumerable<IThingHolder> pods, Action<int, TransportPodsArrivalAction> launchAction)
 		{
 			bool anything = false;
 			if (TransportPodsArrivalAction_FormCaravan.CanFormCaravanAt(pods, tile) && !Find.WorldObjects.AnySettlementBaseAt(tile) && !Find.WorldObjects.AnySiteAt(tile))
 			{
 				anything = true;
+				Log.Message("making caravan");
 				yield return new FloatMenuOption("FormCaravanHere".Translate(), delegate ()
 				{
-					launchAction(tile, new TransportPodsArrivalAction_FormCaravan("MessageShuttleArrived"));
+					launchAction(tile, new ShipArrivalAction_MakeCaravan(this.parent,"MessageShuttleArrived"));
 				}, MenuOptionPriority.Default, null, null, 0f, null, null);
+				FuelingPortSource.TryGetComp<CompRefuelable>().ConsumeFuel(100);
+			
 			}
 			List<WorldObject> worldObjects = Find.WorldObjects.AllWorldObjects;
 			int num;
@@ -64,19 +122,20 @@ namespace RimValiCore.Ships
 
 
 		#region target labeler
-		public static string TargetingLabelGetter(GlobalTargetInfo target, int tile, int maxLaunchDistance, IEnumerable<IThingHolder> pods, Action<int, TransportPodsArrivalAction> launchAction, ShipLaunchable launchable)
+		public string TargetingLabelGetter(GlobalTargetInfo target, int tile, int maxLaunchDistance, IEnumerable<IThingHolder> pods, Action<int, TransportPodsArrivalAction> launchAction, ShipLaunchable launchable)
 		{
+			
 			if (!target.IsValid){return null;}
 			if (Find.WorldGrid.TraversalDistanceBetween(tile, target.Tile, true, 2147483647) > maxLaunchDistance)
 			{
-				GUI.color = ColoredText.RedReadable;
+				GUI.color = Color.red;
 			    return "TransportPodDestinationBeyondMaximumRange".Translate();
 			}
-			IEnumerable<FloatMenuOption> source = (launchable != null) ? launchable.GetTransportPodsFloatMenuOptionsAt(target.Tile) : ShipLaunchable.GetOptionsForTile(target.Tile, pods, launchAction);
+			IEnumerable<FloatMenuOption> source = (launchable != null) ? launchable.GetTransportPodsFloatMenuOptionsAt(target.Tile) : GetOptionsForTile(target.Tile, pods, launchAction);
 			if (!source.Any<FloatMenuOption>()){return string.Empty;}
 			if (source.Count<FloatMenuOption>() == 1)
 			{
-				if (source.First<FloatMenuOption>().Disabled){GUI.color = ColoredText.RedReadable;}
+				if (source.First<FloatMenuOption>().Disabled){GUI.color = Color.red;}
 				return source.First<FloatMenuOption>().Label;
 			}
 			MapParent mapParent=target.WorldObject as MapParent;
@@ -89,11 +148,11 @@ namespace RimValiCore.Ships
 			CameraJumper.TryJump(CameraJumper.GetWorldTarget(this.parent));
 			Find.WorldSelector.ClearSelection();
 			int tile = this.parent.Map.Tile;
-			Log.Message("start test");
-			Find.WorldTargeter.BeginTargeting_NewTemp(new Func<GlobalTargetInfo, bool>(this.ChoseWorldTarget), true, ShipLaunchable.TargeterMouseAttachment, true, delegate
+			Log.Message("picking destination");
+			Find.WorldTargeter.BeginTargeting(new Func<GlobalTargetInfo, bool>(this.ChoseWorldTarget), true, ShipLaunchable.TargeterMouseAttachment, true, delegate
 			{
-				GenDraw.DrawWorldRadiusRing(tile, 10000);
-			}, (GlobalTargetInfo target) => ShipLaunchable.TargetingLabelGetter(target, tile, 10000, this.TransportersInGroup.Cast<IThingHolder>(), new Action<int, TransportPodsArrivalAction>(this.TryLaunch), this), null);
+				GenDraw.DrawWorldRadiusRing(tile,MaxLaunchDistance);
+			}, (GlobalTargetInfo target) => TargetingLabelGetter(target, tile, MaxLaunchDistance, this.TransportersInGroup.Cast<IThingHolder>(), new Action<int, TransportPodsArrivalAction>(this.TryLaunch), this), null);
 		}
 
 		public override IEnumerable<Gizmo> CompGetGizmosExtra()
@@ -133,22 +192,10 @@ namespace RimValiCore.Ships
 			}
 			yield break;
 		}
-		public new bool AllFuelingPortSourcesInGroupHaveAnyFuel
-        {
-            get
-            {
-				return true;
-            }
-        }
-		public new bool AllInGroupConnectedToFuelingPort
-        {
-            get
-            {
-				return true;
-            }
-        }
+
 		public new List<CompTransporter> TransportersInGroup
 		{
+
 			get
 			{
 				return this.Transporter.TransportersInGroup(parent.Map);
@@ -156,7 +203,7 @@ namespace RimValiCore.Ships
 		}
 		public new void TryLaunch(int destinationTile, TransportPodsArrivalAction arrivalAction)
 		{
-			Log.Message("test launch");
+		;
 			if (!parent.Spawned)
 			{
 				Log.Error("Tried to launch " + parent + ", but it's unspawned.", false);
@@ -171,34 +218,30 @@ namespace RimValiCore.Ships
 			if (!this.LoadingInProgressOrReadyToLaunch || !AllInGroupConnectedToFuelingPort || !AllFuelingPortSourcesInGroupHaveAnyFuel){return;}
 			Map map = parent.Map;
 			int num = Find.WorldGrid.TraversalDistanceBetween(map.Tile, destinationTile, true, int.MaxValue);
-			Log.Message("test launch 2");
+
 			if (num > this.MaxLaunchDistance)
 			{
 				return;
 			}
-			Log.Message("test launch 3");
 			this.Transporter.TryRemoveLord(map);
 			int groupID = this.Transporter.groupID;
-			float amount = 100;
-			//float amount = Mathf.Max(ShipTransport.FuelNeededToLaunchAtDist((float)num), 1f);
+			float amount = Mathf.Max(FuelNeededToLaunchAtDist((float)num), 1f);
 			for (int i = 0; i < transportersInGroup.Count; i++)
 			{
-				Log.Message("in launch loop");
 				CompTransporter compTransporter = transportersInGroup[i];
 				ThingOwner directlyHeldThings = compTransporter.GetDirectlyHeldThings();
 				ActiveDropPod activeDropPod = (ActiveDropPod)ThingMaker.MakeThing(ThingDefOf.ActiveDropPod, null);
 				activeDropPod.Contents = new ActiveDropPodInfo();
 				activeDropPod.Contents.innerContainer.TryAddRangeOrTransfer(directlyHeldThings, true, true);
-				DropPodLeaving dropPodLeaving = (DropPodLeaving)SkyfallerMaker.MakeSkyfaller(this.Props.skyfallerLeaving ?? ThingDefOf.DropPodLeaving, activeDropPod);
+				FlyShipLeaving dropPodLeaving = (FlyShipLeaving)SkyfallerMaker.MakeSkyfaller(this.Props.skyfallerLeaving ?? ThingDefOf.DropPodLeaving, activeDropPod);
 				dropPodLeaving.groupID = groupID;
 				dropPodLeaving.destinationTile = destinationTile;
 				dropPodLeaving.arrivalAction = arrivalAction;
 				dropPodLeaving.worldObjectDef = WorldObjectDefOf.TravelingTransportPods;
 				compTransporter.CleanUpLoadingVars(map);
-				this.parent.Destroy(DestroyMode.Vanish);
+				parent.DeSpawn(DestroyMode.Vanish);
 				GenSpawn.Spawn(dropPodLeaving, compTransporter.parent.Position, map, WipeMode.Vanish);
 			}
-			Log.Message("we're here");
 			CameraJumper.TryHideWorld();
 		}
 
@@ -206,11 +249,13 @@ namespace RimValiCore.Ships
 		#region menu options
 		private IEnumerable<FloatMenuOption> GetTransportPodsFloatMenuOptionsAt(int tile)
 		{
+			Log.Message("getting options");
 			if (this.parent.TryGetComp<CompShuttle>() != null)
 			{
-				IEnumerable<FloatMenuOption> optionsForTile = ShipLaunchable.GetOptionsForTile(tile, this.TransportersInGroup.Cast<IThingHolder>(), new Action<int, TransportPodsArrivalAction>(this.TryLaunch));
+				IEnumerable<FloatMenuOption> optionsForTile = GetOptionsForTile(tile, this.TransportersInGroup.Cast<IThingHolder>(), new Action<int, TransportPodsArrivalAction>(this.TryLaunch));
 				foreach (FloatMenuOption floatMenuOption in optionsForTile)
 				{
+					Log.Message(floatMenuOption.Label);
 					yield return floatMenuOption;
 				}
 				
@@ -222,7 +267,7 @@ namespace RimValiCore.Ships
 				anything = true;
 				yield return new FloatMenuOption("FormCaravanHere".Translate(), delegate ()
 				{
-					this.TryLaunch(tile, new TransportPodsArrivalAction_FormCaravan());
+					this.TryLaunch(tile, new ShipArrivalAction_MakeCaravan(this.parent, "MessageShuttleArrived"));
 				}, MenuOptionPriority.Default, null, null, 0f, null, null);
 			}
 			List<WorldObject> worldObjects = Find.WorldObjects.AllWorldObjects;
@@ -235,6 +280,7 @@ namespace RimValiCore.Ships
 					{
 						anything = true;
 						yield return floatMenuOption2;
+						Log.Message("loop2: " +floatMenuOption2.Label);
 					}
 				
 				}
@@ -255,10 +301,10 @@ namespace RimValiCore.Ships
 
         private bool ChoseWorldTarget(GlobalTargetInfo target)
 		{
-			Log.Message("world targ test");
-			return ShipLaunchable.ChoseWorldTarget(target, this.parent.Map.Tile, this.TransportersInGroup.Cast<IThingHolder>(), this.MaxLaunchDistance, new Action<int, TransportPodsArrivalAction>(this.TryLaunch), this);
+
+			return ChoseWorldTarget(target, this.parent.Map.Tile, this.TransportersInGroup.Cast<IThingHolder>(), this.MaxLaunchDistance, new Action<int, TransportPodsArrivalAction>(this.TryLaunch), this);
 		}
-		public static bool ChoseWorldTarget(GlobalTargetInfo target, int tile, IEnumerable<IThingHolder> pods, int maxLaunchDistance, Action<int, TransportPodsArrivalAction> launchAction, ShipLaunchable launchable)
+		public bool ChoseWorldTarget(GlobalTargetInfo target, int tile, IEnumerable<IThingHolder> pods, int maxLaunchDistance, Action<int, TransportPodsArrivalAction> launchAction, ShipLaunchable launchable)
 		{
 			if (!target.IsValid)
 			{
@@ -270,7 +316,7 @@ namespace RimValiCore.Ships
 				//Messages.Message("TransportPodDestinationBeyondMaximumRange".Translate(), MessageTypeDefOf.RejectInput, false);
 				//return false;
 			}
-			IEnumerable<FloatMenuOption> source = (launchable != null) ? launchable.GetTransportPodsFloatMenuOptionsAt(target.Tile) : ShipLaunchable.GetOptionsForTile(target.Tile, pods, launchAction);
+			IEnumerable<FloatMenuOption> source = (launchable != null) ? launchable.GetTransportPodsFloatMenuOptionsAt(target.Tile) : GetOptionsForTile(target.Tile, pods, launchAction);
 			if (!source.Any<FloatMenuOption>())
 			{
 				if (Find.World.Impassable(target.Tile))
@@ -296,18 +342,39 @@ namespace RimValiCore.Ships
 				return false;
 			}
 		}
-        #endregion
-        private int MaxLaunchDistance
+		#endregion
+
+
+
+		public new bool AllFuelingPortSourcesInGroupHaveAnyFuel
 		{
 			get
 			{
-				return 10000;
+				return true;
+			}
+		}
+		public new bool AllInGroupConnectedToFuelingPort
+		{
+			get
+			{
+				return true;
+			}
+		}
+
+		private int MaxLaunchDistance
+		{
+			get
+			{
+				return Props.fixedLaunchDistanceMax;
 			}
 		}
 		public static new int MaxLaunchDistanceAtFuelLevel(float fuelLevel)
 		{
-			return 100;
+			int range = Mathf.FloorToInt(fuelLevel / 2.25f);
+			return range;
 		}
+
+
 		public new ShipLauncherProps Props
         {
             get
@@ -322,12 +389,25 @@ namespace RimValiCore.Ships
                 return !Props.mustBeConnectedToFuelingPort || (!this.Props.requireFuel || this.FuelingPortSource != null);
             }
         }
-        public new bool CanTryLaunch
+
+
+		public new Building FuelingPortSource
+		{
+			get
+			{
+				return this.parent.TryGetComp<CompRefuelable>()!= null ? this.parent as Building : FuelingPortUtility.FuelingPortGiverAtFuelingPortCell(this.parent.Position, this.parent.Map);
+			}
+		}
+
+
+
+		public new bool CanTryLaunch
         {
             get
             {
-                return true;
-            }
+				CompShuttle compShuttle = this.parent.TryGetComp<CompShuttle>();
+				return compShuttle == null || ((compShuttle.permitShuttle) && this.Transporter.innerContainer.Any<Thing>());
+			}
         }
 
 		private static readonly Texture2D DismissTex = ContentFinder<Texture2D>.Get("UI/Commands/DismissShuttle", true);

@@ -2,6 +2,7 @@
 using HarmonyLib;
 using RimWorld;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -73,195 +74,186 @@ namespace RimValiCore.RVR
             try
             {
                 harmony.PatchAll();
-                Log.Message("[RimVali Core] Patches completed. " + harmony.GetPatchedMethods().EnumerableCount().ToString() + " methods patched. [RimVali Core]", false);
+                Log.Message($"[RimVali Core] Patches completed. {harmony.GetPatchedMethods().EnumerableCount()} methods patched.");
             }
             catch (Exception ex)
             {
-                Log.Warning("[RimVali Core] A patch has failed! Patches completed: " + harmony.GetPatchedMethods().EnumerableCount().ToString(), false);
-                Log.Error(ex.ToString(), false);
+                Log.Warning($"[RimVali Core] A patch has failed! Patches completed: {harmony.GetPatchedMethods().EnumerableCount()}");
+                Log.Error(ex.ToString());
             }
-            Log.Message("[RimVali Core/RVR]: Setting up race restrictions.", false);
-            using (IEnumerator<RimValiRaceDef> enumerator = DefDatabase<RimValiRaceDef>.AllDefs.GetEnumerator())
+            Log.Message("[RimVali Core/RVR]: Setting up race restrictions.");
+            foreach (RimValiRaceDef raceDef in DefDatabase<RimValiRaceDef>.AllDefs)
             {
-                while (enumerator.MoveNext())
+                bool flag = raceDef.restrictions.buildables.Count > 0;
+                if (flag)
                 {
-                    RimValiRaceDef raceDef = enumerator.Current;
-                    bool flag = raceDef.restrictions.buildables.Count > 0;
-                    if (flag)
+                    foreach (ThingDef item in raceDef.restrictions.buildables)
                     {
-                        foreach (ThingDef item in raceDef.restrictions.buildables)
+                        bool flag2 = !Enumerable.ToList<ThingDef>(DefDatabase<ThingDef>.AllDefs).Contains(item);
+                        if (flag2)
                         {
-                            bool flag2 = !Enumerable.ToList<ThingDef>(DefDatabase<ThingDef>.AllDefs).Contains(item);
-                            if (flag2)
-                            {
-                                Log.Error("Could not find thing!", false);
-                                return;
-                            }
-                            Restrictions.AddRestriction<BuildableDef, string>(ref Restrictions.buildingRestrictions, item, raceDef.defName);
+                            return;
                         }
-                    }
-                    bool flag3 = raceDef.restrictions.consumables.Count > 0;
-                    if (flag3)
-                    {
-                        foreach (ThingDef item2 in raceDef.restrictions.consumables)
-                        {
-                            Restrictions.AddRestriction<ThingDef, ThingDef>(ref Restrictions.consumableRestrictions, item2, raceDef);
-                        }
-                    }
-                    bool flag4 = raceDef.restrictions.equippables.Count > 0;
-                    if (flag4)
-                    {
-                        foreach (ThingDef item3 in raceDef.restrictions.equippables)
-                        {
-                            Restrictions.AddRestriction<ThingDef, ThingDef>(ref Restrictions.equipmentRestrictions, item3, raceDef);
-                        }
-                    }
-                    bool flag5 = raceDef.restrictions.researchProjectDefs.Count > 0;
-                    if (flag5)
-                    {
-                        foreach (ResearchProjectDef item4 in raceDef.restrictions.researchProjectDefs)
-                        {
-                            Restrictions.AddRestriction<ResearchProjectDef, ThingDef>(ref Restrictions.researchRestrictions, item4, raceDef);
-                        }
-                    }
-                    bool flag6 = raceDef.restrictions.traits.Count > 0;
-                    if (flag6)
-                    {
-                        foreach (TraitDef item5 in raceDef.restrictions.traits)
-                        {
-                            Restrictions.AddRestriction<TraitDef, ThingDef>(ref Restrictions.traitRestrictions, item5, raceDef);
-                        }
-                    }
-                    bool flag7 = raceDef.restrictions.thoughtDefs.Count > 0;
-                    if (flag7)
-                    {
-                        foreach (ThoughtDef item6 in raceDef.restrictions.thoughtDefs)
-                        {
-                            Restrictions.AddRestriction<ThoughtDef, ThingDef>(ref Restrictions.thoughtRestrictions, item6, raceDef);
-                        }
-                    }
-                    bool flag8 = raceDef.restrictions.equippablesWhitelist.Count > 0;
-                    if (flag8)
-                    {
-                        foreach (ThingDef item7 in raceDef.restrictions.equippablesWhitelist)
-                        {
-                            Restrictions.AddRestriction<ThingDef, ThingDef>(ref Restrictions.equipabblbleWhiteLists, item7, raceDef);
-                        }
-                    }
-                    bool flag9 = raceDef.restrictions.bedDefs.Count > 0;
-                    if (flag9)
-                    {
-                        foreach (ThingDef item8 in raceDef.restrictions.bedDefs)
-                        {
-                            Restrictions.AddRestriction<ThingDef, ThingDef>(ref Restrictions.bedRestrictions, item8, raceDef);
-                        }
-                    }
-                    bool flag10 = raceDef.restrictions.bodyTypes.Count > 0;
-                    if (flag10)
-                    {
-                        foreach (BodyTypeDef item9 in raceDef.restrictions.bodyTypes)
-                        {
-                            Restrictions.AddRestriction<BodyTypeDef, ThingDef>(ref Restrictions.bodyTypeRestrictions, item9, raceDef);
-                        }
-                    }
-                    bool flag11 = raceDef.restrictions.modContentRestrictionsApparelWhiteList.Count > 0;
-                    if (raceDef.restrictions.modContentRestrictionsApparelWhiteList.Count > 0)
-                    {
-
-                        foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modContentRestrictionsApparelWhiteList.Contains(x.Name) || raceDef.restrictions.modContentRestrictionsApparelWhiteList.Contains(x.PackageId)))
-                        {
-                            foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef && (thingDef.IsApparel || thingDef.IsWeapon || thingDef.IsMeleeWeapon || thingDef.IsRangedWeapon)))
-                            {
-
-                                AddRestriction(ref equipabblbleWhiteLists, def, raceDef);
-                            }
-                        }
-                    }
-
-                    if (raceDef.restrictions.modContentRestrictionsApparelList.Count > 0)
-                    {
-                        foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modContentRestrictionsApparelList.Contains(x.Name) || raceDef.restrictions.modContentRestrictionsApparelList.Contains(x.PackageId)))
-                        {
-
-                            foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef && (thingDef.IsApparel || thingDef.IsWeapon || thingDef.IsMeleeWeapon || thingDef.IsRangedWeapon)))
-                            {
-                                AddRestriction(ref equipmentRestrictions, def, raceDef);
-                            }
-                        }
-                    }
-
-
-                    if (raceDef.restrictions.modResearchRestrictionsList.Count > 0)
-                    {
-
-                        foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modResearchRestrictionsList.Contains(x.Name) || raceDef.restrictions.modResearchRestrictionsList.Contains(x.PackageId)))
-                        {
-                            foreach (ResearchProjectDef research in mod.AllDefs.Where(x => x is ResearchProjectDef))
-                            {
-                                AddRestriction(ref researchRestrictions, research, raceDef);
-                            }
-                        }
-                    }
-
-
-                    if (raceDef.restrictions.modTraitRestrictions.Count > 0)
-                    {
-
-                        foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modTraitRestrictions.Contains(x.Name) || raceDef.restrictions.modTraitRestrictions.Contains(x.PackageId)))
-                        {
-                            foreach (TraitDef trait in mod.AllDefs.Where(x => x is TraitDef))
-                            {
-                                AddRestriction(ref traitRestrictions, trait, raceDef);
-                            }
-                        }
-                    }
-
-
-                    if (raceDef.restrictions.modBuildingRestrictions.Count > 0)
-                    {
-
-                        foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modBuildingRestrictions.Contains(x.Name) || raceDef.restrictions.modBuildingRestrictions.Contains(x.PackageId)))
-                        {
-                            foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef))
-                            {
-                                AddRestriction(ref buildingRestrictions, def, raceDef.defName);
-                            }
-                        }
-                    }
-                    foreach (BodyTypeDef race in raceDef.bodyTypes)
-                    {
-                        Restrictions.AddRestriction<ThingDef, BodyTypeDef>(ref Restrictions.bodyDefs, raceDef, race);
-                    }
-                    bool useHumanRecipes = raceDef.useHumanRecipes;
-                    if (useHumanRecipes)
-                    {
-                        foreach (RecipeDef recipeDef in Enumerable.Where<RecipeDef>(DefDatabase<RecipeDef>.AllDefsListForReading, (RecipeDef x) => x.recipeUsers != null && x.recipeUsers.Contains(ThingDefOf.Human)))
-                        {
-                            recipeDef.recipeUsers.Add(raceDef);
-                            recipeDef.recipeUsers.RemoveDuplicates<ThingDef>();
-                        }
-                        bool flag16 = raceDef.recipes == null;
-                        if (flag16)
-                        {
-                            raceDef.recipes = new List<RecipeDef>();
-                        }
-                        List<BodyPartDef> list = new List<BodyPartDef>();
-                        foreach (BodyPartRecord bodyPartRecord in raceDef.race.body.AllParts)
-                        {
-                            list.Add(bodyPartRecord.def);
-                        }
-                        foreach (RecipeDef recipeDef2 in Enumerable.Where<RecipeDef>(ThingDefOf.Human.recipes, (RecipeDef recipe) => recipe.targetsBodyPart || !recipe.appliedOnFixedBodyParts.NullOrEmpty<BodyPartDef>()))
-                        {
-                            foreach (BodyPartDef bodyPartDef in Enumerable.Intersect<BodyPartDef>(recipeDef2.appliedOnFixedBodyParts, list))
-                            {
-                                raceDef.recipes.Add(recipeDef2);
-                            }
-                        }
-                        raceDef.recipes.RemoveDuplicates<RecipeDef>();
+                        Restrictions.AddRestriction<BuildableDef, string>(ref Restrictions.buildingRestrictions, item, raceDef.defName);
                     }
                 }
+                bool flag3 = raceDef.restrictions.consumables.Count > 0;
+                if (flag3)
+                {
+                    foreach (ThingDef item2 in raceDef.restrictions.consumables)
+                    {
+                        Restrictions.AddRestriction<ThingDef, ThingDef>(ref Restrictions.consumableRestrictions, item2, raceDef);
+                    }
+                }
+                bool flag4 = raceDef.restrictions.equippables.Count > 0;
+                if (flag4)
+                {
+                    foreach (ThingDef item3 in raceDef.restrictions.equippables)
+                    {
+                        Restrictions.AddRestriction<ThingDef, ThingDef>(ref Restrictions.equipmentRestrictions, item3, raceDef);
+                    }
+                }
+                bool flag5 = raceDef.restrictions.researchProjectDefs.Count > 0;
+                if (flag5)
+                {
+                    foreach (ResearchProjectDef item4 in raceDef.restrictions.researchProjectDefs)
+                    {
+                        Restrictions.AddRestriction<ResearchProjectDef, ThingDef>(ref Restrictions.researchRestrictions, item4, raceDef);
+                    }
+                }
+                bool flag6 = raceDef.restrictions.traits.Count > 0;
+                if (flag6)
+                {
+                    foreach (TraitDef item5 in raceDef.restrictions.traits)
+                    {
+                        Restrictions.AddRestriction<TraitDef, ThingDef>(ref Restrictions.traitRestrictions, item5, raceDef);
+                    }
+                }
+                bool flag7 = raceDef.restrictions.thoughtDefs.Count > 0;
+                if (flag7)
+                {
+                    foreach (ThoughtDef item6 in raceDef.restrictions.thoughtDefs)
+                    {
+                        Restrictions.AddRestriction<ThoughtDef, ThingDef>(ref Restrictions.thoughtRestrictions, item6, raceDef);
+                    }
+                }
+                bool flag8 = raceDef.restrictions.equippablesWhitelist.Count > 0;
+                if (flag8)
+                {
+                    foreach (ThingDef item7 in raceDef.restrictions.equippablesWhitelist)
+                    {
+                        Restrictions.AddRestriction<ThingDef, ThingDef>(ref Restrictions.equipabblbleWhiteLists, item7, raceDef);
+                    }
+                }
+                bool flag9 = raceDef.restrictions.bedDefs.Count > 0;
+                if (flag9)
+                {
+                    foreach (ThingDef item8 in raceDef.restrictions.bedDefs)
+                    {
+                        Restrictions.AddRestriction<ThingDef, ThingDef>(ref Restrictions.bedRestrictions, item8, raceDef);
+                    }
+                }
+                bool flag10 = raceDef.restrictions.bodyTypes.Count > 0;
+                if (flag10)
+                {
+                    foreach (BodyTypeDef item9 in raceDef.restrictions.bodyTypes)
+                    {
+                        Restrictions.AddRestriction<BodyTypeDef, ThingDef>(ref Restrictions.bodyTypeRestrictions, item9, raceDef);
+                    }
+                }
+                if (raceDef.restrictions.modContentRestrictionsApparelWhiteList.Count > 0)
+                {
+                    foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modContentRestrictionsApparelWhiteList.Contains(x.Name) || raceDef.restrictions.modContentRestrictionsApparelWhiteList.Contains(x.PackageId)))
+                    {
+
+                        foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef && (thingDef.IsApparel)))
+                        {
+
+                            AddRestriction(ref equipabblbleWhiteLists, def, raceDef);
+                        }
+                    }
+                }
+
+
+                foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modContentRestrictionsApparelList.Contains(x.Name) || raceDef.restrictions.modContentRestrictionsApparelList.Contains(x.PackageId.ToLower())))
+                {
+                    foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef && (thingDef.IsApparel)))
+                    {
+                        AddRestriction(ref equipmentRestrictions, def, raceDef);
+                    }
+                }
+
+
+                if (raceDef.restrictions.modResearchRestrictionsList.Count > 0)
+                {
+
+                    foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modResearchRestrictionsList.Contains(x.Name) || raceDef.restrictions.modResearchRestrictionsList.Contains(x.PackageId)))
+                    {
+                        foreach (ResearchProjectDef research in mod.AllDefs.Where(x => x is ResearchProjectDef))
+                        {
+                            AddRestriction(ref researchRestrictions, research, raceDef);
+                        }
+                    }
+                }
+
+
+                if (raceDef.restrictions.modTraitRestrictions.Count > 0)
+                {
+
+                    foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modTraitRestrictions.Contains(x.Name) || raceDef.restrictions.modTraitRestrictions.Contains(x.PackageId)))
+                    {
+                        foreach (TraitDef trait in mod.AllDefs.Where(x => x is TraitDef))
+                        {
+                            AddRestriction(ref traitRestrictions, trait, raceDef);
+                        }
+                    }
+                }
+
+
+                if (raceDef.restrictions.modBuildingRestrictions.Count > 0)
+                {
+
+                    foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modBuildingRestrictions.Contains(x.Name) || raceDef.restrictions.modBuildingRestrictions.Contains(x.PackageId)))
+                    {
+                        foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef))
+                        {
+                            AddRestriction(ref buildingRestrictions, def, raceDef.defName);
+                        }
+                    }
+                }
+                foreach (BodyTypeDef race in raceDef.bodyTypes)
+                {
+                    Restrictions.AddRestriction<ThingDef, BodyTypeDef>(ref Restrictions.bodyDefs, raceDef, race);
+                }
+                bool useHumanRecipes = raceDef.useHumanRecipes;
+                if (useHumanRecipes)
+                {
+                    foreach (RecipeDef recipeDef in Enumerable.Where<RecipeDef>(DefDatabase<RecipeDef>.AllDefsListForReading, (RecipeDef x) => x.recipeUsers != null && x.recipeUsers.Contains(ThingDefOf.Human)))
+                    {
+                        recipeDef.recipeUsers.Add(raceDef);
+                        recipeDef.recipeUsers.RemoveDuplicates();
+                    }
+                    bool flag16 = raceDef.recipes == null;
+                    if (flag16)
+                    {
+                        raceDef.recipes = new List<RecipeDef>();
+                    }
+                    List<BodyPartDef> list = new List<BodyPartDef>();
+                    foreach (BodyPartRecord bodyPartRecord in raceDef.race.body.AllParts)
+                    {
+                        list.Add(bodyPartRecord.def);
+                    }
+                    foreach (RecipeDef recipeDef2 in Enumerable.Where<RecipeDef>(ThingDefOf.Human.recipes, (RecipeDef recipe) => recipe.targetsBodyPart || !recipe.appliedOnFixedBodyParts.NullOrEmpty<BodyPartDef>()))
+                    {
+                        foreach (BodyPartDef bodyPartDef in Enumerable.Intersect<BodyPartDef>(recipeDef2.appliedOnFixedBodyParts, list))
+                        {
+                            raceDef.recipes.Add(recipeDef2);
+                        }
+                    }
+                    raceDef.recipes.RemoveDuplicates();
+                }
             }
-            Log.Message("[RimVali Core/RVR]: Setting up faction restrictions.", false);
+            Log.Message("[RimVali Core/RVR]: Setting up faction restrictions.");
             foreach (FactionResearchRestrictionDef factionResearchRestrictionDef in DefDatabase<FactionResearchRestrictionDef>.AllDefsListForReading)
             {
                 foreach (FactionResearchRestriction factionResearchRestriction in factionResearchRestrictionDef.factionResearchRestrictions)
@@ -280,13 +272,16 @@ namespace RimValiCore.RVR
                     bool flag18 = !Restrictions.factionResearchBlacklist.ContainsKey(factionResearchRestriction2.factionDef);
                     if (flag18)
                     {
+
                         Restrictions.factionResearchBlacklist.Add(factionResearchRestriction2.factionDef, new List<FacRes>());
                     }
+
                     Restrictions.factionResearchBlacklist[factionResearchRestriction2.factionDef].Add(item16);
                 }
             }
+            Log.Message($"Loaded {DefDatabase<RimValiRaceDef>.AllDefs.Count()} races");
         }
-
+        
         // Token: 0x04000116 RID: 278
         public static Dictionary<ThingDef, List<ThingDef>> equipmentRestrictions = new Dictionary<ThingDef, List<ThingDef>>();
 
@@ -335,7 +330,7 @@ namespace RimValiCore.RVR
     #endregion
 
     #region Apparel score gain patch
-    [HarmonyPatch(typeof(JobGiver_OptimizeApparel), "ApparelScoreGain_NewTmp")]
+    [HarmonyPatch(typeof(JobGiver_OptimizeApparel), "ApparelScoreGain")]
     public static class ApparelScorePatch
     {
         [HarmonyPostfix]
@@ -627,7 +622,7 @@ namespace RimValiCore.RVR
     #endregion
     #region Body gen patch
     //Generation patch for bodytypes
-    [HarmonyPatch(typeof(PawnGenerator), "GenerateBodyType_NewTemp")]
+    [HarmonyPatch(typeof(PawnGenerator), "GenerateBodyType")]
     public static class BodyPatch
     {
         public static IEnumerable<BodyTypeDef> bTypes(Pawn p)
@@ -646,7 +641,7 @@ namespace RimValiCore.RVR
             if (story.bodyDefOverride != null) { pawn.RaceProps.body = story.bodyDefOverride; }
             if (story.bodyType != null) { pawn.story.bodyType = story.bodyType; }
             else { pawn.story.bodyType = rimValiRace.bodyTypes.RandomElement(); }
-
+            Log.Message($"Pawn bodytype: {pawn.story.bodyType}");
 
         }
         [HarmonyPostfix]
@@ -686,6 +681,7 @@ namespace RimValiCore.RVR
                 if (pawn.def.GetType().Name != "ThingDef_AlienRace")
                 {
                     if (pawn.story.bodyType == null || !bTypes(pawn).Contains(pawn.story.bodyType)) { pawn.story.bodyType = bTypes(pawn).RandomElement(); };
+                    Log.Message(pawn.story.bodyType.defName);
                 }
             }
         }
@@ -940,7 +936,7 @@ namespace RimValiCore.RVR
                     if (other.def == relation.otherFaction)
                     {
                         FactionRelation rel = other.RelationWith(__instance);
-                        rel.goodwill = relation.relation;
+                        rel.baseGoodwill = relation.relation;
                     }
                 }
             }
@@ -987,11 +983,11 @@ namespace RimValiCore.RVR
     }
     #endregion
     #region Cannibalism patch
-    [HarmonyPatch(typeof(FoodUtility), "ThoughtsFromIngesting")]
+  /*  [HarmonyPatch(typeof(FoodUtility), "ThoughtsFromIngesting")]
     public static class IngestingPatch
     {
 
-        [HarmonyPostfix]
+      //  [HarmonyPostfix]
         public static void Patch(Pawn ingester, Thing foodSource, ThingDef foodDef, ref List<ThoughtDef> __result)
         {
 
@@ -1041,11 +1037,11 @@ namespace RimValiCore.RVR
             }
         }
     }
-
+  */
     #endregion
 
     #region Thought patches
-    [HarmonyPatch(typeof(ThoughtUtility), "CanGetThought_NewTemp")]
+    [HarmonyPatch(typeof(ThoughtUtility), "CanGetThought")]
     public static class thoughtPatch
     {
         [HarmonyPostfix]
@@ -1195,18 +1191,18 @@ namespace RimValiCore.RVR
     #endregion
     #region Apparel Equipping
     //Cant patch CanEquip, apparently. This still works though.
-    [HarmonyPatch(typeof(EquipmentUtility), "CanEquip_NewTmp")]
+   [HarmonyPatch(typeof(EquipmentUtility), "CanEquip", new[] { typeof(Thing),typeof(Pawn)})]
     public static class ApparelPatch
     {
 
-
-        public static bool CanWearHeavyRestricted(ThingDef def, Pawn pawn) => pawn.def is RimValiRaceDef rDef ? Restrictions.checkRestrictions(Restrictions.equipmentRestrictions, def, pawn.def, !rDef.restrictions.canOnlyUseApprovedApparel) || Restrictions.checkRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, false) : Restrictions.checkRestrictions(Restrictions.equipmentRestrictions, def, pawn.def, true) || Restrictions.checkRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, false); //Restrictions.checkRestrictions(Restrictions.equipmentRestrictions, def, pawn.def, pawn.def is RimValiRaceDef rDef ? !rDef.restrictions.canOnlyUseApprovedApparel : true) || Restrictions.checkRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, pawn.def is RimValiRaceDef rDef2 ? !rDef2.restrictions.canOnlyUseApprovedApparel : false);
-        [HarmonyPostfix]
-        public static void equipable(ref bool __result, Thing thing, Pawn pawn, ref string cantReason)
+        public static bool CanWearHeavyRestricted(ThingDef def, Pawn pawn) => pawn.def is RimValiRaceDef rDef ? Restrictions.checkRestrictions(Restrictions.equipmentRestrictions, def, pawn.def, !rDef.restrictions.canOnlyUseApprovedApparel)|| Restrictions.checkRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, false): Restrictions.checkRestrictions(Restrictions.equipmentRestrictions, def, pawn.def, true) || Restrictions.checkRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, false); //Restrictions.checkRestrictions(Restrictions.equipmentRestrictions, def, pawn.def, pawn.def is RimValiRaceDef rDef ? !rDef.restrictions.canOnlyUseApprovedApparel : true) || Restrictions.checkRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, pawn.def is RimValiRaceDef rDef2 ? !rDef2.restrictions.canOnlyUseApprovedApparel : false);
+       [HarmonyPostfix]
+        public static void equipable(ref bool __result, Thing thing, Pawn pawn, ref string cantReason, bool checkBonded = true)
         {
-            if (thing.def.IsApparel)
+            __result = __result && CanWearHeavyRestricted(thing.def, pawn);
+            if (thing.def.IsApparel&&__result==false)
             {
-                __result = __result && CanWearHeavyRestricted(thing.def, pawn);
+             
                 cantReason = "CannotWearRVR".Translate(pawn.def.label.Named("RACE"));
             }
            
@@ -1219,7 +1215,7 @@ namespace RimValiCore.RVR
     public static class ConstructPatch
     {
         [HarmonyPostfix]
-        public static void constructable(Thing t, Pawn p, ref bool __result)
+        public static void constructable(Thing t, Pawn p, bool checkSkills,bool forced,ref bool __result)
         {
             //Log.Message(t.def.ToString());
             if (!Restrictions.checkRestrictions<BuildableDef, string>(Restrictions.buildingRestrictions, t.def.entityDefToBuild, p.def.defName))
@@ -1239,89 +1235,99 @@ namespace RimValiCore.RVR
         [HarmonyPrefix]
         public static bool ResolveGraphics(PawnGraphicSet __instance)
         {
+            
             Pawn pawn = __instance.pawn;
             if (pawn.def is RimValiRaceDef rimvaliRaceDef)
             {
-                raceColors graphics = rimvaliRaceDef.graphics;
-                colorComp colorComp = pawn.TryGetComp<colorComp>();
+                try
+                {
+                    
+                    raceColors graphics = rimvaliRaceDef.graphics;
+                    colorComp colorComp = pawn.TryGetComp<colorComp>();
 
-                if (colorComp.colors == null || colorComp.colors.Count() == 0)
-                {
-                    rimvaliRaceDef.GenGraphics(pawn);
-                }
-                if (!ColorInfo.sets.ContainsKey(pawn.GetHashCode().ToString()))
-                {
-                    ColorInfo.sets.Add(pawn.GetHashCode().ToString(), __instance);
-                }
-                List<Colors> colors = graphics.colorSets;
-                if (graphics.skinColorSet != null)
-                {
-                    TriColor_ColorGenerators generators = colors.First<Colors>(x => x.name == graphics.skinColorSet).colorGenerator;
-                    Color color1 = generators.firstColor.NewRandomizedColor();
-                    Color color2 = generators.secondColor.NewRandomizedColor();
-                    Color color3 = generators.thirdColor.NewRandomizedColor();
-                    AvaliGraphic nakedGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.bodyTex, ContentFinder<Texture2D>.Get(graphics.bodyTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
-                                                                 AvaliShaderDatabase.Tricolor, graphics.bodySize, color1, color2, color3);
-                    __instance.nakedGraphic = nakedGraphic;
-
-                    //Find the pawns head graphic and set it..
-                    AvaliGraphic headGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
-                                                                 AvaliShaderDatabase.Tricolor, graphics.headSize, color1, color2, color3);
-                    __instance.headGraphic = headGraphic;
-                    __instance.desiccatedHeadGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
-                                                                 AvaliShaderDatabase.Tricolor, graphics.headSize, color1, color2, color3);
-                    __instance.dessicatedGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
-                                                                 AvaliShaderDatabase.Tricolor, graphics.headSize, color1, color2, color3);
-                    __instance.rottingGraphic = __instance.desiccatedHeadGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
-                                                                 AvaliShaderDatabase.Tricolor, graphics.headSize, PawnGraphicSet.RottingColor, PawnGraphicSet.RottingColor, PawnGraphicSet.RottingColor);
-                    //First, let's get the pawns hair texture.
-                    AvaliGraphic hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(__instance.pawn.story.hairDef.texPath, ContentFinder<Texture2D>.Get(__instance.pawn.story.hairDef.texPath + "_south") == null ? AvaliShaderDatabase.Tricolor :
-                                                                 AvaliShaderDatabase.Tricolor, graphics.headSize, pawn.story.SkinColor);
-                    //Should the race have hair?
-                    if (!rimvaliRaceDef.hasHair)
+                    if (colorComp.colors == null || colorComp.colors.Count() == 0)
                     {
-                        //This leads to a blank texture. So the pawn doesnt have hair, visually. I might (and probably should) change this later.
-                        hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
-
+                        rimvaliRaceDef.GenGraphics(pawn);
                     }
-                    __instance.hairGraphic = hairGraphic;
-
-                    __instance.headStumpGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
-                    __instance.desiccatedHeadStumpGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
-                    __instance.skullGraphic = headGraphic;
-
-
-                    //__instance.MatsBodyBaseAt(pawn.Rotation,bodyCondition=__instance.)
-                }
-                else
-                {
-
-                    //This is the "body" texture of the pawn.
-
-                    AvaliGraphic nakedGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.bodyTex, ContentFinder<Texture2D>.Get(graphics.bodyTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
-                                                                 AvaliShaderDatabase.Tricolor, graphics.bodySize, pawn.story.SkinColor, Color.green, Color.red);
-                    __instance.nakedGraphic = nakedGraphic;
-
-                    //Find the pawns head graphic and set it..
-                    AvaliGraphic headGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
-                                                                 AvaliShaderDatabase.Tricolor, graphics.headSize, pawn.story.SkinColor, Color.green, Color.red);
-                    __instance.headGraphic = headGraphic;
-
-                    //First, let's get the pawns hair texture.
-                    AvaliGraphic hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(__instance.pawn.story.hairDef.texPath, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
-                                                                 AvaliShaderDatabase.Tricolor, graphics.headSize, pawn.story.SkinColor);
-
-                    //Should the race have hair?
-                    if (!rimvaliRaceDef.hasHair)
+                    if (!ColorInfo.sets.ContainsKey(pawn.GetHashCode().ToString()))
                     {
-                        //This leads to a blank texture. So the pawn doesnt have hair, visually. I might (and probably should) change this later.
-                        hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
-
+                        ColorInfo.sets.Add(pawn.GetHashCode().ToString(), __instance);
                     }
-                    __instance.hairGraphic = hairGraphic;
+                    List<Colors> colors = graphics.colorSets;
+                    if (graphics.skinColorSet != null)
+                    {
+                        TriColor_ColorGenerators generators = colors.First(x => x.name == graphics.skinColorSet).colorGenerator;
+                        Color color1 = generators.firstColor.NewRandomizedColor();
+                        Color color2 = generators.secondColor.NewRandomizedColor();
+                        Color color3 = generators.thirdColor.NewRandomizedColor();
+                        AvaliGraphic nakedGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.bodyTex, ContentFinder<Texture2D>.Get(graphics.bodyTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
+                                                                     AvaliShaderDatabase.Tricolor, graphics.bodySize, color1, color2, color3);
+                        __instance.nakedGraphic = nakedGraphic;
+
+                        //Find the pawns head graphic and set it..
+                        AvaliGraphic headGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
+                                                                     AvaliShaderDatabase.Tricolor, graphics.headSize, color1, color2, color3);
+                        __instance.headGraphic = headGraphic;
+                        __instance.desiccatedHeadGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
+                                                                 AvaliShaderDatabase.Tricolor, graphics.headSize, color1, color2, color3);
+                        __instance.dessicatedGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
+                                                                     AvaliShaderDatabase.Tricolor, graphics.headSize, color1, color2, color3);
+                        __instance.rottingGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
+                                                                     AvaliShaderDatabase.Tricolor, graphics.headSize, PawnGraphicSet.RottingColorDefault, PawnGraphicSet.RottingColorDefault, PawnGraphicSet.RottingColorDefault);
+                        //First, let's get the pawns hair texture.
+                        AvaliGraphic hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(__instance.pawn.story.hairDef.texPath, ContentFinder<Texture2D>.Get(__instance.pawn.story.hairDef.texPath + "_south") == null ? AvaliShaderDatabase.Tricolor :
+                                                                    AvaliShaderDatabase.Tricolor, graphics.headSize, pawn.story.SkinColor);
+                        //Should the race have hair?
+                        if (!rimvaliRaceDef.hasHair)
+                        {
+                           //This leads to a blank texture. So the pawn doesnt have hair, visually. I might (and probably should) change this later.
+                            hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
+
+                        }
+                        __instance.hairGraphic = hairGraphic;
+
+                        __instance.headStumpGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
+                        __instance.desiccatedHeadStumpGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
+                        __instance.skullGraphic = headGraphic;
+
+
+                        __instance.MatsBodyBaseAt(pawn.Rotation);
+                    }
+                    else
+                    {
+
+                        //This is the "body" texture of the pawn.
+
+                        AvaliGraphic nakedGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.bodyTex, ContentFinder<Texture2D>.Get(graphics.bodyTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
+                                                                     AvaliShaderDatabase.Tricolor, graphics.bodySize, pawn.story.SkinColor, Color.green, Color.red);
+                        __instance.nakedGraphic = nakedGraphic;
+
+                        //Find the pawns head graphic and set it..
+                        AvaliGraphic headGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
+                                                                     AvaliShaderDatabase.Tricolor, graphics.headSize, pawn.story.SkinColor, Color.green, Color.red);
+                        __instance.headGraphic = headGraphic;
+
+                        //First, let's get the pawns hair texture.
+                        AvaliGraphic hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(__instance.pawn.story.hairDef.texPath, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
+                                                                     AvaliShaderDatabase.Tricolor, graphics.headSize, pawn.story.SkinColor);
+
+                        //Should the race have hair?
+                        if (!rimvaliRaceDef.hasHair)
+                        {
+                            //This leads to a blank texture. So the pawn doesnt have hair, visually. I might (and probably should) change this later.
+                            hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
+
+                        }
+                        __instance.hairGraphic = hairGraphic;
+                    } 
                 }
-                __instance.ResolveApparelGraphics();
-                //PortraitsCache.SetDirty(pawn);
+                catch (Exception e)
+                {
+                    Log.Error(e.Message);
+                }
+
+                __instance?.ResolveApparelGraphics();
+                PortraitsCache.SetDirty(pawn);
                 return false;
             }
             return true;
@@ -1330,10 +1336,10 @@ namespace RimValiCore.RVR
     #endregion
     #region Portraits patch
     //Render renderables the correct way in the portrait. 
-    [HarmonyPatch(typeof(PawnRenderer), "RenderPortrait")]
+    //[HarmonyPatch(typeof(PortraitRenderer), "RenderPortrait")]
     static class RenderPatch
     {
-        [HarmonyPostfix]
+       // [HarmonyPostfix]
         static void Portrait(PawnRenderer __instance)
         {
             Vector3 zero = Vector3.zero;
@@ -1377,29 +1383,15 @@ namespace RimValiCore.RVR
         }
     }
     #endregion
-    #region Hair patch
-    [HarmonyPatch(typeof(PawnHairChooser), "RandomHairDefFor")]
-    public static class HairPatch
-    {
-        [HarmonyPostfix]
-        public static void Patch(Pawn pawn, FactionDef factionType, HairDef __result)
-        {
-            if (pawn.def is RimValiRaceDef def)
-            {
-                if (!def.hasHair)
-                {
-                    __result = DefDatabase<HairDef>.AllDefs.ToList().Find(x => x.defName.ToLower() == "rvrnohair");
-                }
-            }
-        }
-    }
-    #endregion
+
     public static class ColorInfo
     {
         public static Dictionary<string, PawnGraphicSet> sets = new Dictionary<string, PawnGraphicSet>();
     }
+
+
     #region Rendering patch
-    [HarmonyPatch(typeof(PawnRenderer), "RenderPawnInternal", new[] { typeof(Vector3), typeof(float), typeof(bool), typeof(Rot4), typeof(Rot4), typeof(RotDrawMode), typeof(bool), typeof(bool), typeof(bool) })]
+    [HarmonyPatch(typeof(PawnRenderer), "RenderPawnInternal", new[] { typeof( Vector3) , typeof(float), typeof(bool), typeof(Rot4), typeof(RotDrawMode), typeof(PawnRenderFlags)  })]
     static class RenderPatchTwo
     {
         
@@ -1411,27 +1403,7 @@ namespace RimValiCore.RVR
         public static Dictionary<Pawn, RSet> renders = new Dictionary<Pawn, RSet>();
         public static Dictionary<Pawn, List<RenderableDef>> pawnRenderables = new Dictionary<Pawn, List<RenderableDef>>();
 
-        public static void AttachRenderableDefToPawn(Pawn pawn, RenderableDef def)
-        {
-            if (!pawnRenderables.ContainsKey(pawn))
-            {
-                pawnRenderables.Add(pawn, new List<RenderableDef>());
-            }
-            pawnRenderables[pawn].Add(def);
-        }
 
-        public static void RemoveRenderableDefToPawn(Pawn pawn, RenderableDef def)
-        {
-            if (!pawnRenderables.ContainsKey(pawn))
-            {
-                pawnRenderables.Add(pawn, new List<RenderableDef>());
-                return;
-            }
-            if (pawnRenderables[pawn].Contains(def))
-            {
-                pawnRenderables[pawn].Remove(def);
-            }
-        }
         #region portrait version
 
         public static void RenderBodyPartsPortrait(float angle, Vector3 vector, PawnRenderer pawnRenderer, Rot4 rotation, RotDrawMode mode)
@@ -1791,114 +1763,7 @@ namespace RimValiCore.RVR
             }
             else
             {
-                List<RenderableDef> renderables = ((pawnRenderables.ContainsKey(pawn) ? pawnRenderables[pawn] : new List<RenderableDef>()));
-                foreach (RenderableDef renderable in renderables)
-                {
-
-
-                    colorComp colorComp = pawn.TryGetComp<colorComp>();
-                    Vector3 offset = new Vector3();
-                    Vector2 size = new Vector2();
-                    #region Direction / size / layering stuff
-                    if (renderable.west == null)
-                    {
-                        renderable.west = new BodyPartGraphicPos();
-                        renderable.west.position.x = -renderable.east.position.x;
-                        renderable.west.position.y = -renderable.east.position.y;
-                        renderable.west.size = renderable.east.size;
-                        renderable.west.layer = renderable.east.layer;
-                    }
-                    if (rotation == Rot4.East)
-                    {
-                        offset = new Vector3(renderable.east.position.x, renderable.east.layer, renderable.east.position.y);
-                        size = renderable.east.size;
-                    }
-                    else if (rotation == Rot4.North)
-                    {
-                        offset = new Vector3(renderable.north.position.x, renderable.north.layer, renderable.north.position.y);
-                        size = renderable.north.size;
-                    }
-                    else if (rotation == Rot4.South)
-                    {
-                        offset = new Vector3(renderable.south.position.x, renderable.south.layer, renderable.south.position.y);
-                        size = renderable.south.size;
-                    }
-                    else if (rotation == Rot4.West)
-                    {
-                        offset = new Vector3(renderable.west.position.x, renderable.west.layer, renderable.west.position.y);
-                        size = renderable.west.size;
-                    }
-                    #endregion
-                    string path = renderable.texPath(pawn);
-                    AvaliGraphic graphic = Renders.getTex(renderable, path);
-                    if (renderable.useColorSet != null)
-                    {
-
-                        Color color1 = pawn.Graphic.color;
-                        Color color2 = pawn.Graphic.colorTwo;
-                        Color color3 = pawn.story.SkinColor;
-
-                        string colorSetToUse = renderable.useColorSet;
-                        if (colorComp.colors.ContainsKey(colorSetToUse))
-                        {
-                            color1 = colorComp.colors[colorSetToUse].colorOne;
-                            color2 = colorComp.colors[colorSetToUse].colorTwo;
-                            color3 = colorComp.colors[colorSetToUse].colorThree;
-                        }
-                        else
-                        {
-                            Log.ErrorOnce("Pawn graphics does not contain color set: " + renderable.useColorSet + " for " + renderable.defName + ", going to fallback RGB colors. (These should look similar to your mask colors)", 1);
-                        }
-                        #region Rotting/Dessicated Graphic changes
-                        if (pawn.Dead)
-                        {
-
-
-
-                            if (mode == RotDrawMode.Dessicated)
-                            {
-                                if (pawnRenderer.graphics.dessicatedGraphic.Color != null)
-                                {
-                                    //                This will be changed eventually
-                                    color1 = color1 * (pawnRenderer.graphics.rottingGraphic.Color);
-                                    color2 = color2 * (pawnRenderer.graphics.rottingGraphic.Color);
-                                    color3 = color3 * (pawnRenderer.graphics.rottingGraphic.Color);
-                                }
-                                if (renderable.dessicatedTex != null)
-                                {
-                                    path = renderable.dessicatedTex;
-                                }
-                            }
-                            else if (mode == RotDrawMode.Rotting)
-                            {
-                                if (pawnRenderer.graphics.rottingGraphic.color != null)
-                                {
-                                    color1 = color1 * new Color(0.34f, 0.32f, 0.3f);
-                                    color2 = color2 * new Color(0.34f, 0.32f, 0.3f);
-                                    color3 = color3 * new Color(0.34f, 0.32f, 0.3f);
-                                }
-                                if (renderable.rottingTex != null)
-                                {
-                                    path = renderable.rottingTex;
-                                }
-                            }
-                        }
-                        #endregion
-
-
-                        graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(renderable.texPath(pawn), AvaliShaderDatabase.Tricolor, size, color1, color2, color3);
-
-                        GenDraw.DrawMeshNowOrLater(graphic.MeshAt(rotation), vector + offset.RotatedBy(Mathf.Acos(Quaternion.Dot(Quaternion.identity, quaternion)) * 114.59156f), quaternion, graphic.MatAt(rotation), true);
-                    }
-                    else
-                    {
-
-                        graphic.drawSize = size;
-                        graphic.color = pawn.story.SkinColor;
-                        GenDraw.DrawMeshNowOrLater(graphic.MeshAt(rotation), vector + offset.RotatedBy(Mathf.Acos(Quaternion.Dot(Quaternion.identity, quaternion)) * 114.59156f), quaternion, graphic.MatAt(rotation), true);
-
-                    }
-                }
+                return;
             }
         }
 
@@ -1907,166 +1772,157 @@ namespace RimValiCore.RVR
             return __instance.BaseHeadOffsetAt(Rot4.South);
         }
         [HarmonyPostfix]
-        static void RenderPawnInternal(Vector3 rootLoc, float angle, bool renderBody, Rot4 bodyFacing, Rot4 headFacing, RotDrawMode bodyDrawType, bool portrait, bool headStump, bool invisible, PawnRenderer __instance)
+        static void RenderPawnInternal(Vector3 rootLoc, float angle, bool renderBody, Rot4 bodyFacing, RotDrawMode bodyDrawType, PawnRenderFlags flags, PawnRenderer __instance)
         {
-
             void Render()
             {
+                
+
+                if (!(__instance.graphics.pawn.def is RimValiRaceDef))
+                    return;
+
                 Pawn pawn = __instance.graphics.pawn;
-                PawnGraphicSet graphics = __instance.graphics;
-                if (!renders.ContainsKey(pawn))
+
+                Rot4 rot = __instance.graphics.pawn.Rotation;
+                // angle = pawn.Graphic.DrawRotatedExtraAngleOffset;
+                //angle = pawn.Position.AngleFlat;
+                angle = __instance.BodyAngle();
+                Quaternion quaternion = Quaternion.AngleAxis(angle, Vector3.up);
+                if (pawn.GetPosture() != PawnPosture.Standing)
                 {
-                    renders.Add(pawn, new RSet() { mode = bodyDrawType, renderer = __instance });
+
+                    rot = __instance.LayingFacing();
+                    Building_Bed building_Bed = __instance.graphics.pawn.CurrentBed();
+                    if (building_Bed != null && __instance.graphics.pawn.RaceProps.Humanlike)
+                    {
+                      
+                        AltitudeLayer altLayer = (AltitudeLayer)Mathf.Max((int)building_Bed.def.altitudeLayer, 17);
+                        Vector3 vector2;
+                        Vector3 a3 = vector2 = __instance.graphics.pawn.Position.ToVector3ShiftedWithAltitude(altLayer);
+                        vector2.y += 0.024489796f;
+                        Rot4 rotation2 = building_Bed.Rotation;
+                        rotation2.AsInt += 2;
+                        float d = -__instance.BaseHeadOffsetAt(Rot4.South).z;
+                        Vector3 a2 = rotation2.FacingCell.ToVector3();
+                        rootLoc = a3 + a2 * d;
+                        rootLoc.y += 0.009183673f;
+                    }
+                    else if (!pawn.Dead && pawn.CarriedBy == null)
+                    {
+                        rootLoc.y = AltitudeLayer.LayingPawn.AltitudeFor() + 0.009183673f;
+                    }
+
                 }
-                else if (renders[pawn] != new RSet() { mode = bodyDrawType, renderer = __instance })
+                RenderBodyParts(true, angle, rootLoc, __instance, rot, bodyDrawType);
+                if (pawn.Spawned && !pawn.Dead)
                 {
-                    renders[pawn] = new RSet() { mode = bodyDrawType, renderer = __instance };
+                   pawn.stances.StanceTrackerDraw();
+                   pawn.pather.PatherDraw();
                 }
-                if (!portrait && pawn.def is RimValiRaceDef def)
+                Vector3 vector = rootLoc;
+                Vector3 a = rootLoc;
+                if (bodyFacing != Rot4.North)
                 {
-                    Rot4 rot = __instance.graphics.pawn.Rotation;
-                    // angle = pawn.Graphic.DrawRotatedExtraAngleOffset;
-                    //angle = pawn.Position.AngleFlat;
-                    angle = __instance.BodyAngle();
-                    Quaternion quaternion = Quaternion.AngleAxis(angle, Vector3.up);
-                    if (__instance.graphics.pawn.GetPosture() != PawnPosture.Standing)
+                    a.y += 0.024489796f;
+                    vector.y += 0.021428572f;
+                }
+                else
+                {
+                    a.y += 0.021428572f;
+                    vector.y += 0.024489796f;
+                }
+                List<ApparelGraphicRecord> apparelGraphics = __instance.graphics.apparelGraphics;
+                if (__instance.graphics.headGraphic != null)
+                {
+                    Vector3 b = quaternion * __instance.BaseHeadOffsetAt(bodyFacing);
+                    Material material = __instance.graphics.HeadMatAt(bodyFacing, bodyDrawType, false, false);
+                    if (material != null)
                     {
-
-                        rot = __instance.LayingFacing();
-                        Building_Bed building_Bed = __instance.graphics.pawn.CurrentBed();
-                        if (building_Bed != null && __instance.graphics.pawn.RaceProps.Humanlike)
-                        {
-                            renderBody = building_Bed.def.building.bed_showSleeperBody;
-                            AltitudeLayer altLayer = (AltitudeLayer)Mathf.Max((int)building_Bed.def.altitudeLayer, 17);
-                            Vector3 vector2;
-                            Vector3 a3 = vector2 = __instance.graphics.pawn.Position.ToVector3ShiftedWithAltitude(altLayer);
-                            vector2.y += 0.024489796f;
-                            Rot4 rotation = building_Bed.Rotation;
-                            rotation.AsInt += 2;
-                            float d = -__instance.BaseHeadOffsetAt(Rot4.South).z;
-                            Vector3 a2 = rotation.FacingCell.ToVector3();
-                            rootLoc = a3 + a2 * d;
-                            rootLoc.y += 0.009183673f;
-                        }
-                        else if (!__instance.graphics.pawn.Dead && __instance.graphics.pawn.CarriedBy == null)
-                        {
-                            rootLoc.y = AltitudeLayer.LayingPawn.AltitudeFor() + 0.009183673f;
-                        }
-
+                        GenDraw.DrawMeshNowOrLater(MeshPool.humanlikeHeadSet.MeshAt(bodyFacing), a + b, quaternion, material, false);
                     }
-                    RenderBodyParts(portrait, angle, rootLoc, __instance, rot, bodyDrawType);
-
-
-
-                    if (__instance.graphics.pawn.Spawned && !__instance.graphics.pawn.Dead)
+                    Vector3 loc2 = rootLoc + b;
+                    loc2.y += 0.030612245f;
+                    bool flag = false;
+                    if (!Prefs.HatsOnlyOnMap)
                     {
-                        __instance.graphics.pawn.stances.StanceTrackerDraw();
-                        __instance.graphics.pawn.pather.PatherDraw();
-                    }
-                    Vector3 vector = rootLoc;
-                    Vector3 a = rootLoc;
-                    if (bodyFacing != Rot4.North)
-                    {
-                        a.y += 0.024489796f;
-                        vector.y += 0.021428572f;
-                    }
-                    else
-                    {
-                        a.y += 0.021428572f;
-                        vector.y += 0.024489796f;
-                    }
-                    List<ApparelGraphicRecord> apparelGraphics = __instance.graphics.apparelGraphics;
-                    if (__instance.graphics.headGraphic != null && !portrait)
-                    {
-                        Vector3 b = quaternion * __instance.BaseHeadOffsetAt(headFacing);
-                        Material material = __instance.graphics.HeadMatAt_NewTemp(headFacing, bodyDrawType, headStump, portrait);
-                        if (material != null)
+                        Mesh mesh2 = __instance.graphics.HairMeshSet.MeshAt(bodyFacing);
+                        for (int j = 0; j < apparelGraphics.Count; j++)
                         {
-                            GenDraw.DrawMeshNowOrLater(MeshPool.humanlikeHeadSet.MeshAt(headFacing), a + b, quaternion, material, portrait);
-                        }
-                        Vector3 loc2 = rootLoc + b;
-                        loc2.y += 0.030612245f;
-                        bool flag = false;
-                        if (!portrait || !Prefs.HatsOnlyOnMap)
-                        {
-                            Mesh mesh2 = __instance.graphics.HairMeshSet.MeshAt(headFacing);
-                            for (int j = 0; j < apparelGraphics.Count; j++)
+                            if (apparelGraphics[j].sourceApparel.def.apparel.LastLayer == ApparelLayerDefOf.Overhead && pawn.def is RimValiRaceDef rDef)
                             {
-                                if (apparelGraphics[j].sourceApparel.def.apparel.LastLayer == ApparelLayerDefOf.Overhead && pawn.def is RimValiRaceDef rDef)
+                                if (!apparelGraphics[j].sourceApparel.def.apparel.hatRenderedFrontOfFace)
                                 {
-                                    if (!apparelGraphics[j].sourceApparel.def.apparel.hatRenderedFrontOfFace)
-                                    {
-                                        flag = true;
-                                        Material material2 = apparelGraphics[j].graphic.MatAt(bodyFacing, null);
-                                        material2 = OverrideMaterialIfNeeded_NewTemp(material2, __instance.graphics.pawn, __instance, portrait);
-                                        GenDraw.DrawMeshNowOrLater(mesh2, loc2, quaternion, material2, portrait);
-                                    }
-                                    else
-                                    {
-                                        Material material3 = apparelGraphics[j].graphic.MatAt(bodyFacing, null);
-                                        material3 = OverrideMaterialIfNeeded_NewTemp(material3, __instance.graphics.pawn, __instance, portrait);
-                                        Vector3 loc3 = rootLoc + b;
-                                        loc3.y += ((bodyFacing == Rot4.North) ? 0.0030612245f : 0.03367347f);
-                                        GenDraw.DrawMeshNowOrLater(mesh2, loc3, quaternion, material3, portrait);
-                                    }
+                                    flag = true;
+                                    Material material2 = apparelGraphics[j].graphic.MatAt(bodyFacing, null);
+                                    material2 = OverrideMaterialIfNeeded_NewTemp(material2, __instance.graphics.pawn, __instance, false);
+                                    GenDraw.DrawMeshNowOrLater(mesh2, loc2, quaternion, material2, false);
+                                }
+                                else
+                                {
+                                    Material material3 = apparelGraphics[j].graphic.MatAt(bodyFacing, null);
+                                    material3 = OverrideMaterialIfNeeded_NewTemp(material3, __instance.graphics.pawn, __instance, false);
+                                    Vector3 loc3 = rootLoc + b;
+                                    loc3.y += ((bodyFacing == Rot4.North) ? 0.0030612245f : 0.03367347f);
+                                    GenDraw.DrawMeshNowOrLater(mesh2, loc3, quaternion, material3, false);
                                 }
                             }
                         }
-                        if (!flag && bodyDrawType != RotDrawMode.Dessicated && !headStump)
-                        {
-                            Mesh mesh3 = __instance.graphics.HairMeshSet.MeshAt(headFacing);
-                            Material mat2 = __instance.graphics.HairMatAt_NewTemp(headFacing, portrait);
-                            GenDraw.DrawMeshNowOrLater(mesh3, loc2, quaternion, mat2, portrait);
-                        }
                     }
-                    else if (__instance.graphics.headGraphic != null && portrait)
+                    if (!flag && bodyDrawType != RotDrawMode.Dessicated)
                     {
-                        Vector3 b = quaternion * southHeadOffset(__instance);
-                        Material material = __instance.graphics.HeadMatAt_NewTemp(headFacing, bodyDrawType, headStump, portrait);
-                        if (material != null)
+                        Mesh mesh3 = __instance.graphics.HairMeshSet.MeshAt(bodyFacing);
+                        Material mat2 = __instance.graphics.HeadMatAt(bodyFacing, bodyDrawType, false);
+                        GenDraw.DrawMeshNowOrLater(mesh3, loc2, quaternion, mat2, false);
+                    }
+                }
+                else if (__instance.graphics.headGraphic != null)
+                {
+                    Vector3 b = quaternion * southHeadOffset(__instance);
+                    Material material = __instance.graphics.HeadMatAt(bodyFacing, bodyDrawType, false, false);
+                    if (material != null)
+                    {
+                        GenDraw.DrawMeshNowOrLater(MeshPool.humanlikeHeadSet.MeshAt(bodyFacing), a + b, quaternion, material, false);
+                    }
+                    Vector3 loc2 = rootLoc + b;
+                    loc2.y += 0.030612245f;
+                    bool flag = false;
+                    if (!Prefs.HatsOnlyOnMap)
+                    {
+                        Mesh mesh2 = __instance.graphics.HairMeshSet.MeshAt(bodyFacing);
+                        for (int j = 0; j < apparelGraphics.Count; j++)
                         {
-                            GenDraw.DrawMeshNowOrLater(MeshPool.humanlikeHeadSet.MeshAt(headFacing), a + b, quaternion, material, portrait);
-                        }
-                        Vector3 loc2 = rootLoc + b;
-                        loc2.y += 0.030612245f;
-                        bool flag = false;
-                        if (!Prefs.HatsOnlyOnMap)
-                        {
-                            Mesh mesh2 = __instance.graphics.HairMeshSet.MeshAt(headFacing);
-                            for (int j = 0; j < apparelGraphics.Count; j++)
+                            if (apparelGraphics[j].sourceApparel.def.apparel.LastLayer == ApparelLayerDefOf.Overhead)
                             {
-                                if (apparelGraphics[j].sourceApparel.def.apparel.LastLayer == ApparelLayerDefOf.Overhead)
+                                if (!apparelGraphics[j].sourceApparel.def.apparel.hatRenderedFrontOfFace)
                                 {
-                                    if (!apparelGraphics[j].sourceApparel.def.apparel.hatRenderedFrontOfFace)
-                                    {
-                                        flag = true;
-                                        Material material2 = apparelGraphics[j].graphic.MatAt(bodyFacing, null);
-                                        material2 = OverrideMaterialIfNeeded_NewTemp(material2, __instance.graphics.pawn, __instance, portrait);
-                                        GenDraw.DrawMeshNowOrLater(mesh2, loc2, quaternion, material2, portrait);
-                                    }
-                                    else
-                                    {
-                                        Material material3 = apparelGraphics[j].graphic.MatAt(bodyFacing, null);
-                                        material3 = OverrideMaterialIfNeeded_NewTemp(material3, __instance.graphics.pawn, __instance, portrait);
-                                        Vector3 loc3 = rootLoc + b;
-                                        loc3.y += ((bodyFacing == Rot4.North) ? 0.0030612245f : 0.03367347f);
-                                        GenDraw.DrawMeshNowOrLater(mesh2, loc3, quaternion, material3, portrait);
-                                    }
+                                    flag = true;
+                                    Material material2 = apparelGraphics[j].graphic.MatAt(bodyFacing, null);
+                                    material2 = OverrideMaterialIfNeeded_NewTemp(material2, __instance.graphics.pawn, __instance, false);
+                                    GenDraw.DrawMeshNowOrLater(mesh2, loc2, quaternion, material2, false);
+                                }
+                                else
+                                {
+                                    Material material3 = apparelGraphics[j].graphic.MatAt(bodyFacing, null);
+                                    material3 = OverrideMaterialIfNeeded_NewTemp(material3, __instance.graphics.pawn, __instance, false);
+                                    Vector3 loc3 = rootLoc + b;
+                                    loc3.y += ((bodyFacing == Rot4.North) ? 0.0030612245f : 0.03367347f);
+                                    GenDraw.DrawMeshNowOrLater(mesh2, loc3, quaternion, material3, false);
                                 }
                             }
                         }
-                        if (!flag && bodyDrawType != RotDrawMode.Dessicated && !headStump)
-                        {
-                            Mesh mesh3 = __instance.graphics.HairMeshSet.MeshAt(headFacing);
-                            Material mat2 = __instance.graphics.HairMatAt_NewTemp(headFacing, portrait);
-                            GenDraw.DrawMeshNowOrLater(mesh3, loc2, quaternion, mat2, portrait);
-                        }
+                    }
+                    if (!flag && bodyDrawType != RotDrawMode.Dessicated)
+                    {
+                        Mesh mesh3 = __instance.graphics.HairMeshSet.MeshAt(bodyFacing);
+                        Material mat2 = __instance.graphics.HairMatAt(bodyFacing, false);
+                        GenDraw.DrawMeshNowOrLater(mesh3, loc2, quaternion, mat2, false);
                     }
                 }
-
             }
             Render();
+            //Log.Message("test");
         }
+
         static Material OverrideMaterialIfNeeded_NewTemp(Material original, Pawn pawn, PawnRenderer instance, bool portrait = false)
         {
             Material baseMat = (!portrait && pawn.IsInvisible()) ? InvisibilityMatPool.GetInvisibleMat(original) : original;
@@ -2074,34 +1930,5 @@ namespace RimValiCore.RVR
         }
 
     }
-    #endregion
-    #region Starting window patch
-    [HarmonyPatch(typeof(Page_ConfigureStartingPawns), "DoWindowContents")]
-    public static class StartingWindowPatch
-    {
-        public static bool showing = false;
-        public static Rect area;
-        [HarmonyPrefix]
-        public static void Patch(Rect rect, Page_ConfigureStartingPawns __instance)
-        {
-            Listing_Standard ls = new Listing_Standard();
-            area = new Rect(new Vector2(rect.center.x + 200, rect.yMax), new Vector2(170, 100));
-            ls.Begin(area);
-            /* if(ls.ButtonText("Configure pawns")){
-                 showing = !showing;
-             }
-             if (showing)
-             {
-
-                 Traverse traverse = Traverse.Create(typeof(Page_ConfigureStartingPawns)).Field("curPawn");
-                 Pawn pawn = traverse.GetValue<Pawn>(); //RimValiUtility.GetVar<Pawn>("curPawn", BindingFlags.Public | BindingFlags.Instance
-                 GUI.color = Color.white;
-                 GUI.backgroundColor = Color.white;
-                 GUI.Box(rect, "test");
-             }*/
-            ls.End();
-        }
-    }
-
     #endregion
 }

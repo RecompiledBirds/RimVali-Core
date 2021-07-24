@@ -18,7 +18,7 @@ namespace RimValiCore.RVR
         public string path;
         public AvaliGraphic tex;
     }
-    [StaticConstructorOnStartup]
+
     public static class Renders
     {
         public static Dictionary<RenderableDef, List<RenderTex>> graphics = new Dictionary<RenderableDef, List<RenderTex>>();

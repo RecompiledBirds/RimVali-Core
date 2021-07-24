@@ -81,11 +81,6 @@ namespace RimValiCore
             return (AvaliGraphic)graphicLinked;
         }
 
-        public override void Print(SectionLayer layer, Thing thing)
-        {
-            Material mat = this.LinkedDrawMatFrom(thing, thing.Position);
-            Printer_Plane.PrintPlane(layer, thing.TrueCenter(), new Vector2(1f, 1f), mat, 0.0f, false, (Vector2[])null, (Color32[])null, 0.01f, 0.0f);
-        }
 
         public override Material MatSingleFor(Thing thing)
         {

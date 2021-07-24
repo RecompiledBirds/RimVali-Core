@@ -37,7 +37,7 @@ namespace RimValiCore
 		{
 			if (!AvaliMaterialAllocator.references.ContainsKey(material))
 			{
-				Log.Error(string.Format("Destroying material {0}, but that material was not created through the MaterialTracker", material), false);
+				Log.Error(string.Format("Destroying material {0}, but that material was not created through the MaterialTracker", material));
 			}
 			AvaliMaterialAllocator.references.Remove(material);
 			UnityEngine.Object.Destroy(material);
@@ -52,7 +52,7 @@ namespace RimValiCore
 			}
 			if (AvaliMaterialAllocator.references.Count > AvaliMaterialAllocator.nextWarningThreshold)
 			{
-				Log.Error(string.Format("Material allocator has allocated {0} materials; this may be a sign of a material leak", AvaliMaterialAllocator.references.Count), false);
+				Log.Error(string.Format("Material allocator has allocated {0} materials; this may be a sign of a material leak", AvaliMaterialAllocator.references.Count));
 				if (Prefs.DevMode)
 				{
 					AvaliMaterialAllocator.MaterialReport();
@@ -73,7 +73,7 @@ namespace RimValiCore
 		{
 			foreach (string text in Enumerable.Take<string>(Enumerable.Select<IGrouping<string, KeyValuePair<Material, AvaliMaterialAllocator.MaterialInfo>>, string>(Enumerable.OrderByDescending<IGrouping<string, KeyValuePair<Material, AvaliMaterialAllocator.MaterialInfo>>, int>(Enumerable.GroupBy<KeyValuePair<Material, AvaliMaterialAllocator.MaterialInfo>, string>(AvaliMaterialAllocator.references, (KeyValuePair<Material, AvaliMaterialAllocator.MaterialInfo> kvp) => kvp.Value.stackTrace), (IGrouping<string, KeyValuePair<Material, AvaliMaterialAllocator.MaterialInfo>> g) => Enumerable.Count<KeyValuePair<Material, AvaliMaterialAllocator.MaterialInfo>>(g)), (IGrouping<string, KeyValuePair<Material, AvaliMaterialAllocator.MaterialInfo>> g) => string.Format("{0}: {1}", Enumerable.Count<KeyValuePair<Material, AvaliMaterialAllocator.MaterialInfo>>(g), Enumerable.FirstOrDefault<KeyValuePair<Material, AvaliMaterialAllocator.MaterialInfo>>(g).Value.stackTrace)), 20))
 			{
-				Log.Error(text, false);
+				Log.Error(text);
 			}
 		}
 
@@ -100,7 +100,7 @@ namespace RimValiCore
 			}
 			foreach (string text in Enumerable.Take<string>(Enumerable.Select<KeyValuePair<string, int>, string>(Enumerable.OrderByDescending<KeyValuePair<string, int>, int>(Enumerable.Select<string, KeyValuePair<string, int>>(enumerable, (string k) => new KeyValuePair<string, int>(k, currentSnapshot.TryGetValue(k, 0) - AvaliMaterialAllocator.snapshot.TryGetValue(k, 0))), (KeyValuePair<string, int> kvp) => kvp.Value), (KeyValuePair<string, int> g) => string.Format("{0}: {1}", g.Value, g.Key)), 20))
 			{
-				Log.Error(text, false);
+				Log.Error(text);
 			}
 		}
 

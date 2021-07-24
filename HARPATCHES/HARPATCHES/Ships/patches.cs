@@ -8,6 +8,8 @@ using RimValiCore.Ships;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using Verse.Sound;
+
 namespace RimValiCore.Ships
 {
     [StaticConstructorOnStartup]
@@ -37,76 +39,88 @@ namespace RimValiCore.Ships
         {
             ShipLaunchable shipLaunchable = __instance.parent.TryGetComp<ShipLaunchable>();
             bool isRVCship = shipLaunchable != null;
-            if (isRVCship)
-            {
-                List<Gizmo> gizmos = __result.ToList();
-                for(int a =0; a<gizmos.Count; a++)
-                {
+			if (isRVCship)
+			{
+				List<Gizmo> gizmos = new List<Gizmo>();
 
-                    bool isAction = gizmos[a] is Command_LoadToTransporter;
-                    
-                    if (isAction)
-                    {
-						int num = 0;
-						for (int i = 0; i < Find.Selector.NumSelected; i++)
+				if (__instance.LoadingInProgressOrReadyToLaunch)
+				{
+					if (__instance.Shuttle == null || !__instance.Shuttle.Autoload)
+					{
+						Command_Action action = new Command_Action()
 						{
-							Thing thing = Find.Selector.SelectedObjectsListForReading[i] as Thing;
-							if (thing != null && thing.def == __instance.parent.def)
+							defaultLabel = "CommandCancelLoad".Translate(),
+							defaultDesc = "CommandCancelLoadDesc".Translate(),
+							icon = CompTransporter.CancelLoadCommandTex,
+							action = delegate ()
 							{
-								CompLaunchable compLaunchable = thing.TryGetComp<CompLaunchable>();
-								if (compLaunchable == null || (compLaunchable.FuelingPortSource != null && compLaunchable.FuelingPortSourceHasAnyFuel))
-								{
-									num++;
-								}
+								SoundDefOf.Designate_Cancel.PlayOneShotOnCamera(null);
+								__instance.CancelLoad();
 							}
-						}
-						Command_LoadToTransporter action = gizmos[a] as Command_LoadToTransporter;
-						if ((action.defaultLabel == "CommandLoadTransporter".Translate(num.ToString())))
-						{
-							Command_LoadToTransporter command_LoadToTransporter = new Command_LoadToTransporter();
-							if (__instance.Props.max1PerGroup)
-							{
-								if (__instance.Props.canChangeAssignedThingsAfterStarting)
-								{
-									command_LoadToTransporter.defaultLabel = "CommandSetToLoadTransporter".Translate();
-									command_LoadToTransporter.defaultDesc = "CommandSetToLoadTransporterDesc".Translate();
-								}
-								else
-								{
-									command_LoadToTransporter.defaultLabel = "CommandLoadTransporterSingle".Translate();
-									command_LoadToTransporter.defaultDesc = "CommandLoadTransporterSingleDesc".Translate();
-								}
-							}
-							else
-							{
-								
-								command_LoadToTransporter.defaultLabel = "CommandLoadTransporter".Translate(num.ToString());
-								command_LoadToTransporter.defaultDesc = "CommandLoadTransporterDesc".Translate();
-							}
-							command_LoadToTransporter.icon = shipPatches.LoadCommandTex;
-							command_LoadToTransporter.transComp = __instance;
-
-
-							if (false)
-							{
-								command_LoadToTransporter.Disable("CommandLoadTransporterFailNotConnectedToFuelingPort".Translate());
-							}
-							else if (false)
-							{
-								command_LoadToTransporter.Disable("CommandLoadTransporterFailNoFuel".Translate());
-							}
-							command_LoadToTransporter.defaultLabel = "test";
-							gizmos.Add(command_LoadToTransporter);
-							gizmos.Remove(gizmos[a]);
-						}
-						
-
+						};
+						gizmos.Add(action);
 					}
+
+				}
+				else
+				{
+
+
+
+					int num = 0;
+					for (int i = 0; i < Find.Selector.NumSelected; i++)
+					{
+						Thing thing = Find.Selector.SelectedObjectsListForReading[i] as Thing;
+						if (thing != null && thing.def == __instance.parent.def)
+						{
+							CompLaunchable compLaunchable = thing.TryGetComp<CompLaunchable>();
+							if (compLaunchable == null || (compLaunchable.FuelingPortSource != null && compLaunchable.FuelingPortSourceHasAnyFuel))
+							{
+								num++;
+							}
+						}
+					}
+					#region launch gizmo
+					Command_LoadToTransporter command_LoadToTransporter = new Command_LoadToTransporter();
+					if (__instance.Props.max1PerGroup)
+					{
+						if (__instance.Props.canChangeAssignedThingsAfterStarting)
+						{
+							command_LoadToTransporter.defaultLabel = "CommandSetToLoadTransporter".Translate();
+							command_LoadToTransporter.defaultDesc = "CommandSetToLoadTransporterDesc".Translate();
+						}
+						else
+						{
+							command_LoadToTransporter.defaultLabel = "CommandLoadTransporterSingle".Translate();
+							command_LoadToTransporter.defaultDesc = "CommandLoadTransporterSingleDesc".Translate();
+						}
+					}
+					else
+					{
+
+						command_LoadToTransporter.defaultLabel = "CommandLoadTransporter".Translate(num.ToString());
+						command_LoadToTransporter.defaultDesc = "CommandLoadTransporterDesc".Translate();
+					}
+					command_LoadToTransporter.icon = shipPatches.LoadCommandTex;
+					command_LoadToTransporter.transComp = __instance;
+
+
+					if (false)
+					{
+						command_LoadToTransporter.Disable("CommandLoadTransporterFailNotConnectedToFuelingPort".Translate());
+					}
+					else if (false)
+					{
+						command_LoadToTransporter.Disable("CommandLoadTransporterFailNoFuel".Translate());
+					}
+					command_LoadToTransporter.defaultLabel = "test";
+					gizmos.Add(command_LoadToTransporter);
+					#endregion
 					
 				}
 				__result = gizmos;
 			}
-		
-        }
+
+		}
     }
 }

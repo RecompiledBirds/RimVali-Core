@@ -12,13 +12,13 @@ namespace RimValiCore.HealableMaterial
         public HealableGameComp(Game game){ticks = new Dictionary<Thing, int>();}
 
         Dictionary<Thing, int> ticks = new Dictionary<Thing, int>();
-        List<Thing> things = new List<Thing>();
+        HashSet<Thing> things = new HashSet<Thing>();
         public override void GameComponentTick()
         {
             if (!Current.Game.Maps.NullOrEmpty()&&Current.Game.Maps.Any(x=>x.spawnedThings.Any(y=>HealableMatFinder.thingDefs.ContainsKey(y.def)||y.Stuff!=null&& HealableMatFinder.thingDefs.ContainsKey(y.Stuff))))
             {
                 
-                foreach(Map map in Current.Game.Maps.Where(x => x.spawnedThings.Any(y => HealableMatFinder.thingDefs.ContainsKey(y.def) || y.Stuff != null && HealableMatFinder.thingDefs.ContainsKey(y.Stuff)))){things.AddRange(map.spawnedThings.Where(y => (HealableMatFinder.thingDefs.ContainsKey(y.def) || y.Stuff != null && HealableMatFinder.thingDefs.ContainsKey(y.Stuff))&&!things.Contains(y)&&y.HitPoints<y.MaxHitPoints));}
+                foreach(Map map in Current.Game.Maps.Where(x => x.spawnedThings.Any(y => HealableMatFinder.thingDefs.ContainsKey(y.def) || y.Stuff != null && HealableMatFinder.thingDefs.ContainsKey(y.Stuff)))){things.AddRange(map.spawnedThings.Where(y => !things.Contains(y)&&(HealableMatFinder.thingDefs.ContainsKey(y.def) || y.Stuff != null && HealableMatFinder.thingDefs.ContainsKey(y.Stuff))&&y.HitPoints<y.MaxHitPoints));}
                 foreach(Thing thing in things)
                 {
                     if (!ticks.ContainsKey(thing)){ticks.Add(thing, 0);}
@@ -33,11 +33,10 @@ namespace RimValiCore.HealableMaterial
                         ticks[thing]++;
                     }
                 }
-                ticks.RemoveAll(x => !x.Key.Spawned|| x.Key.Destroyed);
-                things.RemoveAll(x => !x.Spawned || x.Destroyed || x.HitPoints==x.MaxHitPoints);
+                ticks.RemoveAll(x => !x.Key.Spawned|| x.Key.Destroyed || x.Key.HitPoints == x.Key.MaxHitPoints);
+                things.RemoveWhere(x => !x.Spawned || x.Destroyed || x.HitPoints==x.MaxHitPoints);
 
             }
-            base.GameComponentTick();
         }
     }
 }

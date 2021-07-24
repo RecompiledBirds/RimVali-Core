@@ -10,9 +10,9 @@ using UnityEngine;
 using RimValiCore.RVR;
 namespace RimValiCore.HARTweaks
 {
-
+   
     //There is probably a much better way to do this, but these patches are combinations of whatever we do and the stuff HAR does.
-    [StaticConstructorOnStartup]
+ //   [StaticConstructorOnStartup]
     public static class test
     {
 
@@ -48,6 +48,8 @@ namespace RimValiCore.HARTweaks
             }
         }
     }
+
+
     public class BodyGenPatch
     {
         public static void Patch(ref Pawn pawn)

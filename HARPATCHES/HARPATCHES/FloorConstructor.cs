@@ -14,9 +14,9 @@ namespace AvaliMod
         public static List<DesignationCategoryDef> toUpdateDesignationCatDefs = new List<DesignationCategoryDef>();
         public static List<DesignatorDropdownGroupDef> toUpdateDropdownDesDefs = new List<DesignatorDropdownGroupDef>();
         public static List<string> materials = new List<string>();
-        public static List<TerrainDef> floorsMade = new List<TerrainDef>();
+        public static HashSet<TerrainDef> floorsMade = new HashSet<TerrainDef>();
         public static StringBuilder builder = new StringBuilder();
-
+        public static bool canGenerate = true;
         /// <summary>
         /// Creates all versions of a floor from a material; it's on the label
         /// </summary>
@@ -38,7 +38,7 @@ namespace AvaliMod
                     bool hasmaxedout = false;
                     bool hasminedout = false;
                     ushort uS = (ushort)$"{def.defName}_{tDef.defName}".GetHashCode();
-                    while (DefDatabase<TerrainDef>.AllDefs.Any(terrain => terrain.shortHash == uS) || floorsMade.Any(t => t.shortHash == uS))
+                    while (DefDatabase<TerrainDef>.AllDefs.Any(terrain => terrain.shortHash == uS) || floorsMade.Any(t => t.shortHash == uS) && canGenerate)
                     {
                         if (uS < 65535 && !hasmaxedout)
                         {
@@ -60,6 +60,7 @@ namespace AvaliMod
                         {
                             //If you ever see this i'll be impressed
                             Log.Warning($"[RimVali Core/FloorConstructor] Could not generate tile {String.Format(def.label, tDef.label)}'s unique short hash, aborting..");
+                            canGenerate = false;
                             return;
                         }
 
@@ -285,14 +286,16 @@ namespace AvaliMod
                     }
                     if (hasDoneTask)
                     {
-                        def.PostLoad();
-                        def.ResolveReferences();
+                       // def.PostLoad();
+                        //def.ResolveReferences();
                     }
                 }
             }
             //Ensures we are adding to the DefDatabase. Just a saftey check.
             foreach (TerrainDef def in floorsMade)
             {
+                def.PostLoad();
+
                 if (!DefDatabase<TerrainDef>.AllDefs.Contains(def))
                 {
                     DefDatabase<TerrainDef>.Add(def);
