@@ -12,7 +12,7 @@ namespace RimValiCore.HealableMaterial
         public HealableGameComp(Game game){ticks = new Dictionary<Thing, int>();}
 
         Dictionary<Thing, int> ticks = new Dictionary<Thing, int>();
-        HashSet<Thing> things = new HashSet<Thing>();
+        HashSet<Thing> things = new HashSet<Thing>();/*
         public override void GameComponentTick()
         {
             if (!Current.Game.Maps.NullOrEmpty()&&Current.Game.Maps.Any(x=>x.spawnedThings.Any(y=>HealableMatFinder.thingDefs.ContainsKey(y.def)||y.Stuff!=null&& HealableMatFinder.thingDefs.ContainsKey(y.Stuff))))
@@ -37,6 +37,6 @@ namespace RimValiCore.HealableMaterial
                 things.RemoveWhere(x => !x.Spawned || x.Destroyed || x.HitPoints==x.MaxHitPoints);
 
             }
-        }
+        }*/
     }
 }

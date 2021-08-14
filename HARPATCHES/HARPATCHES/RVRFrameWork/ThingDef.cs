@@ -8,6 +8,29 @@ namespace RimValiCore.RVR
 {
     public class RimValiRaceDef : ThingDef
     {
+        private HashSet<RenderableDef> renderables = new HashSet<RenderableDef>();
+        public HashSet<RenderableDef> GetRenderableDefs
+        {
+            get
+            {
+                return renderables;
+            }
+        }
+
+        public HashSet<RenderableDef> GetRenderableDefsThatShow(Pawn pawn, RotDrawMode mode, bool portrait)
+        {
+            HashSet<RenderableDef> output = new HashSet<RenderableDef>();
+            foreach(RenderableDef def in GetRenderableDefs)
+            {
+                if (def.CanShow(pawn,mode,portrait))
+                {
+                    output.Add(def);
+                }
+            }
+            return output;
+        }
+
+        public Vector2 textureSize = new Vector2(1000, 1000);
         public List<RenderableDef> renderableDefs = new List<RenderableDef>();
         public raceColors graphics = new raceColors();
         public bool hasHair = false;
@@ -34,6 +57,7 @@ namespace RimValiCore.RVR
 
         public override void ResolveReferences()
         {
+            renderables = renderableDefs.ToHashSet();
             if (corpseThingCategories != null) {
                 race.corpseDef.thingCategories = new List<ThingCategoryDef>();
                 race.corpseDef.thingCategories.AddRange(corpseThingCategories);
@@ -65,16 +89,23 @@ namespace RimValiCore.RVR
             this.comps.Add(new colorCompProps());
             base.ResolveReferences();
         }
+        private Dictionary<ThoughtDef, ThoughtDef> cachedReplacementThoughts = new Dictionary<ThoughtDef, ThoughtDef>();
         public bool ReplaceThought(ref ThoughtDef thought, bool log = false)
         {
             //Log.Message(replaceableThoughts.Count.ToString());
             //Log.Message("checking thought list..", true);
+            if (cachedReplacementThoughts.ContainsKey(thought))
+            {
+                thought = cachedReplacementThoughts[thought];
+                return true;
+            }
             foreach (ReplaceableThoughts replaceable in this.replaceableThoughts)
             {
                
                 //The issue seems to be in this check, although i cannot imagine why
                 if (replaceable.thoughtToReplace.defName == thought.defName)
                 {
+                    cachedReplacementThoughts[thought] = replaceable.replacementThought;
                     thought = replaceable.replacementThought;
                     return true;
                 }
@@ -205,7 +236,7 @@ namespace RimValiCore.RVR
             
             if(pawn.def is RimValiRaceDef rimValiRaceDef)
             {
-                colorComp colorcomp = pawn.TryGetComp<colorComp>();
+                ColorComp colorcomp = pawn.TryGetComp<ColorComp>();
                 
                 foreach (RenderableDef renderableDef in renderableDefs)
                 {

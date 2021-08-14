@@ -66,7 +66,7 @@ namespace RimValiCore.RVR
         {
             if(pawn.def is RimValiRaceDef)
             {
-                colorComp comp = pawn.TryGetComp<colorComp>();
+                ColorComp comp = pawn.TryGetComp<ColorComp>();
                 foreach(string str in comp.renderableDefIndexes.Keys)
                 {
                     if (str == defName || (linkIndexWithDef != null && linkIndexWithDef.defName == str))
@@ -256,30 +256,18 @@ namespace RimValiCore.RVR
             }
             return CanShow(pawn,portrait);
         }
-        public bool CanShow(Pawn pawn, bool portrait =false)
+        public bool CanShow(Pawn pawn, bool portrait = false)
         {
             IEnumerable<BodyPartRecord> bodyParts = pawn.health.hediffSet.GetNotMissingParts();
-            //Log.Message(bodyParts.Any(x => x.def.defName.ToLower() == "left lower ear" || x.untranslatedCustomLabel.ToLower() == "left lower ear".ToLower()).ToString());
-            try
+            bool bodyIsHiding = bodyPart == null || bodyParts.Any(x => x.def.defName.ToLower() == bodyPart.ToLower() || x.Label.ToLower() == bodyPart.ToLower());
+            if (!bodyIsHiding)
+                return bodyIsHiding;
+            if (!portrait)
             {
-                if (bodyPart==null || bodyParts.Any(x => x.def.defName.ToLower() == bodyPart.ToLower() || x.Label.ToLower() == bodyPart.ToLower()) )
-                {
-                    if (!portrait)
-                    {
-                        if ((!this.showsInBed && pawn.InBed() && !pawn.CurrentBed().def.building.bed_showSleeperBody))
-                        {
-                            return false;
-                        }
-                    }
-                    return true;
-                  
-                }
-                return false;
-                
-            }catch {
-                //Log.Message(e.ToString(), true);
-                return true;
+                return !pawn.InBed() || pawn.CurrentBed().def.building.bed_showSleeperBody && showsInBed;
             }
+            return true;
+            
         }
         #endregion
     }

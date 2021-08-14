@@ -111,6 +111,9 @@ namespace RimValiCore.RVR
 
         //Mod lists
 
+        //-Food
+        public List<string> modConsumables = new List<string>();
+
         //-Apparel
         public List<string> modContentRestrictionsApparelWhiteList = new List<string>();
         public List<string> modContentRestrictionsApparelList = new List<string>();
@@ -186,7 +189,7 @@ namespace RimValiCore.RVR
         public ColorGenerator thirdColor;
     }
 
-    public class colorComp : ThingComp
+    public class ColorComp : ThingComp
     {
         public Dictionary<string, ColorSet> colors = new Dictionary<string, ColorSet>();
         public List<string> colorKey = new List<string>();
@@ -208,7 +211,7 @@ namespace RimValiCore.RVR
     {
         public colorCompProps()
         {
-            this.compClass = typeof(colorComp);
+            this.compClass = typeof(ColorComp);
         }
     }
     public class Entry

@@ -1,4 +1,5 @@
 ﻿using RimWorld;
+using RimWorld.Planet;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,7 +19,7 @@ namespace RimValiCore
             return !pawn.Dead;
         }
 
-        public static bool IsOfRace(this Pawn pawn, ThingDef race) => pawn.def.defName == race.defName;
+        public static bool IsOfRace(this Pawn pawn, ThingDef race) => pawn!=null ? pawn.def.defName == race.defName : false;
         #endregion
 
         //private static readonly bool enableDebug = LoadedModManager.GetMod<RimValiMod>().GetSettings<RimValiModSettings>().enableDebugMode;
@@ -92,12 +93,11 @@ namespace RimValiCore
 
         public static MethodInfo GetMethod<T>(string methodName, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
         {
-            ParameterModifier modifer;
             return typeof(T).GetMethod(methodName, flags);
         }
         public static MethodInfo GetMethod<T>(string methodName, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic, ParameterModifier[] modifiers = null)
         {
-            return typeof(T).GetMethod(methodName, flags, null, null, modifiers);
+            return typeof(T).GetMethod(methodName, flags, null, new Type[0], modifiers);
         }
         public static void InvokeMethod<T>(string name, T obj, object[] parameters, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
         {
@@ -109,11 +109,12 @@ namespace RimValiCore
             ParameterModifier[] mods = { pMod };
             obj.GetType().InvokeMember(name, flags, null, obj, parameters, mods, null, null);
         }
+       
 
-        /*  public static void InvokeMethod<T>(string name, T obj, object[] parameters, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
+          public static void InvokeMethodTMP<T>(string name, T obj, object[] parameters, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
           {
               GetMethod<T>(name, flags)?.Invoke(obj, parameters);
-          }*/
+          }
         public static void InvokeMethod<T>(string name, T obj, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
         {
             GetMethod<T>(name, flags)?.Invoke(obj, new object[1]);

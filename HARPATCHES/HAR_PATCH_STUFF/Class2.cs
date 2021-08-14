@@ -165,64 +165,28 @@ namespace RimValiCore.HARTweaks
             {
                 foreach (ThingDef thing in raceDef.alienRace.raceRestriction.buildingList)
                 {
-                    if (!(DefDatabase<ThingDef>.AllDefs.ToList().Contains(thing)))
-                    {
-                        Log.Error("Could not find thing!");
-                        return;
-                    }
-                    if (!Restrictions.buildingRestrictions.ContainsKey(thing))
-                    {
-                        Restrictions.buildingRestrictions.Add(thing, new List<string>());
-                        Restrictions.buildingRestrictions[thing].Add(raceDef.defName);
-                    }
-                    else
-                    {
-                        Restrictions.buildingRestrictions[thing].Add(raceDef.defName);
-                    }
+                    Restrictions.AddRestriction(ref Restrictions.buildingRestrictions, thing, raceDef);
+
                 }
                 if (raceDef.alienRace.raceRestriction.foodList.Count > 0)
                 {
                     foreach (ThingDef thing in raceDef.alienRace.raceRestriction.foodList)
                     {
-                        if (!Restrictions.consumableRestrictions.ContainsKey(thing))
-                        {
-                            Restrictions.consumableRestrictions.Add(thing, new List<ThingDef>());
-                            Restrictions.consumableRestrictions[thing].Add(raceDef);
-                        }
-                        else
-                        {
-                            Restrictions.consumableRestrictions[thing].Add(raceDef);
-                        }
+                        Restrictions.AddRestriction(ref Restrictions.consumableRestrictions, thing, raceDef);
                     }
                 }
                 if (raceDef.alienRace.raceRestriction.apparelList.Count > 0)
                 {
                     foreach (ThingDef thing in raceDef.alienRace.raceRestriction.apparelList)
                     {
-                        if (!Restrictions.equipmentRestrictions.ContainsKey(thing))
-                        {
-                            Restrictions.equipmentRestrictions.Add(thing, new List<ThingDef>());
-                            Restrictions.equipmentRestrictions[thing].Add(raceDef);
-                        }
-                        else
-                        {
-                            Restrictions.equipmentRestrictions[thing].Add(raceDef);
-                        }
+                        Restrictions.AddRestriction(ref Restrictions.equipmentRestrictions, thing, raceDef);
                     }
                 }
                 if (raceDef.alienRace.raceRestriction.traitList.Count > 0)
                 {
                     foreach (TraitDef trait in raceDef.alienRace.raceRestriction.traitList)
                     {
-                        if (!Restrictions.traitRestrictions.ContainsKey(trait))
-                        {
-                            Restrictions.traitRestrictions.Add(trait, new List<ThingDef>());
-                            Restrictions.traitRestrictions[trait].Add(raceDef);
-                        }
-                        else
-                        {
-                            Restrictions.traitRestrictions[trait].Add(raceDef);
-                        }
+                        Restrictions.AddRestriction(ref Restrictions.traitRestrictions, trait, raceDef);
                     }
                 }
                 if (raceDef.alienRace.raceRestriction.researchList.Count > 0)
@@ -231,15 +195,7 @@ namespace RimValiCore.HARTweaks
                     {
                         foreach (ResearchProjectDef researchProject in research.projects)
                         {
-                            if (!Restrictions.researchRestrictions.ContainsKey(researchProject))
-                            {
-                                Restrictions.researchRestrictions.Add(researchProject, new List<ThingDef>());
-                                Restrictions.researchRestrictions[researchProject].Add(raceDef);
-                            }
-                            else
-                            {
-                                Restrictions.researchRestrictions[researchProject].Add(raceDef);
-                            }
+                            Restrictions.AddRestriction(ref Restrictions.researchRestrictions, researchProject, raceDef);
                         }
                     }
                 }

@@ -30,7 +30,7 @@ namespace RimValiCore.RVR
             Pawn pawn = this.parent.pawn;
             if(pawn.def is RimValiRaceDef def)
             {
-                colorComp colorComp= pawn.GetComp<colorComp>();
+                ColorComp colorComp= pawn.GetComp<ColorComp>();
                 foreach(string set in colorComp.colors.Keys)
                 { 
                     if (Props.targetsSpecifcSets == true && Props.setsToChange.Contains(set))
@@ -66,7 +66,7 @@ namespace RimValiCore.RVR
             Pawn pawn = this.parent.pawn;
             if (pawn.def is RimValiRaceDef def)
             {
-                colorComp colorComp = pawn.GetComp<colorComp>();
+                ColorComp colorComp = pawn.GetComp<ColorComp>();
                 colorComp.colors = oldColors;
             }
             base.CompPostPostRemoved();

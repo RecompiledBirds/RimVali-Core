@@ -42,6 +42,7 @@
     </Reference>
     <Reference Include="AlienRace">
       <HintPath>..\..\..\..\..\..\..\..\..\Users\Nesi_\Downloads\AlienRace.dll</HintPath>
+      <Private>False</Private>
     </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\..\..\RimWorldWin64_Data\Managed\Assembly-CSharp.dll</HintPath>
@@ -102,23 +103,18 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\RimValiCore.csproj">
-      <Project>{2f885fb4-711d-47fb-aa2d-47069d72db63}</Project>
-      <Name>RimValiCore</Name>
-      <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\HARPATCHES\RimVali Core.csproj">
-      <Project>{c26a8b61-8b01-4a81-835d-42b2fb8c3a65}</Project>
-      <Name>RimVali Core</Name>
-      <Private>False</Private>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HARPATCHES\RimVali Core.csproj">
+      <Project>{c26a8b61-8b01-4a81-835d-42b2fb8c3a65}</Project>
+      <Name>RimVali Core</Name>
+      <Private>False</Private>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="..\..\packages\Microsoft.NETFramework.ReferenceAssemblies.net472.1.0.0\build\Microsoft.NETFramework.ReferenceAssemblies.net472.targets" Condition="Exists('..\..\packages\Microsoft.NETFramework.ReferenceAssemblies.net472.1.0.0\build\Microsoft.NETFramework.ReferenceAssemblies.net472.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

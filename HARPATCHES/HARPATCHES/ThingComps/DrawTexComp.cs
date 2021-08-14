@@ -38,68 +38,71 @@ namespace RimValiCore
             if (Props.isAnimated)
             {
                 tick++;
+               
                 if (tick == Props.ticksBetweenTexture)
                 {
                     tick = 0;
-                    if (tex < Props.textures.Count - 1)
-                    {
-                        tex++;
-                    }else if (!Props.lockAtLastTex)
-                    {
-                        tex = 0;
-                    }
+                    tex = tex < Props.textures.Count - 1 ? tex++ : !Props.lockAtLastTex ? tex = 0 : tex = Props.textures.Count - 1;
                 }
             }
+            Draw();
             base.CompTick();
         }
-        public override void PostDraw()
+
+        
+        void Draw()
         {
             Vector3 offset = Props.offset;
             Vector3 pos = parent.DrawPos;
-            pos.y += 0.02f + offset.y;
+            pos.y += 1.5f + offset.y;
             pos.z += offset.z;
             pos.x += offset.x;
+
            
-            Quaternion quaternion = Quaternion.AngleAxis(this.parent.Graphic.DrawRotatedExtraAngleOffset, Vector3.up);
             if (!Props.isAnimated)
             {
                 if (graphic == null)
                 {
-                    graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(Props.texPath, AvaliShaderDatabase.Tricolor, this.parent.Graphic.drawSize, this.parent.Graphic.color);
+                    graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(Props.texPath, AvaliShaderDatabase.Tricolor, parent.Graphic.drawSize, parent.Graphic.color);
                 }
-                
+
                 if (parent.TryGetComp<CompPowerTrader>() != null)
                 {
                     if (parent.TryGetComp<CompPowerTrader>().PowerOn && FlickUtility.WantsToBeOn(parent))
                     {
-                        GenDraw.DrawMeshNowOrLater(graphic.MeshAt(parent.Rotation), pos,
-                        Quaternion.identity, graphic.MatAt(parent.Rotation), false);
+                        graphic.Draw(pos, parent.Rotation, parent);
+                        
                     }
                 }
                 else
                 {
-                    GenDraw.DrawMeshNowOrLater(graphic.MeshAt(parent.Rotation), pos,
-                        Quaternion.identity, graphic.MatAt(parent.Rotation), false);
+                    graphic.Draw(pos, parent.Rotation, parent);
+                   
                 }
             }
             else
             {
                 graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(Props.textures[tex], AvaliShaderDatabase.Tricolor, this.parent.Graphic.drawSize, this.parent.Graphic.color);
-                
+
                 if (parent.TryGetComp<CompPowerTrader>() != null)
                 {
                     if (parent.TryGetComp<CompPowerTrader>().PowerOn && FlickUtility.WantsToBeOn(parent))
                     {
-                        GenDraw.DrawMeshNowOrLater(graphic.MeshAt(parent.Rotation), pos,
-                        Quaternion.identity, graphic.MatAt(parent.Rotation), false);
+                        graphic.Draw(pos, parent.Rotation, parent);
+                     
                     }
                 }
                 else
                 {
-                    GenDraw.DrawMeshNowOrLater(graphic.MeshAt(parent.Rotation), pos,
-                        Quaternion.identity, graphic.MatAt(parent.Rotation), false);
+                    graphic.Draw(pos, parent.Rotation, parent);
                 }
             }
+        }
+
+        public override void PostDraw()
+        {
+            Log.Message("postdraw is called");
+            Draw();
             base.PostDraw();
         }
     }
