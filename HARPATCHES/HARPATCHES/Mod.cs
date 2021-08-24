@@ -1,4 +1,6 @@
-﻿using System;
+﻿using HarmonyLib;
+using RimValiCore.RVR;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -47,6 +49,15 @@ namespace RimValiCore
         public ModContentPack mod;
         public RimValiCoreMod(ModContentPack content) : base(content)
         {
+            try
+            {
+                Log.Message("Starting loading patch");
+                new Patcher(new Harmony("RimValiCore.Loading"));
+            }
+            catch(Exception e)
+            {
+                Log.Error(e.Message);
+            }
             RimValiUtility.dir = content.RootDir.ToString();
             mod = content;
             settings = GetSettings<RVCModSettings>();

@@ -4,14 +4,26 @@ using RimWorld;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
+using System.Text;
 using UnityEngine;
 using Verse;
 using Verse.AI;
 
 namespace RimValiCore.RVR
 {
+    public class Patcher
+    {
+        private Harmony harmony;
+        public Patcher(Harmony har)
+        {
+            this.harmony = har;
+           // harmony.Patch(AccessTools.Method(typeof(ModAssemblyHandler), "ReloadAll"),prefix:new HarmonyMethod(typeof(AssemblyLoadingPatch), "Patch"));
+        }
+    }
 
     #region Restrictions and patching
     //Eventually I want to switch from dictionaries to this, and potentially keep a dictionary of restriction types and and objects instead. Eg. Dictionary<Type,RestrictionObject> restrictions
@@ -133,8 +145,8 @@ namespace RimValiCore.RVR
             {
                 harmony.PatchAll();
                 HarmonyMethod transpiler = new HarmonyMethod(typeof(RenderTextureTranspiler), nameof(RenderTextureTranspiler.transpile));
-                harmony.Patch(original: AccessTools.Constructor(typeof(PawnTextureAtlas)),transpiler:transpiler);
-                harmony.Patch(AccessTools.Method(typeof(EquipmentUtility), "CanEquip", new[] { typeof(Thing), typeof(Pawn), typeof(string).MakeByRefType(), typeof(bool) }),postfix:new HarmonyMethod(typeof(ApparelPatch), "Equipable"));
+                harmony.Patch(original: AccessTools.Constructor(typeof(PawnTextureAtlas)), transpiler: transpiler);
+                harmony.Patch(AccessTools.Method(typeof(EquipmentUtility), "CanEquip", new[] { typeof(Thing), typeof(Pawn), typeof(string).MakeByRefType(), typeof(bool) }), postfix: new HarmonyMethod(typeof(ApparelPatch), "Equipable"));
                 Log.Message($"[RimVali Core] Patches completed. {harmony.GetPatchedMethods().EnumerableCount()} methods patched.");
             }
             catch (Exception ex)
@@ -406,6 +418,101 @@ namespace RimValiCore.RVR
         public static Dictionary<FactionDef, List<FacRes>> factionResearchBlacklist = new Dictionary<FactionDef, List<FacRes>>();
     }
     #endregion
+    
+ //   [HarmonyPatch(typeof(ModAssemblyHandler), "ReloadAll")]
+    public static class AssemblyLoadingPatch
+    {
+        private static bool AssemblyIsUsable(Assembly asm)
+        {
+            if (asm == null)
+                return false;
+            try
+            {
+                asm.GetTypes();
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.AppendLine(string.Concat(new object[]
+                {
+                    "ReflectionTypeLoadException getting types in assembly ",
+                    asm.GetName().Name,
+                    ": ",
+                    ex
+                }));
+                stringBuilder.AppendLine();
+                stringBuilder.AppendLine("Loader exceptions:");
+                if (ex.LoaderExceptions != null)
+                {
+                    foreach (Exception ex2 in ex.LoaderExceptions)
+                    {
+                        stringBuilder.AppendLine("   => " + ex2.ToString());
+                    }
+                }
+                Log.Error(stringBuilder.ToString());
+                return false;
+            }
+            catch (Exception ex3)
+            {
+                Log.Error(string.Concat(new object[]
+                {
+                    "Exception getting types in assembly ",
+                    asm.GetName().Name,
+                    ": ",
+                    ex3
+                }));
+                return false;
+            }
+            return true;
+        }
+        private static bool resolverIsSet = false;
+       // [HarmonyPrefix]
+        public static void Patch(ModAssemblyHandler __instance)
+        {
+            Log.Message("test");
+            if (resolverIsSet)
+            {
+                ResolveEventHandler @object = (object obj, ResolveEventArgs args) => Assembly.GetExecutingAssembly();
+                AppDomain.CurrentDomain.AssemblyResolve += @object.Invoke;
+                resolverIsSet = true;
+            }
+            ModContentPack mod = RimValiCore.RimValiUtility.GetVar< ModContentPack>("mod", obj: __instance);
+            foreach (FileInfo fileInfo in from f in ModContentPack.GetAllFilesForModPreserveOrder(mod, "Assemblies/", (string e) => e.ToLower() == ".dll", null)
+                                          select f.Item2)
+            {
+                Assembly assembly = null;
+                try
+                {
+                    assembly = Assembly.Load(fileInfo.FullName);
+                    /*
+                    byte[] rawAssembly = File.ReadAllBytes(fileInfo.FullName);
+                    FileInfo fileInfo2 = new FileInfo(Path.Combine(fileInfo.DirectoryName, Path.GetFileNameWithoutExtension(fileInfo.FullName)) + ".pdb");
+                    if (fileInfo2.Exists)
+                    {
+                        byte[] rawSymbolStore = File.ReadAllBytes(fileInfo2.FullName);
+                        assembly = AppDomain.CurrentDomain.Load(rawAssembly, rawSymbolStore);
+                    }
+                    else
+                    {
+                        assembly = AppDomain.CurrentDomain.Load(rawAssembly);
+                    }
+                    */
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Exception loading " + fileInfo.Name + ": " + ex.ToString());
+                    break;
+                }
+                if (AssemblyIsUsable(assembly))
+                {
+                    GenTypes.ClearCache();
+                    __instance.loadedAssemblies.Add(assembly);
+                    Log.Message($"Loaded {assembly.GetName()}");
+                }
+            }
+        }
+    }
+
 
     #region Apparel score gain patch
     [HarmonyPatch(typeof(JobGiver_OptimizeApparel), "ApparelScoreGain")]

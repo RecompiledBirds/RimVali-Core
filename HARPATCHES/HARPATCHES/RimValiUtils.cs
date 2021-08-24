@@ -109,9 +109,19 @@ namespace RimValiCore
             ParameterModifier[] mods = { pMod };
             obj.GetType().InvokeMember(name, flags, null, obj, parameters, mods, null, null);
         }
-       
+        public static void InvokeMethod<T, V>(Assembly assembly,string name, string typeName, T obj, out V result, object[] parameters, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
+        {
+            ParameterModifier pMod = new ParameterModifier(parameters.Count());
+            for (int a = 0; a < parameters.Count() - 1; a++)
+            {
+                pMod[a] = true;
+            }
+            ParameterModifier[] mods = { pMod };
+            Type type = assembly.GetType(typeName);
+            result = (V)type.InvokeMember(name, flags, null,obj, parameters, mods,null,null);
+        }
 
-          public static void InvokeMethodTMP<T>(string name, T obj, object[] parameters, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
+        public static void InvokeMethodTMP<T>(string name, T obj, object[] parameters, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
           {
               GetMethod<T>(name, flags)?.Invoke(obj, parameters);
           }
