@@ -73,25 +73,7 @@ namespace AvaliMod
         /// pairs contains item, and pairs[item] contains race
         /// otherwise returns false.
         /// </returns>
-        public static bool checkRestrictions<T, V>(Dictionary<T, List<V>> pairs, T item, V race, bool keyNotInReturn = true)
-        {
-            if (pairs.ContainsKey(item))
-            {
-                if (pairs[item] is List<V>)
-                {
-                    if (pairs[item].Contains(race))
-                    {
-                        return true;
-                    }
-                }
-            }
-            //For things that arent in the dictionary
-            if (!pairs.ContainsKey(item))
-            {
-                return keyNotInReturn;
-            }
-            return false;
-        }
+        public static bool checkRestrictions<T, V>(Dictionary<T, List<V>> pairs, T item, V race, bool keyNotInReturn = true)=>return pairs.ContainsKey(item) ?  pairs[item] is List<V> ? pairs[item].Contains(race) : false  : keyNotInReturn
 
         /// <summary>
         /// Adds a restriction to the given restriction dictionary
