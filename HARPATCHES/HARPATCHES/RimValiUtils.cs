@@ -121,18 +121,12 @@ namespace RimValiCore
         }
         public static T GetVar<T>(string fieldName, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic, object obj = null)
         {
-            
-
             return (T)obj.GetType().GetField(fieldName, flags).GetValue(obj);
         }
 
-        public static bool SetVar<T>(string fieldName, T val,BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic,object obj = null)
+        public static void SetVar<T>(string fieldName, T val,BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic,object obj = null)
         {
-
             obj.GetType().GetField(fieldName, flags).SetValue(obj,val);
-
-
-            return true;
         }
 
         public static T GetProp<T>(string propName, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic, object obj = null)
