@@ -688,10 +688,7 @@ namespace AvaliMod
         [HarmonyPostfix]
         public static void BedPostfix(ref bool __result, Pawn p, ThingDef bedDef)
         {
-            if (!Restrictions.checkRestrictions(Restrictions.bedRestrictions, bedDef, p.def))
-            {
-                __result = false;
-            }
+            __result = __result && Restrictions.checkRestrictions(Restrictions.bedRestrictions, bedDef, p.def);
         }
     }
     #endregion
