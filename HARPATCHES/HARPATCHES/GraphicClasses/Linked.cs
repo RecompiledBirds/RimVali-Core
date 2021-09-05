@@ -1,8 +1,8 @@
-﻿using Verse;
-using UnityEngine;
+﻿using UnityEngine;
+using Verse;
 namespace RimValiCore
 {
-    
+
     public class AvaliGraphic_LinkedCornerFiller : AvaliGraphic_Linked
     {
         private static readonly float CoverSizeCornerCorner = new Vector2(0.5f, 0.5f).magnitude;
@@ -18,13 +18,7 @@ namespace RimValiCore
         private const float ShiftUp = 0.09f;
         private const float CoverSize = 0.5f;
 
-        public override LinkDrawerType LinkerType
-        {
-            get
-            {
-                return LinkDrawerType.CornerFiller;
-            }
-        }
+        public override LinkDrawerType LinkerType => LinkDrawerType.CornerFiller;
 
         public AvaliGraphic_LinkedCornerFiller(AvaliGraphic subGraphic)
           : base(subGraphic)
@@ -37,11 +31,13 @@ namespace RimValiCore
           Color newColorTwo,
           Color newColorThree)
         {
-            AvaliGraphic_LinkedCornerFiller linkedCornerFiller = new AvaliGraphic_LinkedCornerFiller(this.subGraphic.GetColoredVersion(newShader, newColor, newColorTwo, newColorThree));
-            linkedCornerFiller.data = this.data;
-            return (AvaliGraphic)linkedCornerFiller;
+            AvaliGraphic_LinkedCornerFiller linkedCornerFiller = new AvaliGraphic_LinkedCornerFiller(subGraphic.GetColoredVersion(newShader, newColor, newColorTwo, newColorThree))
+            {
+                data = data
+            };
+            return linkedCornerFiller;
         }
-        
+
 
     }
     public class AvaliGraphic_LinkedTransmitterOverlay : AvaliGraphic_Linked

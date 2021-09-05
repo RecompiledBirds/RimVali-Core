@@ -1,11 +1,11 @@
 ﻿using RimWorld;
-using Verse;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using Verse;
 
 namespace RimValiCore.RVR
-{ 
+{
 
     public class BodyPartToAffect
     {
@@ -30,7 +30,7 @@ namespace RimValiCore.RVR
         public string femaleTitle;
         public string shortTitle;
         public string shortFemaleTitle;
-        
+
         public bool canSpawnMale = true;
         public bool canSpawnFemale = true;
 
@@ -40,10 +40,10 @@ namespace RimValiCore.RVR
         public int femaleChance = 100;
         public int maleChance = 100;
         public int globalChance = 100;
-        
+
         public BackstorySlot backstorySlot = BackstorySlot.Adulthood;
-        
-        
+
+
         public List<string> spawnInCategories = new List<string>();
         public List<skillGains> skillGains = new List<skillGains>();
         public List<traitList> forcedTraits = new List<traitList>();
@@ -61,16 +61,16 @@ namespace RimValiCore.RVR
         public BodyTypeDef bodyType;
         //Not accessible in XML, dont use them.
         public Backstory story;
-        private List<TraitEntry> traitsToForce = new List<TraitEntry>();
-        private List<TraitEntry> traitsToDisable = new List<TraitEntry>();
+        private readonly List<TraitEntry> traitsToForce = new List<TraitEntry>();
+        private readonly List<TraitEntry> traitsToDisable = new List<TraitEntry>();
 
-        
+
 
         public bool CanSpawn(Pawn pawn)
         {
-            if(this.backstorySlot == BackstorySlot.Adulthood)
+            if (backstorySlot == BackstorySlot.Adulthood)
             {
-                if(linkedStoryIdentifier != null && !(pawn.story.childhood.identifier == linkedStoryIdentifier))
+                if (linkedStoryIdentifier != null && !(pawn.story.childhood.identifier == linkedStoryIdentifier))
                 {
                     //Log.Message("Story can't spawn: linked story not avalible");
                     return false;
@@ -78,7 +78,7 @@ namespace RimValiCore.RVR
             }
             else
             {
-                if(linkedStoryIdentifier !=null && (pawn.story.adulthood != null && (pawn.story.adulthood.identifier) != linkedStoryIdentifier))
+                if (linkedStoryIdentifier != null && (pawn.story.adulthood != null && (pawn.story.adulthood.identifier) != linkedStoryIdentifier))
                 {
                     //Log.Message("Story can't spawn: linked story not avalible");
                     return false;
@@ -86,7 +86,7 @@ namespace RimValiCore.RVR
             }
             if (Rand.Range(0, 100) < globalChance)
             {
-              
+
                 if (!canSpawnFemale && pawn.gender == Gender.Female)
                 {
                     return false;
@@ -114,50 +114,52 @@ namespace RimValiCore.RVR
                     return false;
                 }
             }
-           // Log.Message("Story can't spawn: chance roll (global)");
+            // Log.Message("Story can't spawn: chance roll (global)");
             return false;
         }
         public override void ResolveReferences()
         {
             Dictionary<SkillDef, int> skills = new Dictionary<SkillDef, int>();
             base.ResolveReferences();
-            foreach(skillGains skillGains in this.skillGains)
+            foreach (skillGains skillGains in skillGains)
             {
                 if (!skills.ContainsKey(skillGains.skill))
                 {
                     skills.Add(skillGains.skill, skillGains.amount);
                 }
             }
-            foreach (traitList traitItem in forcedTraits){
+            foreach (traitList traitItem in forcedTraits)
+            {
                 traitsToForce.Add(new TraitEntry(traitItem.def, traitItem.degree));
             }
-            this.story = new Backstory
+            story = new Backstory
             {
-                slot = this.backstorySlot,
-                title = this.title,
-                titleFemale = this.femaleTitle,
-                titleShort = this.shortTitle,
-                titleShortFemale = this.shortFemaleTitle,
-                identifier = this.defName,
-                baseDesc = this.storyDesc,
-                spawnCategories = this.spawnInCategories,
+                slot = backstorySlot,
+                title = title,
+                titleFemale = femaleTitle,
+                titleShort = shortTitle,
+                titleShortFemale = shortFemaleTitle,
+                identifier = defName,
+                baseDesc = storyDesc,
+                spawnCategories = spawnInCategories,
                 skillGainsResolved = skills,
-                forcedTraits = this.traitsToForce,
-                disallowedTraits = this.traitsToDisable,
-               
-                workDisables=((Func<WorkTags>) delegate {
+                forcedTraits = traitsToForce,
+                disallowedTraits = traitsToDisable,
+
+                workDisables = ((Func<WorkTags>)delegate
+                {
                     WorkTags work = WorkTags.None;
-                   Enum.GetValues(typeof(WorkTags)).Cast<WorkTags>().Where(tag =>
-                   ((!enabledWorkTypes.NullOrEmpty() && !enabledWorkTypes.Contains(tag))
-                    || disabledWorkTypes.Contains(tag)) 
-                    && (!(disabledWorkTypes.Contains(WorkTags.AllWork)) && !(tag == WorkTags.AllWork))
-                    ).ToList().ForEach(tag => work |= tag);
+                    Enum.GetValues(typeof(WorkTags)).Cast<WorkTags>().Where(tag =>
+                    ((!enabledWorkTypes.NullOrEmpty() && !enabledWorkTypes.Contains(tag))
+                     || disabledWorkTypes.Contains(tag))
+                     && (!(disabledWorkTypes.Contains(WorkTags.AllWork)) && !(tag == WorkTags.AllWork))
+                     ).ToList().ForEach(tag => work |= tag);
                     return work;
                 })(),
-                shuffleable = this.shuffable
-                };
-            
-    
+                shuffleable = shuffable
+            };
+
+
             BackstoryDatabase.AddBackstory(story);
             //Log.Message("created story: " + this.defName);
         }

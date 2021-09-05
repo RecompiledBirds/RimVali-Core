@@ -39,24 +39,27 @@ namespace RimValiCore
             this.colorThree = colorThree;
             this.graphicData = graphicData;
             this.renderQueue = renderQueue;
-            this.shaderParameters = shaderParameters.NullOrEmpty<ShaderParameter>() ? (List<ShaderParameter>)null : shaderParameters;
+            this.shaderParameters = shaderParameters.NullOrEmpty<ShaderParameter>() ? null : shaderParameters;
         }
 
         public override int GetHashCode()
         {
-            if (this.path == null)
-                this.path = BaseContent.BadTexPath;
-            return Gen.HashCombine<List<ShaderParameter>>(Gen.HashCombine<int>(Gen.HashCombine<AvaliGraphicData>(Gen.HashCombineStruct<Color>(Gen.HashCombineStruct<Color>(Gen.HashCombineStruct<Vector2>(Gen.HashCombine<Shader>(Gen.HashCombine<string>(Gen.HashCombine<System.Type>(0, this.graphicClass), this.path), this.shader), this.drawSize), this.color), this.colorTwo), this.graphicData), this.renderQueue), this.shaderParameters);
+            if (path == null)
+            {
+                path = BaseContent.BadTexPath;
+            }
+
+            return Gen.HashCombine<List<ShaderParameter>>(Gen.HashCombine<int>(Gen.HashCombine<AvaliGraphicData>(Gen.HashCombineStruct<Color>(Gen.HashCombineStruct<Color>(Gen.HashCombineStruct<Vector2>(Gen.HashCombine<Shader>(Gen.HashCombine<string>(Gen.HashCombine<System.Type>(0, graphicClass), path), shader), drawSize), color), colorTwo), graphicData), renderQueue), shaderParameters);
         }
 
         public override bool Equals(object obj)
         {
-            return obj is AvaliGraphicRequest other && this.Equals(other);
+            return obj is AvaliGraphicRequest other && Equals(other);
         }
 
         public bool Equals(AvaliGraphicRequest other)
         {
-            return this.graphicClass == other.graphicClass && this.path == other.path && ((UnityEngine.Object)this.shader == (UnityEngine.Object)other.shader && this.drawSize == other.drawSize) && (this.color == other.color && this.colorTwo == other.colorTwo && (this.graphicData == other.graphicData && this.renderQueue == other.renderQueue)) && this.shaderParameters == other.shaderParameters;
+            return graphicClass == other.graphicClass && path == other.path && (shader == other.shader && drawSize == other.drawSize) && (color == other.color && colorTwo == other.colorTwo && (graphicData == other.graphicData && renderQueue == other.renderQueue)) && shaderParameters == other.shaderParameters;
         }
 
         public static bool operator ==(AvaliGraphicRequest lhs, AvaliGraphicRequest rhs)

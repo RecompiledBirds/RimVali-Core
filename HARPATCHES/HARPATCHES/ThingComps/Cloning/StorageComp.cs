@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using RimWorld;
-using Verse;
+﻿using Verse;
 namespace RimValiCore.Cloning
 {
     public class StorageCompProps : CompProperties
@@ -29,9 +23,9 @@ namespace RimValiCore.Cloning
         {
             pawn.story.adulthood = p2.story.adulthood;
             pawn.story.childhood = p2.story.childhood;
-            
+
             pawn.story.traits = p2.story.traits;
-            
+
             pawn.story.title = p2.story.title;
 
             pawn.relations = p2.relations;

@@ -1,30 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using AlienRace;
 using HarmonyLib;
-using RimWorld;
-using Verse;
-using AvaliMod;
-using AlienRace;
-using UnityEngine;
 using RimValiCore.RVR;
+using RimWorld;
+using System;
+using System.Linq;
+using UnityEngine;
+using Verse;
 namespace RimValiCore.HARTweaks
 {
-   
+
     //There is probably a much better way to do this, but these patches are combinations of whatever we do and the stuff HAR does.
- //   [StaticConstructorOnStartup]
+    //   [StaticConstructorOnStartup]
     public static class test
     {
 
         static test()
 
         {
-            var harmony = new Harmony("Rimvali.HarPatches");
+            Harmony harmony = new Harmony("Rimvali.HarPatches");
             Log.Message("[RimVali Core/Compatiblity] Starting HAR patches.");
             try
             {
                 //The only one actually related to rimvali.
-              //  harmony.Patch(AccessTools.Method(typeof(RimValiDefChecks),"setup"), null, new HarmonyMethod(typeof(ReturnDataPatch), "ReturnDataRaces"));
+                //  harmony.Patch(AccessTools.Method(typeof(RimValiDefChecks),"setup"), null, new HarmonyMethod(typeof(ReturnDataPatch), "ReturnDataRaces"));
 
                 //The rest is all RVR stuff.
                 harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "BaseHeadOffsetAt"), null, new HarmonyMethod(typeof(HeadOffsetPatch), "setPos"));
@@ -41,7 +39,7 @@ namespace RimValiCore.HARTweaks
                 {
                     RestrictionsPatch.AddRestrictions();
                 }
-                catch(Exception error2)
+                catch (Exception error2)
                 {
                     Log.Error("[RimVali Core/Compatiblity] Backup restrictions attempt failed. \n Error: " + error2.Message);
                 }
@@ -54,7 +52,7 @@ namespace RimValiCore.HARTweaks
     {
         public static void Patch(ref Pawn pawn)
         {
-           
+
             Pawn p2 = pawn;
             if (pawn.def is RimValiRaceDef rimValiRace)
             {
@@ -69,7 +67,7 @@ namespace RimValiCore.HARTweaks
                     }
                     else if (DefDatabase<RVRBackstory>.AllDefs.Where(x => x.defName == p2.story.childhood.identifier).Count() > 0)
                     {
-                        
+
                         RVRBackstory story = DefDatabase<RVRBackstory>.AllDefs.Where(x => x.defName == p2.story.childhood.identifier).FirstOrDefault();
                         BodyPatch.SetBody(story, ref pawn);
                         return;
@@ -90,7 +88,7 @@ namespace RimValiCore.HARTweaks
                     Patch(ref pawn);
                 }
             }
-            else if(pawn.def is ThingDef_AlienRace alienRace)
+            else if (pawn.def is ThingDef_AlienRace alienRace)
             {
                 AlienRace.HarmonyPatches.GenerateBodyTypePostfix(ref pawn);
                 return;
@@ -115,10 +113,12 @@ namespace RimValiCore.HARTweaks
                 if (!(rimValiRaceDef.renderableDefs.Where<RenderableDef>(x => x.defName.ToLower() == "head").Count() > 0))
                 {
                     Vector2 offset = new Vector2(0, 0);
-                    
+
                     RenderableDef headDef = rimValiRaceDef.renderableDefs.First(x => x.defName.ToLower() == "head");
-                    Vector3 pos = new Vector3(0, 0, 0);
-                    pos.y = __result.y;
+                    Vector3 pos = new Vector3(0, 0, 0)
+                    {
+                        y = __result.y
+                    };
                     if (headDef.west == null)
                     {
                         headDef.west = headDef.east;
@@ -202,14 +202,14 @@ namespace RimValiCore.HARTweaks
             }
         }
     }
- /*   public class ReturnDataPatch
-    {
-        public static List<AlienRace.ThingDef_AlienRace> potentialPackRaces = DefDatabase<AlienRace.ThingDef_AlienRace>.AllDefsListForReading;
-        public static void ReturnDataRaces()
-        {
-            RimValiDefChecks.potentialPackRaces= DefDatabase<ThingDef>.AllDefs.Where(x => x.race != null).ToList();
-            RimValiDefChecks.potentialPackRaces.AddRange(potentialPackRaces);
+    /*   public class ReturnDataPatch
+       {
+           public static List<AlienRace.ThingDef_AlienRace> potentialPackRaces = DefDatabase<AlienRace.ThingDef_AlienRace>.AllDefsListForReading;
+           public static void ReturnDataRaces()
+           {
+               RimValiDefChecks.potentialPackRaces= DefDatabase<ThingDef>.AllDefs.Where(x => x.race != null).ToList();
+               RimValiDefChecks.potentialPackRaces.AddRange(potentialPackRaces);
 
-        }
-    }*/
+           }
+       }*/
 }

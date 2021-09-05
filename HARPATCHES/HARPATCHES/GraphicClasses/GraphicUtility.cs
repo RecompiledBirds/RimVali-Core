@@ -1,7 +1,6 @@
-﻿using RimWorld;
-using System;
-using Verse;
+﻿using System;
 using UnityEngine;
+using Verse;
 namespace RimValiCore
 {
     public static class AvaliGraphicUtility
@@ -26,15 +25,15 @@ namespace RimValiCore
             switch (linkDrawerType)
             {
                 case LinkDrawerType.None:
-                    return (AvaliGraphic_Linked)null;
+                    return null;
                 case LinkDrawerType.Basic:
                     return new AvaliGraphic_Linked(subGraphic);
                 case LinkDrawerType.CornerFiller:
-                    return (AvaliGraphic_Linked)new AvaliGraphic_LinkedCornerFiller(subGraphic);
+                    return new AvaliGraphic_LinkedCornerFiller(subGraphic);
                 case LinkDrawerType.Transmitter:
-                    return (AvaliGraphic_Linked)new AvaliGraphic_LinkedTransmitter(subGraphic);
+                    return new AvaliGraphic_LinkedTransmitter(subGraphic);
                 case LinkDrawerType.TransmitterOverlay:
-                    return (AvaliGraphic_Linked)new AvaliGraphic_LinkedTransmitterOverlay(subGraphic);
+                    return new AvaliGraphic_LinkedTransmitterOverlay(subGraphic);
                 default:
                     throw new ArgumentException();
             }
@@ -44,21 +43,9 @@ namespace RimValiCore
     {
         protected AvaliGraphic subGraphic;
 
-        public virtual LinkDrawerType LinkerType
-        {
-            get
-            {
-                return LinkDrawerType.Basic;
-            }
-        }
+        public virtual LinkDrawerType LinkerType => LinkDrawerType.Basic;
 
-        public override Material MatSingle
-        {
-            get
-            {
-                return MaterialAtlasPool.SubMaterialFromAtlas(this.subGraphic.MatSingle, LinkDirections.None);
-            }
-        }
+        public override Material MatSingle => MaterialAtlasPool.SubMaterialFromAtlas(subGraphic.MatSingle, LinkDirections.None);
 
         public AvaliGraphic_Linked()
         {
@@ -76,15 +63,17 @@ namespace RimValiCore
           Color newColorThree)
         {
             Log.Message("couldbethisone");
-            AvaliGraphic_Linked graphicLinked = new AvaliGraphic_Linked(this.subGraphic.GetColoredVersion(newShader, newColor, newColorTwo, newColorThree));
-            graphicLinked.data = this.data;
-            return (AvaliGraphic)graphicLinked;
+            AvaliGraphic_Linked graphicLinked = new AvaliGraphic_Linked(subGraphic.GetColoredVersion(newShader, newColor, newColorTwo, newColorThree))
+            {
+                data = data
+            };
+            return graphicLinked;
         }
 
 
         public override Material MatSingleFor(Thing thing)
         {
-            return this.LinkedDrawMatFrom(thing, thing.Position);
+            return LinkedDrawMatFrom(thing, thing.Position);
         }
 
         protected Material LinkedDrawMatFrom(Thing parent, IntVec3 cell)
@@ -93,40 +82,40 @@ namespace RimValiCore
             int num2 = 1;
             for (int index = 0; index < 4; ++index)
             {
-                if (this.ShouldLinkWith(cell + GenAdj.CardinalDirections[index], parent))
+                if (ShouldLinkWith(cell + GenAdj.CardinalDirections[index], parent))
+                {
                     num1 += num2;
+                }
+
                 num2 *= 2;
             }
             LinkDirections LinkSet = (LinkDirections)num1;
-            return MaterialAtlasPool.SubMaterialFromAtlas(this.subGraphic.MatSingleFor(parent), LinkSet);
+            return MaterialAtlasPool.SubMaterialFromAtlas(subGraphic.MatSingleFor(parent), LinkSet);
         }
 
         public virtual bool ShouldLinkWith(IntVec3 c, Thing parent)
         {
             if (!parent.Spawned)
+            {
                 return false;
+            }
+
             return !c.InBounds(parent.Map) ? (uint)(parent.def.graphicData.linkFlags & LinkFlags.MapEdge) > 0U : (uint)(parent.Map.linkGrid.LinkFlagsAt(c) & parent.def.graphicData.linkFlags) > 0U;
         }
     }
 
     public class AvaliGraphic_RandomRotated : AvaliGraphic
     {
-        private AvaliGraphic subGraphic;
-        private float maxAngle;
+        private readonly AvaliGraphic subGraphic;
+        private readonly float maxAngle;
 
-        public override Material MatSingle
-        {
-            get
-            {
-                return this.subGraphic.MatSingle;
-            }
-        }
+        public override Material MatSingle => subGraphic.MatSingle;
 
         public AvaliGraphic_RandomRotated(AvaliGraphic subGraphic, float maxAngle)
         {
             this.subGraphic = subGraphic;
             this.maxAngle = maxAngle;
-            this.drawSize = subGraphic.drawSize;
+            drawSize = subGraphic.drawSize;
         }
 
         public override void DrawWorker(
@@ -136,21 +125,24 @@ namespace RimValiCore
           Thing thing,
           float extraRotation)
         {
-            Mesh mesh = this.MeshAt(rot);
+            Mesh mesh = MeshAt(rot);
             float num = 0.0f;
             if (thing != null)
-                num = (float)(-(double)this.maxAngle + (double)(thing.thingIDNumber * 542) % ((double)this.maxAngle * 2.0));
+            {
+                num = (float)(-maxAngle + thing.thingIDNumber * 542 % (maxAngle * 2.0));
+            }
+
             float angle = num + extraRotation;
-            Material matSingle = this.subGraphic.MatSingle;
+            Material matSingle = subGraphic.MatSingle;
             Vector3 position = loc;
             Quaternion rotation = Quaternion.AngleAxis(angle, Vector3.up);
             Material material = matSingle;
-            Graphics.DrawMesh(mesh, position, rotation, material, 0, (Camera)null, 0);
+            Graphics.DrawMesh(mesh, position, rotation, material, 0, null, 0);
         }
 
         public override string ToString()
         {
-            return "RandomRotated(subGraphic=" + this.subGraphic.ToString() + ")";
+            return "RandomRotated(subGraphic=" + subGraphic.ToString() + ")";
         }
 
         public override AvaliGraphic GetColoredVersion(
@@ -159,10 +151,12 @@ namespace RimValiCore
           Color newColorTwo,
           Color newColorThree)
         {
-            AvaliGraphic_RandomRotated graphicRandomRotated = new AvaliGraphic_RandomRotated(this.subGraphic.GetColoredVersion(newShader, newColor, newColorTwo, newColorThree), this.maxAngle);
-            graphicRandomRotated.data = this.data;
-            graphicRandomRotated.drawSize = this.drawSize;
-            return (AvaliGraphic)graphicRandomRotated;
+            AvaliGraphic_RandomRotated graphicRandomRotated = new AvaliGraphic_RandomRotated(subGraphic.GetColoredVersion(newShader, newColor, newColorTwo, newColorThree), maxAngle)
+            {
+                data = data,
+                drawSize = drawSize
+            };
+            return graphicRandomRotated;
         }
     }
 }

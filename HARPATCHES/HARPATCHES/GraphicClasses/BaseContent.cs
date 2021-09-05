@@ -23,12 +23,12 @@ namespace RimValiCore
 
         public static bool NullOrBad(this Material mat)
         {
-            return (Object)mat == (Object)null || (Object)mat == (Object)AvaliBaseContent.BadMat;
+            return mat == null || mat == BadMat;
         }
 
         public static bool NullOrBad(this Texture2D tex)
         {
-            return (Object)tex == (Object)null || (Object)tex == (Object)AvaliBaseContent.BadTex;
+            return tex == null || tex == BadTex;
         }
     }
 }

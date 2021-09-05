@@ -1,7 +1,7 @@
 ﻿using RimWorld;
-using Verse;
 using System.Collections.Generic;
 using UnityEngine;
+using Verse;
 
 namespace RimValiCore.RVR
 {
@@ -9,7 +9,7 @@ namespace RimValiCore.RVR
     {
         public string organDefName = "any";
         public ThingDef race;
-       
+
         public ThoughtDef colonistThought;
         public ThoughtDef guestThought;
     }
@@ -31,9 +31,8 @@ namespace RimValiCore.RVR
 
         public ThoughtDef ateCookedCannibal = ThoughtDefOf.AteHumanlikeMeatAsIngredientCannibal;
         public ThoughtDef ateRawCannibal = ThoughtDefOf.AteHumanlikeMeatDirectCannibal;
-
-        
     }
+
     public class cannibalismThoughts
     {
         public List<cannibalsimThought> thoughts = new List<cannibalsimThought>();
@@ -71,13 +70,15 @@ namespace RimValiCore.RVR
         public Vector2 west;
         public headOffset()
         {
-            if(east == null)
+            if (east == null)
             {
                 east = south;
-            }if(north == null)
+            }
+            if (north == null)
             {
                 north = south;
-            }if(west == null)
+            }
+            if (west == null)
             {
                 west = east;
             }
@@ -129,13 +130,13 @@ namespace RimValiCore.RVR
 
     public class Main
     {
-        public restrictions restrictions= new restrictions();
-        
+        public restrictions restrictions = new restrictions();
+
 
         public List<BodyTypeDef> bodyTypeDefs = new List<BodyTypeDef>();
     }
 
-  
+
 
     public class ColorSet : IExposable
     {
@@ -143,7 +144,7 @@ namespace RimValiCore.RVR
         public Color colorTwo = Color.white;
         public Color colorThree = Color.white;
         public bool dyeable = true;
-        
+
         public ColorSet() { }
         public ColorSet(Color colorOne, Color colorTwo, Color colorThree, bool dyeable = true)
         {
@@ -171,9 +172,9 @@ namespace RimValiCore.RVR
 
         public TriColor_ColorGenerators Generator(Pawn pawn)
         {
-            if(this.isGendered==true && pawn.gender == Gender.Female)
+            if (isGendered == true && pawn.gender == Gender.Female)
             {
-                if(colorGeneratorFemale != null)
+                if (colorGeneratorFemale != null)
                 {
                     return colorGeneratorFemale;
                 }
@@ -204,14 +205,14 @@ namespace RimValiCore.RVR
         {
             Scribe_Collections.Look(ref colors, "colors", LookMode.Value, LookMode.Deep, ref colorKey, ref colorValue);
             Scribe_Collections.Look(ref renderableDefIndexes, "renderables", LookMode.Value, LookMode.Value, ref renderableKeys, ref index);
-           
+
         }
     }
     public class colorCompProps : CompProperties
     {
         public colorCompProps()
         {
-            this.compClass = typeof(ColorComp);
+            compClass = typeof(ColorComp);
         }
     }
     public class Entry
@@ -228,4 +229,4 @@ namespace RimValiCore.RVR
         public int globalChance = 50;
         public List<Entry> entries = new List<Entry>();
     }
-}  
+}

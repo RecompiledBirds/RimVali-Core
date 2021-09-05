@@ -4,9 +4,9 @@
     <defName>RVRNoHair</defName>
     <label>No hair</label>
     <hairGender>Male</hairGender>
-    <texPath>avali/Heads/AvaliHead_east</texPath>
+    <texPath>avali/Heads/AvaliHead</texPath>
     <hairTags>
       <li>Urban</li>
     </hairTags>
   </HairDef>
- </Defs>
+</Defs>

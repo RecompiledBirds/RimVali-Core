@@ -1,28 +1,22 @@
 ﻿using RimWorld;
-using Verse;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using Verse;
 //using RimValiCore.RimValiPlants;
 namespace RimValiCore.RVR
 {
     public class RimValiRaceDef : ThingDef
     {
         private HashSet<RenderableDef> renderables = new HashSet<RenderableDef>();
-        public HashSet<RenderableDef> GetRenderableDefs
-        {
-            get
-            {
-                return renderables;
-            }
-        }
+        public HashSet<RenderableDef> GetRenderableDefs => renderables;
 
         public HashSet<RenderableDef> GetRenderableDefsThatShow(Pawn pawn, RotDrawMode mode, bool portrait)
         {
             HashSet<RenderableDef> output = new HashSet<RenderableDef>();
-            foreach(RenderableDef def in GetRenderableDefs)
+            foreach (RenderableDef def in GetRenderableDefs)
             {
-                if (def.CanShow(pawn,mode,portrait))
+                if (def.CanShow(pawn, mode, portrait))
                 {
                     output.Add(def);
                 }
@@ -52,32 +46,34 @@ namespace RimValiCore.RVR
         public ThingDef meatToUse = null;
         public List<ThingCategoryDef> corpseThingCategories = null;
 
-        
+
         //public plantClass RimValiPlant;
 
         public override void ResolveReferences()
         {
             renderables = renderableDefs.ToHashSet();
-            if (corpseThingCategories != null) {
+            if (corpseThingCategories != null)
+            {
                 race.corpseDef.thingCategories = new List<ThingCategoryDef>();
                 race.corpseDef.thingCategories.AddRange(corpseThingCategories);
-                
+
             }
-            if (corpseToUse != null) {
+            if (corpseToUse != null)
+            {
                 race.corpseDef.statBases = new List<StatModifier>() { };
-                
+
                 race.corpseDef.alwaysHaulable = false;
                 race.corpseDef.ingestible.preferability = FoodPreferability.NeverForNutrition;
                 race.corpseDef.category = ThingCategory.None;
                 race.corpseDef.ResolveReferences();
 
                 race.corpseDef = corpseToUse;
-                
+
             }
-            if(meatToUse != null)
+            if (meatToUse != null)
             {
                 race.meatDef.statBases = new List<StatModifier>() { };
-                
+
                 race.meatDef.alwaysHaulable = false;
                 race.meatDef.ingestible.preferability = FoodPreferability.NeverForNutrition;
                 race.meatDef.category = ThingCategory.None;
@@ -85,11 +81,11 @@ namespace RimValiCore.RVR
 
                 race.meatDef = meatToUse;
             }
-           
-            this.comps.Add(new colorCompProps());
+
+            comps.Add(new colorCompProps());
             base.ResolveReferences();
         }
-        private Dictionary<ThoughtDef, ThoughtDef> cachedReplacementThoughts = new Dictionary<ThoughtDef, ThoughtDef>();
+        private readonly Dictionary<ThoughtDef, ThoughtDef> cachedReplacementThoughts = new Dictionary<ThoughtDef, ThoughtDef>();
         public bool ReplaceThought(ref ThoughtDef thought, bool log = false)
         {
             //Log.Message(replaceableThoughts.Count.ToString());
@@ -99,9 +95,9 @@ namespace RimValiCore.RVR
                 thought = cachedReplacementThoughts[thought];
                 return true;
             }
-            foreach (ReplaceableThoughts replaceable in this.replaceableThoughts)
+            foreach (ReplaceableThoughts replaceable in replaceableThoughts)
             {
-               
+
                 //The issue seems to be in this check, although i cannot imagine why
                 if (replaceable.thoughtToReplace.defName == thought.defName)
                 {
@@ -109,18 +105,21 @@ namespace RimValiCore.RVR
                     thought = replaceable.replacementThought;
                     return true;
                 }
-             
+
 
             }
             return false;
         }
-        public ThoughtDef getEatenThought(ThingDef race, bool raw = true, bool cannibal = false)=> cannibalismThoughts.thoughts.Any(x => x.race == race) ? raw ? cannibal ? cannibalismThoughts.thoughts.First(x => x.race == race).ateRawCannibal : cannibalismThoughts.thoughts.First(x => x.race == race).ateRaw : cannibal ? cannibalismThoughts.thoughts.First(x => x.race == race).ateCookedCannibal : cannibalismThoughts.thoughts.First(x => x.race == race).ateCooked : butcherAndHarvestThoughts.careAboutUndefinedRaces ? raw ? cannibal ? ThoughtDefOf.AteHumanlikeMeatDirectCannibal : ThoughtDefOf.AteHumanlikeMeatDirect : cannibal ? ThoughtDefOf.AteHumanlikeMeatAsIngredientCannibal : ThoughtDefOf.AteHumanlikeMeatAsIngredient : null;
+        public ThoughtDef getEatenThought(ThingDef race, bool raw = true, bool cannibal = false)
+        {
+            return cannibalismThoughts.thoughts.Any(x => x.race == race) ? raw ? cannibal ? cannibalismThoughts.thoughts.First(x => x.race == race).ateRawCannibal : cannibalismThoughts.thoughts.First(x => x.race == race).ateRaw : cannibal ? cannibalismThoughts.thoughts.First(x => x.race == race).ateCookedCannibal : cannibalismThoughts.thoughts.First(x => x.race == race).ateCooked : butcherAndHarvestThoughts.careAboutUndefinedRaces ? raw ? cannibal ? ThoughtDefOf.AteHumanlikeMeatDirectCannibal : ThoughtDefOf.AteHumanlikeMeatDirect : cannibal ? ThoughtDefOf.AteHumanlikeMeatAsIngredientCannibal : ThoughtDefOf.AteHumanlikeMeatAsIngredient : null;
+        }
 
         public ThoughtDef getEatenThoughtFromIngestible(ThingDef ingestible, bool raw = false, bool cannibal = false)
         {
-            if (getAllCannibalThoughtRaces().Any(race=>race.race.meatDef==ingestible))
+            if (getAllCannibalThoughtRaces().Any(race => race.race.meatDef == ingestible))
             {
-                return getEatenThought(getAllCannibalThoughtRaces().Where(race => race.race.meatDef == ingestible).ToList()[0],raw,cannibal);
+                return getEatenThought(getAllCannibalThoughtRaces().Where(race => race.race.meatDef == ingestible).ToList()[0], raw, cannibal);
             }
             return null;
         }
@@ -137,7 +136,7 @@ namespace RimValiCore.RVR
             }
             return result;
         }
-        public void HeadOffsetPawn(Rot4 rot,Pawn pawn ,ref Vector3 __result)
+        public void HeadOffsetPawn(Rot4 rot, Pawn pawn, ref Vector3 __result)
         {
 
             if (pawn.def is RimValiRaceDef rimValiRaceDef)
@@ -150,8 +149,10 @@ namespace RimValiCore.RVR
                     Vector2 offset = new Vector2(0, 0);
 
                     RenderableDef headDef = rimValiRaceDef.renderableDefs.First(x => x.defName.ToLower() == "head");
-                    Vector3 pos = new Vector3(0, 0, 0);
-                    pos.y = __result.y;
+                    Vector3 pos = new Vector3(0, 0, 0)
+                    {
+                        y = __result.y
+                    };
                     if (headDef.west == null)
                     {
                         headDef.west = headDef.east;
@@ -198,8 +199,10 @@ namespace RimValiCore.RVR
 
                     RenderableDef headDef = rimValiRaceDef.renderableDefs.First(x => x.defName.ToLower() == "head");
                     __instance.graphics.headGraphic.drawSize = headDef.south.size;
-                    Vector3 pos = new Vector3(0, 0, 0);
-                    pos.y = __result.y;
+                    Vector3 pos = new Vector3(0, 0, 0)
+                    {
+                        y = __result.y
+                    };
                     if (headDef.west == null)
                     {
                         headDef.west = headDef.east;
@@ -233,16 +236,16 @@ namespace RimValiCore.RVR
         }
         public void GenGraphics(Pawn pawn)
         {
-            
-            if(pawn.def is RimValiRaceDef rimValiRaceDef)
+
+            if (pawn.def is RimValiRaceDef rimValiRaceDef)
             {
                 ColorComp colorcomp = pawn.TryGetComp<ColorComp>();
-                
+
                 foreach (RenderableDef renderableDef in renderableDefs)
                 {
                     if (!colorcomp.renderableDefIndexes.ContainsKey(renderableDef.defName))
                     {
-                        if(renderableDef.linkIndexWithDef != null)
+                        if (renderableDef.linkIndexWithDef != null)
                         {
                             if (colorcomp.renderableDefIndexes.ContainsKey(renderableDef.linkIndexWithDef.defName))
                             {
@@ -250,7 +253,7 @@ namespace RimValiCore.RVR
                             }
                             else
                             {
-                                var Rand = new System.Random();
+                                System.Random Rand = new System.Random();
                                 int index = Rand.Next(renderableDef.textures.Count);
                                 colorcomp.renderableDefIndexes.Add(renderableDef.linkIndexWithDef.defName, index);
                                 colorcomp.renderableDefIndexes.Add(renderableDef.defName, index);
@@ -258,7 +261,7 @@ namespace RimValiCore.RVR
                         }
                         else
                         {
-                            var Rand = new System.Random();
+                            System.Random Rand = new System.Random();
                             int index = Rand.Next(renderableDef.textures.Count);
                             colorcomp.renderableDefIndexes.Add(renderableDef.defName, index);
                         }
@@ -285,16 +288,16 @@ namespace RimValiCore.RVR
 
                     }
                 }
-                
-                foreach(Colors color in rimValiRaceDef.graphics.colorSets)
+
+                foreach (Colors color in rimValiRaceDef.graphics.colorSets)
                 {
-                    
+
                     if (!colorcomp.colors.ContainsKey(color.name))
                     {
                         Color color1 = color.Generator(pawn).firstColor.NewRandomizedColor();
                         Color color2 = color.Generator(pawn).secondColor.NewRandomizedColor();
                         Color color3 = color.Generator(pawn).thirdColor.NewRandomizedColor();
-                        colorcomp.colors.Add(color.name, new ColorSet(color1,color2,color3,color.isDyeable));
+                        colorcomp.colors.Add(color.name, new ColorSet(color1, color2, color3, color.isDyeable));
                     }
                 }
             }
@@ -308,5 +311,5 @@ namespace RimValiCore.RVR
         }
     }
 
-    
+
 }

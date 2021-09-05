@@ -1,5 +1,4 @@
-﻿using RimWorld;
-using UnityEngine;
+﻿using UnityEngine;
 using Verse;
 namespace RimValiCore
 {
@@ -9,23 +8,17 @@ namespace RimValiCore
         public Color colorThree = Color.white;
         public AvaliGraphicData data;
         public string path;
-        private Graphic_Shadow cachedShadowGraphicInt;
+        private readonly Graphic_Shadow cachedShadowGraphicInt;
         private AvaliGraphic cachedShadowlessGraphicInt;
 
-        public Color ColorThree
-        {
-            get
-            {
-                return this.colorThree;
-            }
-        }
+        public Color ColorThree => colorThree;
 
-     
+
 
 
         public virtual void Init(AvaliGraphicRequest req)
         {
-            Log.ErrorOnce("Cannot init Graphic of class " + this.GetType().ToString(), 658928, false);
+            Log.ErrorOnce("Cannot init Graphic of class " + GetType().ToString(), 658928, false);
         }
 
         public virtual AvaliGraphic GetColoredVersion(
@@ -34,7 +27,7 @@ namespace RimValiCore
           Color newColorTwo,
           Color newColorThree)
         {
-            Log.ErrorOnce("CloneColored not implemented on this subclass of Graphic: " + this.GetType().ToString(), 66300, false);
+            Log.ErrorOnce("CloneColored not implemented on this subclass of Graphic: " + GetType().ToString(), 66300, false);
             return AvaliBaseContent.BadGraphic;
         }
 
@@ -42,27 +35,30 @@ namespace RimValiCore
         public virtual AvaliGraphic GetCopy(Vector2 newDrawSize)
 
         {
-            return AvaliGraphicDatabase.Get(this.GetType(),
-                                            this.path,
-                                            this.Shader,
+            return AvaliGraphicDatabase.Get(GetType(),
+                                            path,
+                                            Shader,
                                             newDrawSize,
-                                            this.color,
-                                            this.colorTwo,
-                                            this.colorThree);
+                                            color,
+                                            colorTwo,
+                                            colorThree);
         }
 
         public virtual AvaliGraphic GetShadowlessGraphic()
         {
-            if (this.data == null || this.data.shadowData == null)
+            if (data == null || data.shadowData == null)
+            {
                 return this;
-            if (this.cachedShadowlessGraphicInt == null)
+            }
+
+            if (cachedShadowlessGraphicInt == null)
             {
                 AvaliGraphicData graphicData = new AvaliGraphicData();
-                graphicData.CopyFrom(this.data);
-                graphicData.shadowData = (ShadowData)null;
-                this.cachedShadowlessGraphicInt = graphicData.Graphic;
+                graphicData.CopyFrom(data);
+                graphicData.shadowData = null;
+                cachedShadowlessGraphicInt = graphicData.Graphic;
             }
-            return this.cachedShadowlessGraphicInt;
+            return cachedShadowlessGraphicInt;
         }
     }
 }

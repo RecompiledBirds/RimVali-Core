@@ -20,7 +20,7 @@ namespace RimValiCore.RVR
         public T obj;
         public List<V> allowed;
     }
-    
+
     #region FactionResearch
     public class FacRes
     {
@@ -48,7 +48,7 @@ namespace RimValiCore.RVR
             {
                 if (expRes.ContainsKey(race))
                 {
-                    if(expRes[race] is HashSet<Def> l && l.Contains((Def)item))
+                    if (expRes[race] is HashSet<Def> l && l.Contains(item))
                     {
                         return true;
                     }
@@ -61,7 +61,7 @@ namespace RimValiCore.RVR
                 {
                     return raceNotFound;
                 }
-               
+
             }
         }
 
@@ -106,17 +106,19 @@ namespace RimValiCore.RVR
                         }
                         else
                         {
-                            defs = new HashSet<Def>();
-                            defs.Add(item);
+                            defs = new HashSet<Def>
+                            {
+                                item
+                            };
                             expRes[race] = defs;
                         }
                     }
-                    catch(Exception e)
+                    catch (Exception e)
                     {
                         Log.Error($"Error adding {item.defName} to {race.defName}:  {e.Message}");
                     }
                 }
-                
+
                 return true;
             }
         }
@@ -129,8 +131,8 @@ namespace RimValiCore.RVR
             {
                 harmony.PatchAll();
                 HarmonyMethod transpiler = new HarmonyMethod(typeof(RenderTextureTranspiler), nameof(RenderTextureTranspiler.transpile));
-                harmony.Patch(original: AccessTools.Constructor(typeof(PawnTextureAtlas)),transpiler:transpiler);
-                harmony.Patch(AccessTools.Method(typeof(EquipmentUtility), "CanEquip", new[] { typeof(Thing), typeof(Pawn), typeof(string).MakeByRefType(), typeof(bool) }),postfix:new HarmonyMethod(typeof(ApparelPatch), "Equipable"));
+                harmony.Patch(original: AccessTools.Constructor(typeof(PawnTextureAtlas)), transpiler: transpiler);
+                harmony.Patch(AccessTools.Method(typeof(EquipmentUtility), "CanEquip", new[] { typeof(Thing), typeof(Pawn), typeof(string).MakeByRefType(), typeof(bool) }), postfix: new HarmonyMethod(typeof(ApparelPatch), "Equipable"));
                 Log.Message($"[RimVali Core] Patches completed. {harmony.GetPatchedMethods().EnumerableCount()} methods patched.");
             }
             catch (Exception ex)
@@ -355,7 +357,7 @@ namespace RimValiCore.RVR
             }
             Log.Message($"Loaded {DefDatabase<RimValiRaceDef>.AllDefs.Count()} races");
         }
-        
+
         // Token: 0x04000116 RID: 278
         public static Dictionary<ThingDef, List<ThingDef>> equipmentRestrictions = new Dictionary<ThingDef, List<ThingDef>>();
 
@@ -425,7 +427,7 @@ namespace RimValiCore.RVR
     public static class ButcherPatch
     {
         //Gets the thought for butchering.
-        static void ButcheredThoughAdder(Pawn pawn, Pawn butchered, bool butcher = true)
+        private static void ButcheredThoughAdder(Pawn pawn, Pawn butchered, bool butcher = true)
         {
             if (butchered.RaceProps.Humanlike)
             {
@@ -520,8 +522,10 @@ namespace RimValiCore.RVR
                 if (!(pawn.def is RimValiRaceDef) && pawn.RaceProps.Humanlike)
                 {
                     if (butcher)
-
+                    {
                         pawn.needs.mood.thoughts.memories.TryGainMemory(ThoughtDefOf.ButcheredHumanlikeCorpse, null);
+                    }
+
                     return;
                 }
                 pawn.needs.mood.thoughts.memories.TryGainMemory(ThoughtDefOf.KnowButcheredHumanlikeCorpse, null);
@@ -704,7 +708,7 @@ namespace RimValiCore.RVR
             List<BodyTypeDef> getAllAvalibleBodyTypes = new List<BodyTypeDef>();
             if (Restrictions.bodyDefs.ContainsKey(p.def)) { getAllAvalibleBodyTypes.AddRange(Restrictions.bodyDefs[p.def]); }
             if (getAllAvalibleBodyTypes.NullOrEmpty()) { getAllAvalibleBodyTypes.AddRange(new List<BodyTypeDef> { BodyTypeDefOf.Fat, BodyTypeDefOf.Hulk, BodyTypeDefOf.Thin }); }
-            getAllAvalibleBodyTypes.AddRange(getAllAvalibleBodyTypes.NullOrEmpty() ? new List<BodyTypeDef> { BodyTypeDefOf.Fat, BodyTypeDefOf.Hulk, BodyTypeDefOf.Thin }: new List<BodyTypeDef>());
+            getAllAvalibleBodyTypes.AddRange(getAllAvalibleBodyTypes.NullOrEmpty() ? new List<BodyTypeDef> { BodyTypeDefOf.Fat, BodyTypeDefOf.Hulk, BodyTypeDefOf.Thin } : new List<BodyTypeDef>());
             getAllAvalibleBodyTypes.Add(p.gender == Gender.Female ? BodyTypeDefOf.Female : BodyTypeDefOf.Male);
 
             return getAllAvalibleBodyTypes;
@@ -779,7 +783,7 @@ namespace RimValiCore.RVR
     public class ResearchPatch
     {
         [HarmonyPostfix]
-        static void Research(Pawn pawn, ref bool __result)
+        private static void Research(Pawn pawn, ref bool __result)
         {
             //Log.Message("test");
             if (Find.ResearchManager.currentProj != null)
@@ -909,7 +913,7 @@ namespace RimValiCore.RVR
                     apparelInfo.SetValue(pairs);
                 }
             }
-            catch (Exception e){Log.Error($"Oops! RV:C had an issue generating apparel: {e.Message}");}
+            catch (Exception e) { Log.Error($"Oops! RV:C had an issue generating apparel: {e.Message}"); }
         }
     }
     #endregion
@@ -1046,11 +1050,11 @@ namespace RimValiCore.RVR
             }
             if (num > 0)
             {
-                __result = (float)Mathf.CeilToInt((float)__instance.hitPoints * pawn.HealthScale * num) + otherNum;
+                __result = Mathf.CeilToInt(__instance.hitPoints * pawn.HealthScale * num) + otherNum;
             }
             else
             {
-                __result = (float)Mathf.CeilToInt((float)__instance.hitPoints * pawn.HealthScale) + otherNum;
+                __result = Mathf.CeilToInt(__instance.hitPoints * pawn.HealthScale) + otherNum;
             }
             return;
         }
@@ -1064,7 +1068,7 @@ namespace RimValiCore.RVR
         [HarmonyPostfix]
         public static void Patch(Pawn ingester, Thing foodSource, ThingDef foodDef, ref List<FoodUtility.ThoughtFromIngesting> __result)
         {
-            
+
             bool cannibal = ingester.story.traits.HasTrait(TraitDefOf.Cannibal);
             if (ingester.def is RimValiRaceDef rDef)
             {
@@ -1078,10 +1082,12 @@ namespace RimValiCore.RVR
                         if (r != null)
                         {
                             if (rDef.getEatenThought(r, true, cannibal) != null)
+                            {
                                 __result[a] = new FoodUtility.ThoughtFromIngesting
                                 {
                                     thought = rDef.getEatenThought(r, true, cannibal)
                                 };
+                            }
                             else if (!rDef.butcherAndHarvestThoughts.careAboutUndefinedRaces)
                             {
                                 __result.RemoveAt(a);
@@ -1113,7 +1119,7 @@ namespace RimValiCore.RVR
             }
         }
     }
-  
+
     #endregion
 
     #region Thought patches
@@ -1251,7 +1257,7 @@ namespace RimValiCore.RVR
     [HarmonyPatch(typeof(RaceProperties), "CanEverEat", new[] { typeof(ThingDef) })]
     public static class FoodPatch
     {
-        static Dictionary<RaceProperties, ThingDef> cachedDefs = new Dictionary<RaceProperties, ThingDef>();
+        private static readonly Dictionary<RaceProperties, ThingDef> cachedDefs = new Dictionary<RaceProperties, ThingDef>();
         [HarmonyPostfix]
         public static void EdiblePatch(ref bool __result, RaceProperties __instance, ThingDef t)
         {
@@ -1276,16 +1282,17 @@ namespace RimValiCore.RVR
     }
     #endregion
     #region Apparel Equipping
-    
+
     public static class ApparelPatch
     {
-        public static bool CanWearHeavyRestricted(ThingDef def, Pawn pawn) { 
-            if(pawn.def is RimValiRaceDef def1)
+        public static bool CanWearHeavyRestricted(ThingDef def, Pawn pawn)
+        {
+            if (pawn.def is RimValiRaceDef def1)
             {
-              return  Restrictions.checkRestrictions(Restrictions.equipmentRestrictions, def, def1, !def1.restrictions.canOnlyUseApprovedApparel) || Restrictions.checkRestrictions(Restrictions.equipabblbleWhiteLists,def,def1,!def1.restrictions.canOnlyUseApprovedApparel);
+                return Restrictions.checkRestrictions(Restrictions.equipmentRestrictions, def, def1, !def1.restrictions.canOnlyUseApprovedApparel) || Restrictions.checkRestrictions(Restrictions.equipabblbleWhiteLists, def, def1, !def1.restrictions.canOnlyUseApprovedApparel);
             }
-            return Restrictions.checkRestrictions(Restrictions.equipmentRestrictions, def, pawn.def) || Restrictions.checkRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def,false,false);
-          
+            return Restrictions.checkRestrictions(Restrictions.equipmentRestrictions, def, pawn.def) || Restrictions.checkRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, false, false);
+
         }
         public static void Equipable(ref bool __result, Thing thing, Pawn pawn, ref string cantReason)
         {
@@ -1293,21 +1300,21 @@ namespace RimValiCore.RVR
             {
                 __result = __result && CanWearHeavyRestricted(thing.def, pawn);
                 if (!__result)
-                { 
-                   cantReason = "CannotWearRVR".Translate(pawn.def.label.Named("RACE"));
+                {
+                    cantReason = "CannotWearRVR".Translate(pawn.def.label.Named("RACE"));
                 }
             }
-           
+
         }
     }
     #endregion
     #region Construction
-    [HarmonyPatch(typeof(GenConstruct), "CanConstruct", new[] { typeof(Thing),typeof(Pawn),typeof(WorkTypeDef),typeof(bool)})]
+    [HarmonyPatch(typeof(GenConstruct), "CanConstruct", new[] { typeof(Thing), typeof(Pawn), typeof(WorkTypeDef), typeof(bool) })]
     //This was confusing at first, but it works.
     public static class ConstructPatch
     {
         [HarmonyPostfix]
-        public static void constructable(Thing t, Pawn pawn, WorkTypeDef workType,bool forced,ref bool __result)
+        public static void constructable(Thing t, Pawn pawn, WorkTypeDef workType, bool forced, ref bool __result)
         {
             //Log.Message(t.def.ToString());
             if (!Restrictions.checkRestrictions<BuildableDef, ThingDef>(Restrictions.buildingRestrictions, t.def.entityDefToBuild, pawn.def))
@@ -1327,13 +1334,13 @@ namespace RimValiCore.RVR
         [HarmonyPrefix]
         public static bool ResolveGraphics(PawnGraphicSet __instance)
         {
-            
+
             Pawn pawn = __instance.pawn;
             if (pawn.def is RimValiRaceDef rimvaliRaceDef)
             {
                 try
                 {
-                    
+
                     raceColors graphics = rimvaliRaceDef.graphics;
                     ColorComp colorComp = pawn.TryGetComp<ColorComp>();
 
@@ -1372,7 +1379,7 @@ namespace RimValiCore.RVR
                         //Should the race have hair?
                         if (!rimvaliRaceDef.hasHair)
                         {
-                           //This leads to a blank texture. So the pawn doesnt have hair, visually. I might (and probably should) change this later.
+                            //This leads to a blank texture. So the pawn doesnt have hair, visually. I might (and probably should) change this later.
                             hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
 
                         }
@@ -1411,7 +1418,7 @@ namespace RimValiCore.RVR
 
                         }
                         __instance.hairGraphic = hairGraphic;
-                    } 
+                    }
                 }
                 catch (Exception e)
                 {
@@ -1426,7 +1433,7 @@ namespace RimValiCore.RVR
         }
     }
     #endregion
- 
+
 
     public static class ColorInfo
     {
@@ -1435,10 +1442,10 @@ namespace RimValiCore.RVR
 
 
     #region Rendering patch
-    [HarmonyPatch(typeof(PawnRenderer), "RenderPawnInternal", new[] { typeof( Vector3) , typeof(float), typeof(bool), typeof(Rot4), typeof(RotDrawMode), typeof(PawnRenderFlags)  })]
-    static class RenderPatchTwo
+    [HarmonyPatch(typeof(PawnRenderer), "RenderPawnInternal", new[] { typeof(Vector3), typeof(float), typeof(bool), typeof(Rot4), typeof(RotDrawMode), typeof(PawnRenderFlags) })]
+    internal static class RenderPatchTwo
     {
-        
+
         public class RSet
         {
             public RotDrawMode mode;
@@ -1448,17 +1455,18 @@ namespace RimValiCore.RVR
         public static Dictionary<Pawn, List<RenderableDef>> pawnRenderables = new Dictionary<Pawn, List<RenderableDef>>();
 
 
-     
+
 
 
         public static void RenderBodyParts(bool portrait, float angle, Vector3 vector, PawnRenderer pawnRenderer, Rot4 rotation, RotDrawMode mode, Pawn pawn)
         {
             if (portrait)
+            {
                 rotation = Rot4.South;
-
+            }
 
             Quaternion quaternion = Quaternion.AngleAxis(angle, Vector3.up);
-          
+
             if (pawn.def is RimValiRaceDef rimValiRaceDef)
             {
                 HashSet<RenderableDef> renderables = rimValiRaceDef.GetRenderableDefsThatShow(pawn, mode, portrait);
@@ -1512,7 +1520,7 @@ namespace RimValiCore.RVR
                         Color color1 = Color.red;
                         Color color2 = Color.green;
                         Color color3 = Color.blue;
-                       
+
                         string colorSetToUse = renderable.useColorSet;
                         if (colorComp.colors.ContainsKey(colorSetToUse))
                         {
@@ -1566,7 +1574,7 @@ namespace RimValiCore.RVR
                     }
                     else
                     {
-                        
+
                         graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(renderable.texPath(pawn), AvaliShaderDatabase.Tricolor, size, pawn.story.SkinColor);
                         GenDraw.DrawMeshNowOrLater(graphic.MeshAt(rotation), vector + offset.RotatedBy(Mathf.Acos(Quaternion.Dot(Quaternion.identity, quaternion)) * 114.59156f),
                          quaternion, graphic.MatAt(rotation), true);
@@ -1580,10 +1588,12 @@ namespace RimValiCore.RVR
         }
 
         [HarmonyPostfix]
-        static void RenderPawnInternal(Vector3 rootLoc, float angle, bool renderBody, Rot4 bodyFacing, RotDrawMode bodyDrawType, PawnRenderFlags flags, PawnRenderer __instance)
+        private static void RenderPawnInternal(Vector3 rootLoc, float angle, bool renderBody, Rot4 bodyFacing, RotDrawMode bodyDrawType, PawnRenderFlags flags, PawnRenderer __instance)
         {
             if (!(__instance.graphics.pawn.def is RimValiRaceDef))
+            {
                 return;
+            }
 
             void Render()
             {
@@ -1592,23 +1602,23 @@ namespace RimValiCore.RVR
                 bool isStanding = pawn.GetPosture() == PawnPosture.Standing;
 
                 Rot4 rot = isStanding ? pawn.Rotation : __instance.LayingFacing();
-                
+
                 RenderBodyParts(portrait, angle, rootLoc, __instance, rot, bodyDrawType, pawn);
             }
             Render();
-;
+            ;
         }
     }
 
     #endregion
     #region RenderTexture
-    public  class RenderTexturePatch
+    public class RenderTexturePatch
     {
-        static int texSize = 8000;
+        private static readonly int texSize = 8000;
         public static RenderTexture newTex()
         {
             Vector2Int size = new Vector2Int(GetAtlasSizeWithPawnsOnMap(), GetAtlasSizeWithPawnsOnMap());
-            return new RenderTexture(size.x, size.y, 24, RenderTextureFormat.ARGB64 , 0)
+            return new RenderTexture(size.x, size.y, 24, RenderTextureFormat.ARGB64, 0)
             {
                 antiAliasing = 0,
                 useMipMap = true,
@@ -1642,7 +1652,7 @@ namespace RimValiCore.RVR
         {
             List<CodeInstruction> codes = instructions.ToList();
             int cont = instructions.Count();
-            for(int index = 0; index<cont; index++)
+            for (int index = 0; index < cont; index++)
             {
                 if (c(codes, index))
                 {

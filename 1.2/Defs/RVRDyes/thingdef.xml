@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <Defs>
-<ThingDef ParentName="DrugBase">
+  <ThingDef ParentName="DrugBase">
     <defName>RVRDye</defName>
     <label>Dye</label>
     <description>A dye.</description>

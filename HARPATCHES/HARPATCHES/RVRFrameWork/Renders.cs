@@ -1,9 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using RimWorld;
 using Verse;
 namespace RimValiCore.RVR
 {
@@ -45,15 +42,15 @@ namespace RimValiCore.RVR
             builder.AppendLine("[RimVali Core/RVR]: Started renderabledef loading, please standby!");
             builder.AppendLine($"[RimVali Core/RVR]: Loading  {renderableDefs.Count()} renderableDefs.");
             int cont = 0;
-            foreach(RenderableDef render in renderableDefs)
+            foreach (RenderableDef render in renderableDefs)
             {
-                foreach(string tex in render.findAllTextures())
+                foreach (string tex in render.findAllTextures())
                 {
-                    if (!graphics.ContainsKey(render)){graphics.Add(render, new List<RenderTex>());}
+                    if (!graphics.ContainsKey(render)) { graphics.Add(render, new List<RenderTex>()); }
                     RenderTex rTex = new RenderTex
                     {
                         path = tex,
-                        tex = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(tex,AvaliShaderDatabase.Tricolor)
+                        tex = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(tex, AvaliShaderDatabase.Tricolor)
                     };
                     graphics[render].Add(rTex);
                     builder.AppendLine($"[RimVali Core/RVR]: Loaded tex: {tex} for {render.defName}");

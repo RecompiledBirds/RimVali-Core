@@ -1,7 +1,7 @@
 ﻿using RimWorld;
-using Verse;
 using System.Collections.Generic;
 using UnityEngine;
+using Verse;
 
 namespace RimValiCore
 {
@@ -32,77 +32,83 @@ namespace RimValiCore
         [Unsaved(false)]
         private AvaliGraphic cachedGraphic;
 
-        public bool Linked
-        {
-            get
-            {
-                return (uint)this.linkType > 0U;
-            }
-        }
+        public bool Linked => (uint)linkType > 0U;
 
         public AvaliGraphic Graphic
         {
             get
             {
-                if (this.cachedGraphic == null)
-                    this.Init();
-                return this.cachedGraphic;
+                if (cachedGraphic == null)
+                {
+                    Init();
+                }
+
+                return cachedGraphic;
             }
         }
 
         public void CopyFrom(AvaliGraphicData other)
         {
-            this.texPath = other.texPath;
-            this.graphicClass = other.graphicClass;
-            this.shaderType = other.shaderType;
-            this.color = other.color;
-            this.colorTwo = other.colorTwo;
-            this.colorThree = other.colorThree;
-            this.drawSize = other.drawSize;
-            this.drawOffset = other.drawOffset;
-            this.drawOffsetNorth = other.drawOffsetNorth;
-            this.drawOffsetEast = other.drawOffsetEast;
-            this.drawOffsetSouth = other.drawOffsetSouth;
-            this.drawOffsetWest = other.drawOffsetSouth;
-            this.onGroundRandomRotateAngle = other.onGroundRandomRotateAngle;
-            this.drawRotated = other.drawRotated;
-            this.allowFlip = other.allowFlip;
-            this.flipExtraRotation = other.flipExtraRotation;
-            this.shadowData = other.shadowData;
-            this.damageData = other.damageData;
-            this.linkType = other.linkType;
-            this.linkFlags = other.linkFlags;
-            this.cachedGraphic = (AvaliGraphic)null;
+            texPath = other.texPath;
+            graphicClass = other.graphicClass;
+            shaderType = other.shaderType;
+            color = other.color;
+            colorTwo = other.colorTwo;
+            colorThree = other.colorThree;
+            drawSize = other.drawSize;
+            drawOffset = other.drawOffset;
+            drawOffsetNorth = other.drawOffsetNorth;
+            drawOffsetEast = other.drawOffsetEast;
+            drawOffsetSouth = other.drawOffsetSouth;
+            drawOffsetWest = other.drawOffsetSouth;
+            onGroundRandomRotateAngle = other.onGroundRandomRotateAngle;
+            drawRotated = other.drawRotated;
+            allowFlip = other.allowFlip;
+            flipExtraRotation = other.flipExtraRotation;
+            shadowData = other.shadowData;
+            damageData = other.damageData;
+            linkType = other.linkType;
+            linkFlags = other.linkFlags;
+            cachedGraphic = null;
         }
 
         private void Init()
         {
-            if (this.graphicClass == (System.Type)null)
+            if (graphicClass == null)
             {
-                this.cachedGraphic = (AvaliGraphic)null;
+                cachedGraphic = null;
             }
             else
             {
-                this.cachedGraphic = AvaliGraphicDatabase.Get(this.graphicClass, this.texPath, (this.shaderType ?? ShaderTypeDefOf.Cutout).Shader, this.drawSize, this.color, this.colorTwo, this.colorThree,this, this.shaderParameters);
-                if ((double)this.onGroundRandomRotateAngle > 0.00999999977648258)
-                    this.cachedGraphic = (AvaliGraphic)new AvaliGraphic_RandomRotated(this.cachedGraphic, this.onGroundRandomRotateAngle);
-                if (!this.Linked)
+                cachedGraphic = AvaliGraphicDatabase.Get(graphicClass, texPath, (shaderType ?? ShaderTypeDefOf.Cutout).Shader, drawSize, color, colorTwo, colorThree, this, shaderParameters);
+                if (onGroundRandomRotateAngle > 0.00999999977648258)
+                {
+                    cachedGraphic = new AvaliGraphic_RandomRotated(cachedGraphic, onGroundRandomRotateAngle);
+                }
+
+                if (!Linked)
+                {
                     return;
-                this.cachedGraphic = (AvaliGraphic)AvaliGraphicUtility.WrapLinked(this.cachedGraphic, this.linkType);
+                }
+
+                cachedGraphic = AvaliGraphicUtility.WrapLinked(cachedGraphic, linkType);
             }
         }
 
         public void ResolveReferencesSpecial()
         {
-            if (this.damageData == null)
+            if (damageData == null)
+            {
                 return;
-            this.damageData.ResolveReferencesSpecial();
+            }
+
+            damageData.ResolveReferencesSpecial();
         }
 
 
         public AvaliGraphic GraphicColoredFor(Thing t)
         {
-            return t.DrawColor.IndistinguishableFrom(this.Graphic.Color) && t.DrawColorTwo.IndistinguishableFrom(this.Graphic.ColorTwo) ? this.Graphic : this.Graphic.GetColoredVersion(this.Graphic.Shader, t.DrawColor, t.DrawColorTwo, t.DrawColorTwo);
+            return t.DrawColor.IndistinguishableFrom(Graphic.Color) && t.DrawColorTwo.IndistinguishableFrom(Graphic.ColorTwo) ? Graphic : Graphic.GetColoredVersion(Graphic.Shader, t.DrawColor, t.DrawColorTwo, t.DrawColorTwo);
         }
     }
 }

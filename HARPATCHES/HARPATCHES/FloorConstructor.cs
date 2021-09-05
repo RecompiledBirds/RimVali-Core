@@ -59,13 +59,12 @@ namespace AvaliMod
                         if (hasminedout && hasmaxedout)
                         {
                             //If you ever see this i'll be impressed
-                            Log.Warning($"[RimVali Core/FloorConstructor] Could not generate tile {String.Format(def.label, tDef.label)}'s unique short hash, aborting..");
+                            Log.Warning($"[RimVali Core/FloorConstructor] Could not generate tile {string.Format(def.label, tDef.label)}'s unique short hash, aborting..");
                             canGenerate = false;
                             return;
                         }
-
-
                     }
+
                     //Sets up some basic stuff
                     //shortHash  & defName are the very important
                     TerrainDef output = new TerrainDef()
@@ -73,7 +72,7 @@ namespace AvaliMod
                         color = tDef.GetColorForStuff(tDef),
                         uiIconColor = tDef.GetColorForStuff(tDef),
                         defName = $"{def.defName}_{tDef.defName}",
-                        label = String.Format(def.label, tDef.label),
+                        label = string.Format(def.label, tDef.label),
                         debugRandomId = uS,
                         index = uS,
                         shortHash = uS,
@@ -96,7 +95,7 @@ namespace AvaliMod
                         designatorDropdown = def.designatorDropdown
                     };
 
-                    var bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+                    BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
                     //This copies some of the varibles from the floor we are duplicating over
                     //We don't want it to touch the fields we've already set, so I keep a list here to help.
 
@@ -171,10 +170,12 @@ namespace AvaliMod
                     thingDef.defName = ThingDefGenerator_Buildings.BlueprintDefNamePrefix + output.defName;
                     thingDef.label = output.label + "BlueprintLabelExtra".Translate();
                     thingDef.entityDefToBuild = output;
-                    thingDef.graphicData = new GraphicData();
-                    thingDef.graphicData.shaderType = ShaderTypeDefOf.MetaOverlay;
-                    thingDef.graphicData.texPath = "Things/Special/TerrainBlueprint";
-                    thingDef.graphicData.graphicClass = typeof(Graphic_Single);
+                    thingDef.graphicData = new GraphicData
+                    {
+                        shaderType = ShaderTypeDefOf.MetaOverlay,
+                        texPath = "Things/Special/TerrainBlueprint",
+                        graphicClass = typeof(Graphic_Single)
+                    };
                     thingDef.constructionSkillPrerequisite = output.constructionSkillPrerequisite;
                     thingDef.artisticSkillPrerequisite = output.artisticSkillPrerequisite;
                     thingDef.clearBuildingArea = false;
@@ -240,55 +241,55 @@ namespace AvaliMod
             foreach (TerrainDef def in DefDatabase<TerrainDef>.AllDefs)
             {
                 bool hasDoneTask = false;
-                if (!def.tags.NullOrEmpty())
+                if (def.tags.NullOrEmpty())
                 {
-                    if (def.tags.Any(str => str.Contains("cloneMaterial")))
+                    continue;
+                }
+                if (def.tags.Any(str => str.Contains("cloneMaterial")))
+                {
+                    IEnumerable<string> tags = def.tags.Where(x => x.Contains("cloneMaterial") && !x.NullOrEmpty());
+                    foreach (string s in tags)
                     {
-                        List<string> tags = def.tags.Where(x => x.Contains("cloneMaterial") && !x.NullOrEmpty()).ToList();
-                        for (int a = 0; a < tags.Count; a++)
+                        try
                         {
-                            string s = tags[a];
-                            try
-                            {
-                                //Gets the category name between cloneMaterial_ and [ENDCATNAME]
-                                string cS = string.Copy(s);
-                                string res = cS.Substring(cS.IndexOf("cloneMaterial_") + "_cloneMaterial".Length, (cS.IndexOf("[ENDCATNAME]") - ("[ENDCATNAME]".Length + 2)) - cS.IndexOf("cloneMaterial_"));
-                                CreateAllVersions(def, res);
-                            }
-                            catch
-                            {
+                            //Gets the category name between cloneMaterial_ and [ENDCATNAME]
+                            string cS = string.Copy(s);
+                            string res = cS.Substring(cS.IndexOf("cloneMaterial_") + "cloneMaterial_".Length, cS.IndexOf("[ENDCATNAME]") - "[ENDCATNAME]".Length + 2 - cS.IndexOf("cloneMaterial_"));
+                            CreateAllVersions(def, res);
+                        }
+                        catch
+                        {
 
-                            }
                         }
                     }
+                }
 
-                    if (def.tags.Any(str => str.Contains("removeFromResearch")))
+                if (def.tags.Any(str => str.Contains("removeFromResearch")))
+                {
+                    List<string> tags = def.tags.Where(x => x.Contains("removeFromResearch_") && !x.NullOrEmpty()).ToList();
+                    for (int a = 0; a < tags.Count; a++)
                     {
-                        List<string> tags = def.tags.Where(x => x.Contains("removeFromResearch_") && !x.NullOrEmpty()).ToList();
-                        for (int a = 0; a < tags.Count; a++)
+                        string s = tags[a];
+                        try
                         {
-                            string s = tags[a];
-                            try
-                            {
-                                hasDoneTask = true;
-                                //Gets the category name between cloneMaterial_ and [ENDCATNAME]
-                                string cS = string.Copy(s);
-                                string res = cS.Substring(cS.IndexOf("removeFromResearch_") + "removeFromResearch_".Length, (cS.IndexOf("[ENDRESNAME]") - ("[ENDRESNAME]".Length + 7)) - cS.IndexOf("removeFromResearch_"));
-                                Log.Message(res);
-                                def.researchPrerequisites.RemoveAll(x => x.defName == res);
+                            hasDoneTask = true;
+                            //Gets the category name between cloneMaterial_ and [ENDCATNAME]
+                            string cS = string.Copy(s);
+                            string res = cS.Substring(cS.IndexOf("removeFromResearch_") + "removeFromResearch_".Length, (cS.IndexOf("[ENDRESNAME]") - ("[ENDRESNAME]".Length + 7)) - cS.IndexOf("removeFromResearch_"));
+                            Log.Message(res);
+                            def.researchPrerequisites.RemoveAll(x => x.defName == res);
 
-                            }
-                            catch
-                            {
+                        }
+                        catch
+                        {
 
-                            }
                         }
                     }
-                    if (hasDoneTask)
-                    {
-                       // def.PostLoad();
-                        //def.ResolveReferences();
-                    }
+                }
+                if (hasDoneTask)
+                {
+                    // def.PostLoad();
+                    //def.ResolveReferences();
                 }
             }
             //Ensures we are adding to the DefDatabase. Just a saftey check.

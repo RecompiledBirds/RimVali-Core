@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
+﻿using UnityEngine;
 using Verse;
 
 namespace RimValiCore
@@ -23,7 +18,7 @@ namespace RimValiCore
         }
         public override void ExposeData()
         {
-            Scribe_Values.Look(ref expMode, "mode",false,false);
+            Scribe_Values.Look(ref expMode, "mode", false, false);
             Scribe_Values.Look(ref smartPawnScaling, "SmartScale", true, false);
             Scribe_Values.Look(ref textureSizeScaling, "texSS", 10, false);
             Scribe_Values.Look(ref smallestTexSize, "STS", 200, false);
@@ -37,13 +32,7 @@ namespace RimValiCore
             return "RimValiCore";
         }
         private static RVCModSettings settings;
-        public static RVCModSettings Settings
-        {
-            get
-            {
-                return settings;
-            }
-        }
+        public static RVCModSettings Settings => settings;
         public ModContentPack mod;
         public RimValiCoreMod(ModContentPack content) : base(content)
         {
@@ -53,10 +42,10 @@ namespace RimValiCore
         }
         public override void DoSettingsWindowContents(Rect inRect)
         {
-          
+
             Listing_Standard ls = new Listing_Standard();
             ls.Begin(inRect);
-            ls.CheckboxLabeled("Experimental mode: ",ref settings.expMode, "Only enable if you are willing to risk damage to saves and other such things!");
+            ls.CheckboxLabeled("Experimental mode: ", ref settings.expMode, "Only enable if you are willing to risk damage to saves and other such things!");
             ls.CheckboxLabeled("Smart pawn scaling: ", ref settings.smartPawnScaling);
             ls.Label($"Smart texture scaling: {settings.textureSizeScaling}");
             settings.textureSizeScaling = (int)ls.Slider(settings.textureSizeScaling, 1, 100);

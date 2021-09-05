@@ -17,19 +17,13 @@ namespace RimValiCore
         public List<string> textures = new List<string>();
         public DrawCompProps()
         {
-            this.compClass = typeof(DrawComp);
+            compClass = typeof(DrawComp);
         }
     }
 
     public class DrawComp : ThingComp
     {
-        public DrawCompProps Props
-        {
-            get
-            {
-                return (DrawCompProps)props;
-            }
-        }
+        public DrawCompProps Props => (DrawCompProps)props;
         public Graphic graphic;
         public int tex;
         public int tick;
@@ -38,7 +32,7 @@ namespace RimValiCore
             if (Props.isAnimated)
             {
                 tick++;
-               
+
                 if (tick == Props.ticksBetweenTexture)
                 {
                     tick = 0;
@@ -49,8 +43,7 @@ namespace RimValiCore
             base.CompTick();
         }
 
-        
-        void Draw()
+        private void Draw()
         {
             Vector3 offset = Props.offset;
             Vector3 pos = parent.DrawPos;
@@ -58,7 +51,7 @@ namespace RimValiCore
             pos.z += offset.z;
             pos.x += offset.x;
 
-           
+
             if (!Props.isAnimated)
             {
                 if (graphic == null)
@@ -71,25 +64,25 @@ namespace RimValiCore
                     if (parent.TryGetComp<CompPowerTrader>().PowerOn && FlickUtility.WantsToBeOn(parent))
                     {
                         graphic.Draw(pos, parent.Rotation, parent);
-                        
+
                     }
                 }
                 else
                 {
                     graphic.Draw(pos, parent.Rotation, parent);
-                   
+
                 }
             }
             else
             {
-                graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(Props.textures[tex], AvaliShaderDatabase.Tricolor, this.parent.Graphic.drawSize, this.parent.Graphic.color);
+                graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(Props.textures[tex], AvaliShaderDatabase.Tricolor, parent.Graphic.drawSize, parent.Graphic.color);
 
                 if (parent.TryGetComp<CompPowerTrader>() != null)
                 {
                     if (parent.TryGetComp<CompPowerTrader>().PowerOn && FlickUtility.WantsToBeOn(parent))
                     {
                         graphic.Draw(pos, parent.Rotation, parent);
-                     
+
                     }
                 }
                 else

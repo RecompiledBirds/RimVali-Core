@@ -1,10 +1,8 @@
 ﻿using RimWorld;
-using Verse;
 using System.Collections.Generic;
 using System.Linq;
-using Unity;
 using UnityEngine;
-using System;
+using Verse;
 
 namespace RimValiCore.RVR
 {
@@ -39,7 +37,7 @@ namespace RimValiCore.RVR
     }
     public class RenderableDef : Def
     {
-       
+
         public Graphic graphic;
 
         #region backstory checks
@@ -50,7 +48,7 @@ namespace RimValiCore.RVR
             return ((story.untranslatedTitle != null && story.untranslatedTitle == title)
                         || ((story.untranslatedTitle != null && story.untranslatedTitle == title)
                         || (story.untranslatedTitleShort != null && story.untranslatedTitleShort == title)
-                        ||(story.untranslatedTitleFemale != null && story.untranslatedTitleFemale == title)
+                        || (story.untranslatedTitleFemale != null && story.untranslatedTitleFemale == title)
                         //This does not need to be checked, as it literally cannot ever be null.
                         || story.identifier == title
                         || (story.titleShort != null && story.titleShort == title)
@@ -64,10 +62,10 @@ namespace RimValiCore.RVR
         #region get index
         public int GetMyIndex(Pawn pawn)
         {
-            if(pawn.def is RimValiRaceDef)
+            if (pawn.def is RimValiRaceDef)
             {
                 ColorComp comp = pawn.TryGetComp<ColorComp>();
-                foreach(string str in comp.renderableDefIndexes.Keys)
+                foreach (string str in comp.renderableDefIndexes.Keys)
                 {
                     if (str == defName || (linkIndexWithDef != null && linkIndexWithDef.defName == str))
                     {
@@ -86,7 +84,7 @@ namespace RimValiCore.RVR
         }
         public string texPath(Pawn pawn, int index)
         {
-            
+
             string path = textures[index].tex;
 
             if (textures[index].femaleTex != null && pawn.gender == Gender.Female)
@@ -166,7 +164,7 @@ namespace RimValiCore.RVR
                     }
                 }
             }
-            
+
             return path;
 
         }
@@ -184,7 +182,7 @@ namespace RimValiCore.RVR
         public List<string> findAllTextures()
         {
             List<string> paths = new List<string>();
-            foreach(BaseTex tex in getTexList())
+            foreach (BaseTex tex in getTexList())
             {
                 paths.Add(tex.tex);
                 if (tex.femaleTex != null)
@@ -254,20 +252,23 @@ namespace RimValiCore.RVR
             {
                 return false;
             }
-            return CanShow(pawn,portrait);
+            return CanShow(pawn, portrait);
         }
         public bool CanShow(Pawn pawn, bool portrait = false)
         {
             IEnumerable<BodyPartRecord> bodyParts = pawn.health.hediffSet.GetNotMissingParts();
             bool bodyIsHiding = bodyPart == null || bodyParts.Any(x => x.def.defName.ToLower() == bodyPart.ToLower() || x.Label.ToLower() == bodyPart.ToLower());
             if (!bodyIsHiding)
+            {
                 return bodyIsHiding;
+            }
+
             if (!portrait)
             {
                 return !pawn.InBed() || pawn.CurrentBed().def.building.bed_showSleeperBody && showsInBed;
             }
             return true;
-            
+
         }
         #endregion
     }

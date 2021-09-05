@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+
+  <!-- <CannotWearRVR>{RACE} can't wear this</CannotWearRVR> -->
+  <CannotWearRVR>{RACE} kann dies nicht tragen</CannotWearRVR>
+  <!-- <CannotBuildRVR>{RACE} can't build this</CannotBuildRVR> -->
+  <CannotBuildRVR>{RACE} kann dies nicht bauen</CannotBuildRVR>
+  <!-- <CannotEatRVR>{RACE} can't eat this</CannotEatRVR> -->
+  <CannotEatRVR>{RACE} kann das nicht essen</CannotEatRVR>
+
+</LanguageData>
