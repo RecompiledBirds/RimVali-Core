@@ -13,13 +13,29 @@ namespace RimValiCore.HealableMaterial
     [StaticConstructorOnStartup]
     public static class HealableMatFinder
     {
-        public static Dictionary<ThingDef, HealStuff> thingDefs = new Dictionary<ThingDef, HealStuff>();
+        private static readonly Dictionary<ThingDef, HealStuff> thingDefs = new Dictionary<ThingDef, HealStuff>();
+
+        public static HealStuff FindThing(Thing thing)
+        {
+            HealStuff healStuff = null;
+
+            if (thingDefs.ContainsKey(thing.def))
+            {
+                return thingDefs[thing.def];
+            }
+            if (thing.Stuff != null && thingDefs.ContainsKey(thing.Stuff))
+            {
+                return thingDefs[thing.Stuff];
+            }
+
+            return healStuff;
+        }
 
         static HealableMatFinder()
         {
             foreach (ThingDef def in DefDatabase<ThingDef>.AllDefs.Where(x => x.HasComp(typeof(HealableComp))))
             {
-                thingDefs.Add(def, new HealStuff
+                thingDefs.Add(def, new HealStuff()
                 {
                     amount = def.GetCompProperties<HealableCompProps>().amountHealed,
                     ticks = def.GetCompProperties<HealableCompProps>().ticksBetweenHeal

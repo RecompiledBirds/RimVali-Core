@@ -268,7 +268,7 @@ namespace RimValiCore.RVR
 
             if (!portrait)
             {
-                return !pawn.InBed() || pawn.CurrentBed().def.building.bed_showSleeperBody && showsInBed;
+                return !pawn.InBed() || (pawn.CurrentBed().def.building.bed_showSleeperBody) || showsInBed;
             }
             return true;
         }

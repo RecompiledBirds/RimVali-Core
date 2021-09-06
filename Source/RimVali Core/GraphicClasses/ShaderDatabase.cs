@@ -5,7 +5,6 @@ using Verse;
 
 namespace RimValiCore
 {
-    [StaticConstructorOnStartup]
     public static class ClassTMPDecompiler
     {
         private static readonly string path = $"{Application.dataPath}";
@@ -21,14 +20,16 @@ namespace RimValiCore
                 int count = 0;
                 foreach (Texture2D tex in bundle.LoadAllAssets<Texture2D>())
                 {
-                    Rect renderRect = new Rect(new Vector2(100, 100), new Vector2(tex.width, tex.height));
-                    RenderTexture rTex = new RenderTexture(tex.width, tex.height, 3);
-
-                    Graphics.DrawTexture(renderRect, tex);
-
-                    Texture2D copyTex = new Texture2D(tex.width, tex.height);
-                    Graphics.CopyTexture(tex, copyTex);
-                    WriteTex(copyTex, $"{bundle.name}_dectexture_{count}");
+                    RenderTexture rTex = new RenderTexture(tex.width, tex.height,0,RenderTextureFormat.Default,RenderTextureReadWrite.Linear);
+                    RenderTexture previous = RenderTexture.active;
+                    Graphics.Blit(tex, rTex);
+                    RenderTexture.active = rTex;
+                    Texture2D nTex = new Texture2D(tex.width,tex.height);
+                    nTex.ReadPixels(new Rect(0, 0, tex.width, tex.height), 0, 0);
+                    nTex.Apply();
+                    WriteTex(nTex, $"{bundle.name}_dectexture_{count}");
+                    RenderTexture.active = previous;
+                    RenderTexture.ReleaseTemporary(rTex);
                     count++;
                     totalCount++;
                 }

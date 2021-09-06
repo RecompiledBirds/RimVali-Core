@@ -57,7 +57,6 @@ namespace RimValiCore.Ships
         }
 
         private static readonly List<Pawn> tmpPawns = new List<Pawn>();
-
         private static readonly List<Thing> tmpContainedThings = new List<Thing>();
 
         private readonly string arrivalMessageKey = "MessageTransportPodsArrived";
@@ -93,6 +92,7 @@ namespace RimValiCore.Ships
                 }, MenuOptionPriority.Default, null, null, 0f, null, null);
                 FuelingPortSource.TryGetComp<CompRefuelable>().ConsumeFuel(100);
             }
+
             List<WorldObject> worldObjects = Find.WorldObjects.AllWorldObjects;
             int num;
             for (int i = 0; i < worldObjects.Count; i = num + 1)
@@ -195,7 +195,6 @@ namespace RimValiCore.Ships
 
         public new void TryLaunch(int destinationTile, TransportPodsArrivalAction arrivalAction)
         {
-            ;
             if (!parent.Spawned)
             {
                 Log.Error("Tried to launch " + parent + ", but it's unspawned.");
@@ -291,7 +290,7 @@ namespace RimValiCore.Ships
 
         #region picking world targ
 
-        public bool ChoseWorldTarget(GlobalTargetInfo target)
+        private bool ChoseWorldTarget(GlobalTargetInfo target)
         {
             return ChoseWorldTarget(target, parent.Map.Tile, TransportersInGroup.Cast<IThingHolder>(), MaxLaunchDistance, new Action<int, TransportPodsArrivalAction>(TryLaunch), this);
         }
@@ -362,7 +361,8 @@ namespace RimValiCore.Ships
             }
         }
 
-        public static readonly Texture2D DismissTex = ContentFinder<Texture2D>.Get("UI/Commands/DismissShuttle", true);
+        // What's this for??
+        private static readonly Texture2D DismissTex = ContentFinder<Texture2D>.Get("UI/Commands/DismissShuttle", true);
     }
 
     #endregion launchable

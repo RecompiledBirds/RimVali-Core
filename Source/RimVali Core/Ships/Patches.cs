@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using RimWorld;
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Verse;
@@ -15,17 +14,7 @@ namespace RimValiCore.Ships
 
         static ShipPatches()
         {
-            // Harmony rVC_Ships_Harmony = new Harmony("RimValiCore.Ships");
-            try
-            {
-                Log.Message("[RimVali: Core/Ships & Drones]: Ready for launch!");
-                // rVC_Ships_Harmony.PatchAll();
-                //  Log.Message($"[RimVali: Core/Ships]: Patched {rVC_Ships_Harmony.GetPatchedMethods().Count()} methods succesfully!");
-            }
-            catch (Exception)
-            {
-                //  Log.Error($"[RimVali: Core/Ships]: Patches failed!!! Patched {rVC_Ships_Harmony.GetPatchedMethods().Count()} methods. \n Error: {e}");
-            }
+            Log.Message("[RimVali: Core/Ships & Drones]: Ready for launch!");
         }
     }
 
@@ -97,17 +86,6 @@ namespace RimValiCore.Ships
                     }
                     command_LoadToTransporter.icon = ShipPatches.LoadCommandTex;
                     command_LoadToTransporter.transComp = __instance;
-
-                    /*
-                    if (false)
-                    {
-                        command_LoadToTransporter.Disable("CommandLoadTransporterFailNotConnectedToFuelingPort".Translate());
-                    }
-                    else if (false)
-                    {
-                        command_LoadToTransporter.Disable("CommandLoadTransporterFailNoFuel".Translate());
-                    }
-                    */
 
                     command_LoadToTransporter.defaultLabel = "test";
                     gizmos.Add(command_LoadToTransporter);

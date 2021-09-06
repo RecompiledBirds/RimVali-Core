@@ -42,7 +42,7 @@ namespace AvaliMod
                     ushort uS = (ushort)$"{def.defName}_{tDef.defName}".GetHashCode();
                     while (DefDatabase<TerrainDef>.AllDefs.Any(terrain => terrain.shortHash == uS) || floorsMade.Any(t => t.shortHash == uS) && canGenerate)
                     {
-                        if (uS < 65535 && !hasmaxedout)
+                        if (uS < ushort.MaxValue && !hasmaxedout)
                         {
                             uS += 1;
                         }
@@ -279,10 +279,14 @@ namespace AvaliMod
                             string cS = string.Copy(s);
                             string res = cS.Substring(cS.IndexOf("removeFromResearch_") + "removeFromResearch_".Length, (cS.IndexOf("[ENDRESNAME]") - ("[ENDRESNAME]".Length + 7)) - cS.IndexOf("removeFromResearch_"));
                             Log.Message(res);
-                            def.researchPrerequisites.RemoveAll(x => x.defName == res);
+                            ResearchProjectDef proj = def.researchPrerequisites.Find(x => x.defName == res);
+                            def.researchPrerequisites.Remove(proj);
+                            proj.PostLoad();
+                            proj.ResolveReferences();
                         }
                         catch
                         {
+
                         }
                     }
                 }

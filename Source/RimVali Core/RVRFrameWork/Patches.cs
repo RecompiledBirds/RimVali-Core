@@ -3,14 +3,28 @@ using RimWorld;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
+using System.Text;
 using UnityEngine;
 using Verse;
 using Verse.AI;
 
 namespace RimValiCore.RVR
 {
+    public class Patcher
+    {
+        private readonly Harmony harmony;
+        public Patcher(Harmony har)
+        {
+            harmony = har;
+            harmony.Patch(AccessTools.Method(typeof(ModAssemblyHandler), "ReloadAll"), prefix: new HarmonyMethod(typeof(AssemblyLoadingPatch), "Patch"));
+            Log.Message("Loading patch completed!");
+        }
+    }
+
     #region Restrictions and patching
 
     //Eventually I want to switch from dictionaries to this, and potentially keep a dictionary of restriction types and and objects instead. Eg. Dictionary<Type,RestrictionObject> restrictions
@@ -45,7 +59,7 @@ namespace RimValiCore.RVR
         {
             if (!RimValiCoreMod.Settings.expMode)
             {
-                return pairs.ContainsKey(item) ? pairs[item] is List<V> && !pairs[item].NullOrEmpty() && pairs[item].Contains(race) : keyNotInReturn;
+                return pairs.ContainsKey(item) ? pairs[item] is List<V> ? !pairs[item].NullOrEmpty() && pairs[item].Contains(race) : false : keyNotInReturn;
             }
             else
             {
@@ -124,7 +138,6 @@ namespace RimValiCore.RVR
             }
         }
 
-        // Token: 0x060000EB RID: 235 RVA: 0x00006D94 File Offset: 0x00004F94
         static Restrictions()
         {
             Harmony harmony = new Harmony("RimVali.Core");
@@ -386,6 +399,93 @@ namespace RimValiCore.RVR
     }
 
     #endregion Restrictions and patching
+
+    // [HarmonyPatch(typeof(ModAssemblyHandler), "ReloadAll")]
+    public static class AssemblyLoadingPatch
+    {
+        private static bool AssemblyIsUsable(Assembly asm)
+        {
+            if (asm == null)
+            {
+                return false;
+            }
+
+            try
+            {
+                asm.GetTypes();
+            }
+            catch (ReflectionTypeLoadException ex)
+            {
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.AppendLine(string.Concat(new object[]
+                {
+                    "ReflectionTypeLoadException getting types in assembly ",
+                    asm.GetName().Name,
+                    ": ",
+                    ex
+                }));
+                stringBuilder.AppendLine();
+                stringBuilder.AppendLine("Loader exceptions:");
+                if (ex.LoaderExceptions != null)
+                {
+                    foreach (Exception ex2 in ex.LoaderExceptions)
+                    {
+                        stringBuilder.AppendLine("   => " + ex2.ToString());
+                    }
+                }
+                Log.Error(stringBuilder.ToString());
+                return false;
+            }
+            catch (Exception ex3)
+            {
+                Log.Error(string.Concat(new object[]
+                {
+                    "Exception getting types in assembly ",
+                    asm.GetName().Name,
+                    ": ",
+                    ex3
+                }));
+                return false;
+            }
+            return true;
+        }
+
+        private static bool resolverIsSet = false;
+
+        // [HarmonyPrefix]
+        public static void Patch(ModAssemblyHandler __instance)
+        {
+            if (resolverIsSet)
+            {
+                ResolveEventHandler @object = (object obj, ResolveEventArgs args) => Assembly.GetExecutingAssembly();
+                AppDomain.CurrentDomain.AssemblyResolve += @object.Invoke;
+                // if (var is true) set var to true ; ?
+                resolverIsSet = true;
+            }
+            ModContentPack mod = RimValiCore.RimValiUtility.GetVar<ModContentPack>("mod", obj: __instance);
+            foreach (FileInfo fileInfo in from f in ModContentPack.GetAllFilesForModPreserveOrder(mod, "Assemblies/", (string e) => e.ToLower() == ".dll", null)
+                                          select f.Item2)
+            {
+                Assembly assembly = null;
+                try
+                {
+                    assembly = Assembly.Load(fileInfo.FullName);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Exception loading " + fileInfo.Name + ": " + ex.ToString());
+                    break;
+                }
+                if (AssemblyIsUsable(assembly))
+                {
+                    GenTypes.ClearCache();
+                    __instance.loadedAssemblies.Add(assembly);
+                    Log.Message($"Loaded {assembly.GetName()}");
+                }
+            }
+        }
+    }
+
 
     #region Apparel score gain patch
 

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using Verse;
 
 namespace RimValiCore
@@ -41,6 +42,15 @@ namespace RimValiCore
 
         public RimValiCoreMod(ModContentPack content) : base(content)
         {
+            try
+            {
+                // Log.Message("Starting loading patch");
+                // new Patcher(new Harmony("RimValiCore.Loading"));
+            }
+            catch (Exception e)
+            {
+                Log.Error(e.Message);
+            }
             RimValiUtility.dir = content.RootDir.ToString();
             mod = content;
             settings = GetSettings<RVCModSettings>();

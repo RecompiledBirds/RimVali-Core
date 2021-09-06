@@ -81,6 +81,7 @@
     <Compile Include="ThingComps\Cloning\StorageComp.cs" />
     <Compile Include="ThingComps\DrawTexComp.cs" />
     <Compile Include="ThingComps\FuelConsumer.cs" />
+    <Compile Include="WallPlaceworker.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
