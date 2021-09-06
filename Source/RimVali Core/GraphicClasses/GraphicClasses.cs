@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Verse;
+
 namespace RimValiCore
 {
     public class AvaliGraphic_Appearances : AvaliGraphic
@@ -31,10 +32,10 @@ namespace RimValiCore
                 string folderPath = req.path;
                 if (!stuffAppearance.pathPrefix.NullOrEmpty())
                 {
-                    folderPath = stuffAppearance.pathPrefix + "/" + ((IEnumerable<string>)folderPath.Split('/')).Last<string>();
+                    folderPath = stuffAppearance.pathPrefix + "/" + ((IEnumerable<string>)folderPath.Split('/')).Last();
                 }
 
-                Texture2D texture2D = ContentFinder<Texture2D>.GetAllInFolder(folderPath).Where<Texture2D>(x => x.name.EndsWith(stuffAppearance.defName)).FirstOrDefault<Texture2D>();
+                Texture2D texture2D = ContentFinder<Texture2D>.GetAllInFolder(folderPath).Where(x => x.name.EndsWith(stuffAppearance.defName)).FirstOrDefault();
                 if (texture2D != null)
                 {
                     subGraphics[index] = AvaliGraphicDatabase.Get<AvaliGraphic_Single>(folderPath + "/" + texture2D.name, req.shader, drawSize, color);
@@ -58,7 +59,7 @@ namespace RimValiCore
             Log.Message("treidmoasrasd");
             if (newColorTwo != Color.white)
             {
-                Log.ErrorOnce("Cannot use Graphic_Appearances.GetColoredVersion with a non-white colorTwo.", 9910251, false);
+                Log.ErrorOnce("Cannot use Graphic_Appearances.GetColoredVersion with a non-white colorTwo.", 9910251);
             }
 
             return AvaliGraphicDatabase.Get<AvaliGraphic_Appearances>(path, newShader, drawSize, newColor, Color.white, Color.white, data);
@@ -79,6 +80,7 @@ namespace RimValiCore
              this.SubGraphicFor(thing).DrawWorker(loc, rot, thingDef, thing, extraRotation);
          }
         */
+
         public AvaliGraphic SubGraphicFor(Thing thing)
         {
             StuffAppearanceDef smooth = StuffAppearanceDefOf.Smooth;
@@ -104,10 +106,12 @@ namespace RimValiCore
 
     public class AvaliGraphic_Cluster : AvaliGraphic_Collection
     {
+#pragma warning disable IDE0051 // Remove unused private member
         private const float PositionVariance = 0.45f;
         private const float SizeVariance = 0.2f;
         private const float SizeFactorMin = 0.8f;
         private const float SizeFactorMax = 1.2f;
+#pragma warning restore IDE0051 // Remove unused private member
 
         public override Material MatSingle => subGraphics[Rand.Range(0, subGraphics.Length)].MatSingle;
 
@@ -139,6 +143,7 @@ namespace RimValiCore
                Rand.PopState();
            }
            */
+
         public override string ToString()
         {
             return "Scatter(subGraphic[0]=" + subGraphics[0].ToString() + ", count=" + subGraphics.Length + ")";
@@ -166,10 +171,10 @@ namespace RimValiCore
             color = req.color;
             colorTwo = req.colorTwo;
             drawSize = req.drawSize;
-            List<Texture2D> list = ContentFinder<Texture2D>.GetAllInFolder(req.path).Where<Texture2D>(x => !x.name.EndsWith(Graphic_Single.MaskSuffix)).OrderBy<Texture2D, string>(x => x.name).ToList<Texture2D>();
-            if (list.NullOrEmpty<Texture2D>())
+            List<Texture2D> list = ContentFinder<Texture2D>.GetAllInFolder(req.path).Where(x => !x.name.EndsWith(Graphic_Single.MaskSuffix)).OrderBy(x => x.name).ToList();
+            if (list.NullOrEmpty())
             {
-                Log.Error("Collection cannot init: No textures found at path " + req.path, false);
+                Log.Error("Collection cannot init: No textures found at path " + req.path);
                 subGraphics = new AvaliGraphic[1]
                 {
           AvaliBaseContent.BadGraphic
@@ -271,7 +276,7 @@ namespace RimValiCore
             CompFadesInOut comp = thing.TryGetComp<CompFadesInOut>();
             if (comp == null)
             {
-                Log.ErrorOnce(thingDef.defName + ": Graphic_FadesInOut requires CompFadesInOut.", 5643893, false);
+                Log.ErrorOnce(thingDef.defName + ": Graphic_FadesInOut requires CompFadesInOut.", 5643893);
             }
             else
             {
@@ -280,6 +285,7 @@ namespace RimValiCore
             }
         }
     }
+
     public class AvaliGraphic_Terrain : AvaliGraphic_Single
     {
         public override void Init(AvaliGraphicRequest req)
@@ -292,6 +298,7 @@ namespace RimValiCore
             return "Terrain(path=" + path + ", shader=" + Shader + ", color=" + color + ")";
         }
     }
+
     [StaticConstructorOnStartup]
     public class AvaliGraphic_Mote : AvaliGraphic_Single
     {
@@ -306,16 +313,7 @@ namespace RimValiCore
           Thing thing,
           float extraRotation)
         {
-            DrawMoteInternal(loc, rot, thingDef, thing, 0);
-        }
-
-        public void DrawMoteInternal(
-          Vector3 loc,
-          Rot4 rot,
-          ThingDef thingDef,
-          Thing thing,
-          int layer)
-        {
+            const int layer = 0;
             Mote mote = (Mote)thing;
             float alpha = mote.Alpha;
             if (alpha <= 0.0)
@@ -337,8 +335,8 @@ namespace RimValiCore
             }
             else
             {
-                AvaliGraphic_Mote.propertyBlock.SetColor(ShaderPropertyIDs.Color, colA);
-                Graphics.DrawMesh(MeshPool.plane10, matrix, matSingle, layer, null, 0, AvaliGraphic_Mote.propertyBlock);
+                propertyBlock.SetColor(ShaderPropertyIDs.Color, colA);
+                Graphics.DrawMesh(MeshPool.plane10, matrix, matSingle, layer, null, 0, propertyBlock);
             }
         }
 
@@ -348,10 +346,8 @@ namespace RimValiCore
         }
     }
 
-
     public class AvaliGraphic_Multi : AvaliGraphic
     {
-
         private readonly Material[] mats = new Material[4];
         private bool westFlipped;
         private bool eastFlipped;
@@ -433,9 +429,8 @@ namespace RimValiCore
             }
             if (texture2DArray1[0] == null)
             {
-                Log.Error("Failed to find any textures at " + req.path + " while constructing " + this.ToStringSafe<AvaliGraphic_Multi>(), false);
+                Log.Error("Failed to find any textures at " + req.path + " while constructing " + this.ToStringSafe());
             }
-
             else
             {
                 if (texture2DArray1[2] == null)
@@ -519,7 +514,6 @@ namespace RimValiCore
                         maskTex = texture2DArray2[index],
                         shaderParameters = req.shaderParameters
                     });
-
                 };
             }
         }
@@ -541,7 +535,7 @@ namespace RimValiCore
 
         public override int GetHashCode()
         {
-            return Gen.HashCombineStruct<Color>(Gen.HashCombineStruct<Color>(Gen.HashCombineStruct<Color>(Gen.HashCombine<string>(0, path), color), colorTwo), ColorThree);
+            return Gen.HashCombineStruct(Gen.HashCombineStruct(Gen.HashCombineStruct(Gen.HashCombine(0, path), color), colorTwo), ColorThree);
         }
     }
 
@@ -558,11 +552,12 @@ namespace RimValiCore
             //Log.Message("butalsothert");
             if (newColorTwo != Color.white)
             {
-                Log.ErrorOnce("Cannot use Graphic_Random.GetColoredVersion with a non-white colorTwo.", 9910251, false);
+                Log.ErrorOnce("Cannot use Graphic_Random.GetColoredVersion with a non-white colorTwo.", 9910251);
             }
 
             return AvaliGraphicDatabase.Get<AvaliGraphic_Random>(path, newShader, drawSize, newColor, Color.white, Color.white, data);
         }
+
         /*
         public override Material MatAt(Rot4 rot, Thing thing = null)
         {
@@ -584,6 +579,7 @@ namespace RimValiCore
             (thing == null ? this.subGraphics[0] : this.SubGraphicFor(thing)).DrawWorker(loc, rot, thingDef, thing, extraRotation);
         }
         */
+
         public AvaliGraphic SubGraphicFor(Thing thing)
         {
             return thing == null ? subGraphics[0] : subGraphics[thing.thingIDNumber % subGraphics.Length];
@@ -602,9 +598,11 @@ namespace RimValiCore
 
     public class AvaliGraphic_Flicker : AvaliGraphic_Collection
     {
+#pragma warning disable IDE0051 // Remove unused private member
         private const int BaseTicksPerFrameChange = 15;
         private const int ExtraTicksPerFrameChange = 10;
         private const float MaxOffset = 0.05f;
+#pragma warning restore IDE0051 // Remove unused private member
 
         public override Material MatSingle => subGraphics[Rand.Range(0, subGraphics.Length)].MatSingle;
 
@@ -657,6 +655,7 @@ namespace RimValiCore
             }
         }
         */
+
         public override string ToString()
         {
             return "Flicker(subGraphic[0]=" + subGraphics[0].ToString() + ", count=" + subGraphics.Length + ")";
@@ -665,8 +664,6 @@ namespace RimValiCore
 
     public class AvaliGraphic_StackCount : AvaliGraphic_Collection
     {
-
-
         public override AvaliGraphic GetColoredVersion(
           Shader newShader,
           Color newColor,
@@ -677,6 +674,7 @@ namespace RimValiCore
             return AvaliGraphicDatabase.Get<AvaliGraphic_StackCount>(path, newShader, drawSize, newColor, newColorTwo, newColorThree
                 , data);
         }
+
         /*
         public override Material MatAt(Rot4 rot, Thing thing = null)
         {
@@ -703,14 +701,17 @@ namespace RimValiCore
             (thing == null ? this.subGraphics[0] : this.SubGraphicFor(thing)).DrawWorker(loc, rot, thingDef, thing, extraRotation);
         }
         */
+
         public AvaliGraphic SubGraphicForStackCount(int stackCount, ThingDef def)
         {
             switch (subGraphics.Length)
             {
                 case 1:
                     return subGraphics[0];
+
                 case 2:
                     return stackCount == 1 ? subGraphics[0] : subGraphics[1];
+
                 case 3:
                     if (stackCount == 1)
                     {
@@ -718,6 +719,7 @@ namespace RimValiCore
                     }
 
                     return stackCount == def.stackLimit ? subGraphics[2] : subGraphics[1];
+
                 default:
                     if (stackCount == 1)
                     {

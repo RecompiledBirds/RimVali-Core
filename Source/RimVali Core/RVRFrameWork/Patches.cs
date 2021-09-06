@@ -1,5 +1,4 @@
-﻿
-using HarmonyLib;
+﻿using HarmonyLib;
 using RimWorld;
 using System;
 using System.Collections;
@@ -12,8 +11,8 @@ using Verse.AI;
 
 namespace RimValiCore.RVR
 {
-
     #region Restrictions and patching
+
     //Eventually I want to switch from dictionaries to this, and potentially keep a dictionary of restriction types and and objects instead. Eg. Dictionary<Type,RestrictionObject> restrictions
     public class RestrictionObject<T, V>
     {
@@ -22,6 +21,7 @@ namespace RimValiCore.RVR
     }
 
     #region FactionResearch
+
     public class FacRes
     {
         public ResearchProjectDef proj;
@@ -33,16 +33,19 @@ namespace RimValiCore.RVR
             proj = projectDef;
         }
     }
-    #endregion
+
+    #endregion FactionResearch
+
     [StaticConstructorOnStartup]
     public static class Restrictions
     {
         public static Hashtable expRes = new Hashtable();
-        public static bool checkRestrictions<T, V>(Dictionary<T, List<V>> pairs, T item, V race, bool keyNotInReturn = true, bool raceNotFound = false) where V : Def where T : Def
+
+        public static bool CheckRestrictions<T, V>(Dictionary<T, List<V>> pairs, T item, V race, bool keyNotInReturn = true, bool raceNotFound = false) where V : Def where T : Def
         {
             if (!RimValiCoreMod.Settings.expMode)
             {
-                return pairs.ContainsKey(item) ? pairs[item] is List<V> ? !pairs[item].NullOrEmpty() && pairs[item].Contains(race) : false : keyNotInReturn;
+                return pairs.ContainsKey(item) ? pairs[item] is List<V> && !pairs[item].NullOrEmpty() && pairs[item].Contains(race) : keyNotInReturn;
             }
             else
             {
@@ -61,7 +64,6 @@ namespace RimValiCore.RVR
                 {
                     return raceNotFound;
                 }
-
             }
         }
 
@@ -92,7 +94,6 @@ namespace RimValiCore.RVR
                     expRes.Add(race, new HashSet<Def>());
                     HashSet<Def> defs = new HashSet<Def> { item };
                     expRes[race] = defs;
-
                 }
                 else
                 {
@@ -130,7 +131,7 @@ namespace RimValiCore.RVR
             try
             {
                 harmony.PatchAll();
-                HarmonyMethod transpiler = new HarmonyMethod(typeof(RenderTextureTranspiler), nameof(RenderTextureTranspiler.transpile));
+                HarmonyMethod transpiler = new HarmonyMethod(typeof(RenderTextureTranspiler), nameof(RenderTextureTranspiler.Transpile));
                 harmony.Patch(original: AccessTools.Constructor(typeof(PawnTextureAtlas)), transpiler: transpiler);
                 harmony.Patch(AccessTools.Method(typeof(EquipmentUtility), "CanEquip", new[] { typeof(Thing), typeof(Pawn), typeof(string).MakeByRefType(), typeof(bool) }), postfix: new HarmonyMethod(typeof(ApparelPatch), "Equipable"));
                 Log.Message($"[RimVali Core] Patches completed. {harmony.GetPatchedMethods().EnumerableCount()} methods patched.");
@@ -143,13 +144,12 @@ namespace RimValiCore.RVR
             Log.Message("[RimVali Core/RVR]: Setting up race restrictions.");
             foreach (RimValiRaceDef raceDef in DefDatabase<RimValiRaceDef>.AllDefs)
             {
-
                 bool flag = raceDef.restrictions.buildables.Count > 0;
                 if (flag)
                 {
                     foreach (ThingDef item in raceDef.restrictions.buildables)
                     {
-                        AddRestriction<BuildableDef, ThingDef>(ref buildingRestrictions, item, raceDef);
+                        AddRestriction(ref buildingRestrictions, item, raceDef);
                     }
                 }
                 bool flag3 = raceDef.restrictions.consumables.Count > 0;
@@ -157,7 +157,7 @@ namespace RimValiCore.RVR
                 {
                     foreach (ThingDef item2 in raceDef.restrictions.consumables)
                     {
-                        AddRestriction<ThingDef, ThingDef>(ref consumableRestrictions, item2, raceDef);
+                        AddRestriction(ref consumableRestrictions, item2, raceDef);
                     }
                 }
                 bool flag4 = raceDef.restrictions.equippables.Count > 0;
@@ -165,7 +165,7 @@ namespace RimValiCore.RVR
                 {
                     foreach (ThingDef item3 in raceDef.restrictions.equippables)
                     {
-                        AddRestriction<ThingDef, ThingDef>(ref equipmentRestrictions, item3, raceDef);
+                        AddRestriction(ref equipmentRestrictions, item3, raceDef);
                     }
                 }
                 bool flag5 = raceDef.restrictions.researchProjectDefs.Count > 0;
@@ -173,7 +173,7 @@ namespace RimValiCore.RVR
                 {
                     foreach (ResearchProjectDef item4 in raceDef.restrictions.researchProjectDefs)
                     {
-                        AddRestriction<ResearchProjectDef, ThingDef>(ref researchRestrictions, item4, raceDef);
+                        AddRestriction(ref researchRestrictions, item4, raceDef);
                     }
                 }
                 bool flag6 = raceDef.restrictions.traits.Count > 0;
@@ -181,7 +181,7 @@ namespace RimValiCore.RVR
                 {
                     foreach (TraitDef item5 in raceDef.restrictions.traits)
                     {
-                        AddRestriction<TraitDef, ThingDef>(ref traitRestrictions, item5, raceDef);
+                        AddRestriction(ref traitRestrictions, item5, raceDef);
                     }
                 }
                 bool flag7 = raceDef.restrictions.thoughtDefs.Count > 0;
@@ -189,7 +189,7 @@ namespace RimValiCore.RVR
                 {
                     foreach (ThoughtDef item6 in raceDef.restrictions.thoughtDefs)
                     {
-                        AddRestriction<ThoughtDef, ThingDef>(ref thoughtRestrictions, item6, raceDef);
+                        AddRestriction(ref thoughtRestrictions, item6, raceDef);
                     }
                 }
                 bool flag8 = raceDef.restrictions.equippablesWhitelist.Count > 0;
@@ -197,7 +197,7 @@ namespace RimValiCore.RVR
                 {
                     foreach (ThingDef item7 in raceDef.restrictions.equippablesWhitelist)
                     {
-                        AddRestriction<ThingDef, ThingDef>(ref equipabblbleWhiteLists, item7, raceDef);
+                        AddRestriction(ref equipabblbleWhiteLists, item7, raceDef);
                     }
                 }
                 bool flag9 = raceDef.restrictions.bedDefs.Count > 0;
@@ -205,7 +205,7 @@ namespace RimValiCore.RVR
                 {
                     foreach (ThingDef item8 in raceDef.restrictions.bedDefs)
                     {
-                        AddRestriction<ThingDef, ThingDef>(ref bedRestrictions, item8, raceDef);
+                        AddRestriction(ref bedRestrictions, item8, raceDef);
                     }
                 }
                 bool flag10 = raceDef.restrictions.bodyTypes.Count > 0;
@@ -213,22 +213,19 @@ namespace RimValiCore.RVR
                 {
                     foreach (BodyTypeDef item9 in raceDef.restrictions.bodyTypes)
                     {
-                        AddRestriction<BodyTypeDef, ThingDef>(ref bodyTypeRestrictions, item9, raceDef);
+                        AddRestriction(ref bodyTypeRestrictions, item9, raceDef);
                     }
                 }
                 if (raceDef.restrictions.modContentRestrictionsApparelWhiteList.Count > 0)
                 {
                     foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modContentRestrictionsApparelWhiteList.Contains(x.Name) || raceDef.restrictions.modContentRestrictionsApparelWhiteList.Contains(x.PackageId)))
                     {
-
                         foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef && (thingDef.IsApparel)))
                         {
-
                             AddRestriction(ref equipabblbleWhiteLists, def, raceDef);
                         }
                     }
                 }
-
 
                 foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modContentRestrictionsApparelList.Contains(x.Name) || raceDef.restrictions.modContentRestrictionsApparelList.Contains(x.PackageId.ToLower())))
                 {
@@ -238,10 +235,8 @@ namespace RimValiCore.RVR
                     }
                 }
 
-
                 if (raceDef.restrictions.modResearchRestrictionsList.Count > 0)
                 {
-
                     foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modResearchRestrictionsList.Contains(x.Name) || raceDef.restrictions.modResearchRestrictionsList.Contains(x.PackageId)))
                     {
                         foreach (ResearchProjectDef research in mod.AllDefs.Where(x => x is ResearchProjectDef))
@@ -251,10 +246,8 @@ namespace RimValiCore.RVR
                     }
                 }
 
-
                 if (raceDef.restrictions.modTraitRestrictions.Count > 0)
                 {
-
                     foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modTraitRestrictions.Contains(x.Name) || raceDef.restrictions.modTraitRestrictions.Contains(x.PackageId)))
                     {
                         foreach (TraitDef trait in mod.AllDefs.Where(x => x is TraitDef))
@@ -264,10 +257,8 @@ namespace RimValiCore.RVR
                     }
                 }
 
-
                 if (raceDef.restrictions.modBuildingRestrictions.Count > 0)
                 {
-
                     foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modBuildingRestrictions.Contains(x.Name) || raceDef.restrictions.modBuildingRestrictions.Contains(x.PackageId)))
                     {
                         foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef))
@@ -277,11 +268,8 @@ namespace RimValiCore.RVR
                     }
                 }
 
-
-
                 if (raceDef.restrictions.modConsumables.Count > 0)
                 {
-
                     foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modBuildingRestrictions.Contains(x.Name) || raceDef.restrictions.modBuildingRestrictions.Contains(x.PackageId)))
                     {
                         foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef && thingDef.IsIngestible))
@@ -292,19 +280,13 @@ namespace RimValiCore.RVR
                 }
                 foreach (BodyTypeDef race in raceDef.bodyTypes)
                 {
-                    AddRestriction<ThingDef, BodyTypeDef>(ref bodyDefs, raceDef, race);
-
+                    AddRestriction(ref bodyDefs, raceDef, race);
                 }
-
-
-
-
-
 
                 bool useHumanRecipes = raceDef.useHumanRecipes;
                 if (useHumanRecipes)
                 {
-                    foreach (RecipeDef recipeDef in Enumerable.Where<RecipeDef>(DefDatabase<RecipeDef>.AllDefsListForReading, (RecipeDef x) => x.recipeUsers != null && x.recipeUsers.Contains(ThingDefOf.Human)))
+                    foreach (RecipeDef recipeDef in Enumerable.Where(DefDatabase<RecipeDef>.AllDefsListForReading, (RecipeDef x) => x.recipeUsers != null && x.recipeUsers.Contains(ThingDefOf.Human)))
                     {
                         recipeDef.recipeUsers.Add(raceDef);
                         recipeDef.recipeUsers.RemoveDuplicates();
@@ -319,9 +301,9 @@ namespace RimValiCore.RVR
                     {
                         list.Add(bodyPartRecord.def);
                     }
-                    foreach (RecipeDef recipeDef2 in Enumerable.Where<RecipeDef>(ThingDefOf.Human.recipes, (RecipeDef recipe) => recipe.targetsBodyPart || !recipe.appliedOnFixedBodyParts.NullOrEmpty<BodyPartDef>()))
+                    foreach (RecipeDef recipeDef2 in Enumerable.Where(ThingDefOf.Human.recipes, (RecipeDef recipe) => recipe.targetsBodyPart || !recipe.appliedOnFixedBodyParts.NullOrEmpty()))
                     {
-                        foreach (BodyPartDef bodyPartDef in Enumerable.Intersect<BodyPartDef>(recipeDef2.appliedOnFixedBodyParts, list))
+                        foreach (BodyPartDef bodyPartDef in Enumerable.Intersect(recipeDef2.appliedOnFixedBodyParts, list))
                         {
                             raceDef.recipes.Add(recipeDef2);
                         }
@@ -335,24 +317,23 @@ namespace RimValiCore.RVR
                 foreach (FactionResearchRestriction factionResearchRestriction in factionResearchRestrictionDef.factionResearchRestrictions)
                 {
                     FacRes item15 = new FacRes(factionResearchRestriction.researchProj, factionResearchRestriction.isHackable);
-                    bool flag17 = !Restrictions.factionResearchRestrictions.ContainsKey(factionResearchRestriction.factionDef);
+                    bool flag17 = !factionResearchRestrictions.ContainsKey(factionResearchRestriction.factionDef);
                     if (flag17)
                     {
-                        Restrictions.factionResearchRestrictions.Add(factionResearchRestriction.factionDef, new List<FacRes>());
+                        factionResearchRestrictions.Add(factionResearchRestriction.factionDef, new List<FacRes>());
                     }
-                    Restrictions.factionResearchRestrictions[factionResearchRestriction.factionDef].Add(item15);
+                    factionResearchRestrictions[factionResearchRestriction.factionDef].Add(item15);
                 }
                 foreach (FactionResearchRestriction factionResearchRestriction2 in factionResearchRestrictionDef.factionResearchRestrictionBlackList)
                 {
                     FacRes item16 = new FacRes(factionResearchRestriction2.researchProj, factionResearchRestriction2.isHackable);
-                    bool flag18 = !Restrictions.factionResearchBlacklist.ContainsKey(factionResearchRestriction2.factionDef);
+                    bool flag18 = !factionResearchBlacklist.ContainsKey(factionResearchRestriction2.factionDef);
                     if (flag18)
                     {
-
-                        Restrictions.factionResearchBlacklist.Add(factionResearchRestriction2.factionDef, new List<FacRes>());
+                        factionResearchBlacklist.Add(factionResearchRestriction2.factionDef, new List<FacRes>());
                     }
 
-                    Restrictions.factionResearchBlacklist[factionResearchRestriction2.factionDef].Add(item16);
+                    factionResearchBlacklist[factionResearchRestriction2.factionDef].Add(item16);
                 }
             }
             Log.Message($"Loaded {DefDatabase<RimValiRaceDef>.AllDefs.Count()} races");
@@ -403,9 +384,11 @@ namespace RimValiCore.RVR
         // Token: 0x04000124 RID: 292
         public static Dictionary<FactionDef, List<FacRes>> factionResearchBlacklist = new Dictionary<FactionDef, List<FacRes>>();
     }
-    #endregion
+
+    #endregion Restrictions and patching
 
     #region Apparel score gain patch
+
     [HarmonyPatch(typeof(JobGiver_OptimizeApparel), "ApparelScoreGain")]
     public static class ApparelScorePatch
     {
@@ -420,9 +403,11 @@ namespace RimValiCore.RVR
             }
         }
     }
-    #endregion
+
+    #endregion Apparel score gain patch
 
     #region Butcher patch
+
     [HarmonyPatch(typeof(Corpse), "ButcherProducts")]
     public static class ButcherPatch
     {
@@ -432,12 +417,12 @@ namespace RimValiCore.RVR
             if (butchered.RaceProps.Humanlike)
             {
                 #region stories
+
                 try
                 {
                     //Backstories
                     if (!DefDatabase<RVRBackstory>.AllDefs.Where(x => x.hasButcherThoughtOverrides == true && (x.defName == pawn.story.adulthood.identifier || x.defName == pawn.story.childhood.identifier)).EnumerableNullOrEmpty())
                     {
-
                         butcherAndHarvestThoughts butcherAndHarvestThoughts = DefDatabase<RVRBackstory>.AllDefs.Where(x => x.defName == pawn.story.adulthood.identifier || x.defName == pawn.story.childhood.identifier).First().butcherAndHarvestThoughtOverrides;
                         try
                         {
@@ -458,7 +443,6 @@ namespace RimValiCore.RVR
                                     }
                                 }
                             }
-
                         }
                         catch (Exception e)
                         {
@@ -484,16 +468,19 @@ namespace RimValiCore.RVR
                 {
                     Log.Error(e.Message);
                 }
-                #endregion
+
+                #endregion stories
+
                 #region races
+
                 #region RVR races
+
                 //Races
                 if (pawn.def is RimValiRaceDef def)
                 {
                     butcherAndHarvestThoughts butcherAndHarvestThoughts = def.butcherAndHarvestThoughts;
                     if (butcherAndHarvestThoughts.butcherThoughts.Any(x => x.race == butchered.def) && pawn.RaceProps.Humanlike)
                     {
-
                         raceButcherThought rBT = butcherAndHarvestThoughts.butcherThoughts.Find(x => x.race == butchered.def);
                         if (butcher)
                         {
@@ -517,8 +504,11 @@ namespace RimValiCore.RVR
                         return;
                     }
                 }
-                #endregion 
+
+                #endregion RVR races
+
                 //If the pawn is not from RVR.
+
                 if (!(pawn.def is RimValiRaceDef) && pawn.RaceProps.Humanlike)
                 {
                     if (butcher)
@@ -530,11 +520,9 @@ namespace RimValiCore.RVR
                 }
                 pawn.needs.mood.thoughts.memories.TryGainMemory(ThoughtDefOf.KnowButcheredHumanlikeCorpse, null);
             }
-            #endregion
+
+            #endregion races
         }
-
-
-
 
         [HarmonyPrefix]
         public static bool Patch(Pawn butcher, float efficiency, ref IEnumerable<Thing> __result, Corpse __instance)
@@ -546,7 +534,6 @@ namespace RimValiCore.RVR
             TaleRecorder.RecordTale(TaleDefOf.ButcheredHumanlikeCorpse, new object[] { butcher });
             Pawn deadPawn = __instance.InnerPawn;
 
-
             __result = deadPawn.ButcherProducts(butcher, efficiency);
             /*
             if (!(deadPawn.def is RimValiRaceDef))
@@ -557,7 +544,7 @@ namespace RimValiCore.RVR
             bool butcheredThought = false;
             if (deadPawn.RaceProps.Humanlike)
             {
-                if (butcher.def is RimValiRaceDef def)
+                if (butcher.def is RimValiRaceDef)
                 {
                     ButcheredThoughAdder(butcher, deadPawn, true);
                     butcheredThought = true;
@@ -568,7 +555,6 @@ namespace RimValiCore.RVR
                     {
                         Log.Message(targetPawn.Name.ToStringFull);
                         ButcheredThoughAdder(targetPawn, deadPawn, false);
-
                     }
                     else if (!butcheredThought)
                     {
@@ -578,19 +564,16 @@ namespace RimValiCore.RVR
                 }
             }
 
-
-
-
-
             return false;
         }
-
     }
-    #endregion
+
+    #endregion Butcher patch
+
     #region Backstory patch
 
     [HarmonyPatch(typeof(PawnBioAndNameGenerator), "FillBackstorySlotShuffled")]
-    public class storyPatch
+    public class StoryPatch
     {
         private static float SelectionWeightFactorFromWorkTagsDisabled(WorkTags wt)
         {
@@ -621,10 +604,12 @@ namespace RimValiCore.RVR
             }
             return num;
         }
+
         private static float BackstorySelectionWeight(Backstory bs)
         {
             return SelectionWeightFactorFromWorkTagsDisabled(bs.workDisables);
         }
+
         private static void FillBackstorySlotShuffled(Pawn pawn, BackstorySlot slot, ref Backstory backstory, Backstory backstoryOtherSlot, List<BackstoryCategoryFilter> backstoryCategories, FactionDef factionType)
         {
             BackstoryCategoryFilter backstoryCategoryFilter = backstoryCategories.RandomElementByWeight((BackstoryCategoryFilter c) => c.commonality);
@@ -636,19 +621,10 @@ namespace RimValiCore.RVR
                   where slot != BackstorySlot.Adulthood || !bs.requiredWorkTags.OverlapsWithOnAnyWorkType(pawn.story.childhood.workDisables)
                   select bs).TryRandomElementByWeight(new Func<Backstory, float>(BackstorySelectionWeight), out backstory))
             {
-                Log.Error(string.Concat(new object[]
-                {
-                    "No shuffled ",
-                    slot,
-                    " found for ",
-                    pawn.ToStringSafe<Pawn>(),
-                    " of ",
-                    factionType.ToStringSafe<FactionDef>(),
-                    ". Choosing random."
-                }), false);
+                Log.Error($"No shuffled {slot} found for {pawn.ToStringSafe()} of {factionType.ToStringSafe()}. Choosing random.");
                 backstory = (from kvp in BackstoryDatabase.allBackstories
                              where kvp.Value.slot == slot
-                             select kvp).RandomElement<KeyValuePair<string, Backstory>>().Value;
+                             select kvp).RandomElement().Value;
                 foreach (RVRBackstory story in DefDatabase<RVRBackstory>.AllDefsListForReading)
                 {
                     if (story.defName == backstory.identifier)
@@ -661,8 +637,9 @@ namespace RimValiCore.RVR
                 }
             }
         }
+
         [HarmonyPostfix]
-        public static void checkStory(Pawn pawn, BackstorySlot slot, ref Backstory backstory, Backstory backstoryOtherSlot, List<BackstoryCategoryFilter> backstoryCategories, FactionDef factionType)
+        public static void CheckStory(Pawn pawn, BackstorySlot slot, ref Backstory backstory, Backstory backstoryOtherSlot, List<BackstoryCategoryFilter> backstoryCategories, FactionDef factionType)
         {
             foreach (RVRBackstory story in DefDatabase<RVRBackstory>.AllDefsListForReading)
             {
@@ -672,38 +649,40 @@ namespace RimValiCore.RVR
                     {
                         FillBackstorySlotShuffled(pawn, slot, ref backstory, backstoryOtherSlot, pawn.Faction.def.backstoryFilters, factionType);
                     }
-
                 }
             }
         }
     }
-    #endregion
+
+    #endregion Backstory patch
+
     #region Base Head Offset patch
+
     [HarmonyPatch(typeof(PawnRenderer), "BaseHeadOffsetAt")]
     public static class HeadPatch
     {
-
         [HarmonyPostfix]
-        public static void setPos(ref Vector3 __result, Rot4 rotation, PawnRenderer __instance)
+        public static void SetPos(ref Vector3 __result, PawnRenderer __instance)
         {
             Pawn pawn = __instance.graphics.pawn;
-            PawnGraphicSet set = __instance.graphics;
             if (pawn.def is RimValiRaceDef rimValiRaceDef)
             {
                 //This is an automatic check to see if we can put the head position here.
                 //no human required
                 rimValiRaceDef.HeadOffsetPawn(__instance, ref __result);
-
             }
         }
     }
-    #endregion
+
+    #endregion Base Head Offset patch
+
     #region Body gen patch
+
     //Generation patch for bodytypes
     [HarmonyPatch(typeof(PawnGenerator), "GenerateBodyType")]
     public static class BodyPatch
     {
-        public static IEnumerable<BodyTypeDef> bTypes(Pawn p)
+        public static IEnumerable<BodyTypeDef> BodyTypes(Pawn p)
         {
             List<BodyTypeDef> getAllAvalibleBodyTypes = new List<BodyTypeDef>();
             if (Restrictions.bodyDefs.ContainsKey(p.def)) { getAllAvalibleBodyTypes.AddRange(Restrictions.bodyDefs[p.def]); }
@@ -713,6 +692,7 @@ namespace RimValiCore.RVR
 
             return getAllAvalibleBodyTypes;
         }
+
         public static void SetBody(RVRBackstory story, ref Pawn pawn)
         {
             RimValiRaceDef rimValiRace = pawn.def as RimValiRaceDef;
@@ -720,8 +700,8 @@ namespace RimValiCore.RVR
             if (story.bodyType != null) { pawn.story.bodyType = story.bodyType; }
             else { pawn.story.bodyType = rimValiRace.bodyTypes.RandomElement(); }
             Log.Message($"Pawn bodytype: {pawn.story.bodyType}");
-
         }
+
         [HarmonyPostfix]
         public static void Patch(ref Pawn pawn)
         {
@@ -744,7 +724,6 @@ namespace RimValiCore.RVR
                         return;
                     }
                     else { pawn.story.bodyType = rimValiRace.bodyTypes.RandomElement(); }
-
                 }
                 catch (Exception e)
                 {
@@ -758,24 +737,28 @@ namespace RimValiCore.RVR
             {
                 if (pawn.def.GetType().Name != "ThingDef_AlienRace")
                 {
-                    if (pawn.story.bodyType == null || !bTypes(pawn).Contains(pawn.story.bodyType)) { pawn.story.bodyType = bTypes(pawn).RandomElement(); };
+                    if (pawn.story.bodyType == null || !BodyTypes(pawn).Contains(pawn.story.bodyType)) { pawn.story.bodyType = BodyTypes(pawn).RandomElement(); };
                     Log.Message(pawn.story.bodyType.defName);
                 }
             }
         }
     }
-    #endregion
+
+    #endregion Body gen patch
+
     #region Bed patch
+
     [HarmonyPatch(typeof(RestUtility), "CanUseBedEver")]
     public class BedPatch
     {
         [HarmonyPostfix]
         public static void BedPostfix(ref bool __result, Pawn p, ThingDef bedDef)
         {
-            __result = __result && Restrictions.checkRestrictions(Restrictions.bedRestrictions, bedDef, p.def);
+            __result = __result && Restrictions.CheckRestrictions(Restrictions.bedRestrictions, bedDef, p.def);
         }
     }
-    #endregion
+
+    #endregion Bed patch
 
     #region Research restriction patch
 
@@ -783,13 +766,13 @@ namespace RimValiCore.RVR
     public class ResearchPatch
     {
         [HarmonyPostfix]
-        private static void Research(Pawn pawn, ref bool __result)
+        public static void Research(Pawn pawn, ref bool __result)
         {
             //Log.Message("test");
             if (Find.ResearchManager.currentProj != null)
             {
                 // Log.Message($"Is blacklisted: {(Restrictions.factionResearchBlacklist.ContainsKey(pawn.Faction.def) && Restrictions.factionResearchBlacklist[pawn.Faction.def].Any(res => res.proj == Find.ResearchManager.currentProj))}");
-                if (!Restrictions.checkRestrictions(Restrictions.researchRestrictions, Find.ResearchManager.currentProj, pawn.def) || (Restrictions.factionResearchRestrictions.ContainsKey(pawn.Faction.def) && !Restrictions.factionResearchRestrictions[pawn.Faction.def].Any(res => res.proj == Find.ResearchManager.currentProj)) || (Restrictions.factionResearchBlacklist.ContainsKey(pawn.Faction.def) && Restrictions.factionResearchBlacklist[pawn.Faction.def].Any(res => res.proj == Find.ResearchManager.currentProj)))
+                if (!Restrictions.CheckRestrictions(Restrictions.researchRestrictions, Find.ResearchManager.currentProj, pawn.def) || (Restrictions.factionResearchRestrictions.ContainsKey(pawn.Faction.def) && !Restrictions.factionResearchRestrictions[pawn.Faction.def].Any(res => res.proj == Find.ResearchManager.currentProj)) || (Restrictions.factionResearchBlacklist.ContainsKey(pawn.Faction.def) && Restrictions.factionResearchBlacklist[pawn.Faction.def].Any(res => res.proj == Find.ResearchManager.currentProj)))
                 {
                     bool isHacked;
                     isHacked = !Restrictions.hackedProjects.EnumerableNullOrEmpty() && !(Restrictions.hackedProjects.ContainsKey(Find.ResearchManager.currentProj) || Restrictions.hackedProjects[Find.ResearchManager.currentProj] == false);
@@ -802,18 +785,19 @@ namespace RimValiCore.RVR
             }
         }
     }
-    #endregion
+
+    #endregion Research restriction patch
 
     #region Pawnkind replacement
+
     [HarmonyPatch(typeof(PawnGenerator), "GeneratePawn", new Type[] { typeof(PawnGenerationRequest) })]
-    public static class generatorPatch
+    public static class GeneratorPatch
     {
         [HarmonyPrefix]
         public static void GeneratePawn(ref PawnGenerationRequest request)
         {
             if (request.KindDef != null)
             {
-
                 PawnKindDef pawnKindDef = request.KindDef;
                 IEnumerable<RimValiRaceDef> races = DefDatabase<RimValiRaceDef>.AllDefsListForReading;
                 for (int raceIndex = 0; raceIndex < races.Count() - 1; raceIndex++)
@@ -828,7 +812,6 @@ namespace RimValiCore.RVR
                             {
                                 if (entry.isSlave && Rand.Range(0, 100) < entry.chance)
                                 {
-
                                     if (entry.pawnkind != null)
                                     {
                                         pawnKindDef = entry.pawnkind;
@@ -845,7 +828,6 @@ namespace RimValiCore.RVR
                             {
                                 if (entry.isVillager && Rand.Range(0, 100) < entry.chance)
                                 {
-
                                     if (entry.pawnkind != null)
                                     {
                                         pawnKindDef = entry.pawnkind;
@@ -883,7 +865,6 @@ namespace RimValiCore.RVR
                                         pawnKindDef = entry.pawnkind;
                                         request.KindDef = pawnKindDef;
                                         race.bodyTypes.RandomElement();
-
                                     }
                                     break;
                                 }
@@ -894,9 +875,11 @@ namespace RimValiCore.RVR
             }
         }
     }
-    #endregion
+
+    #endregion Pawnkind replacement
 
     #region Apparel gen patch
+
     [HarmonyPatch(typeof(PawnApparelGenerator), "GenerateStartingApparelFor")]
     public class ApparelGenPatch
     {
@@ -916,8 +899,11 @@ namespace RimValiCore.RVR
             catch (Exception e) { Log.Error($"Oops! RV:C had an issue generating apparel: {e.Message}"); }
         }
     }
-    #endregion
+
+    #endregion Apparel gen patch
+
     #region Trait patch
+
     [HarmonyPatch(typeof(TraitSet), "GainTrait")]
     public class TraitPatch
     {
@@ -925,17 +911,17 @@ namespace RimValiCore.RVR
         public static bool TraitGain(Trait trait, TraitSet __instance)
         {
             Pawn pawn = Traverse.Create(__instance).Field("pawn").GetValue<Pawn>();
-            return pawn.def is RimValiRaceDef rDef ? (!rDef.restrictions.disabledTraits.NullOrEmpty() && rDef.restrictions.disabledTraits.Contains(trait.def)) || Restrictions.checkRestrictions(Restrictions.traitRestrictions, trait.def, pawn.def) : Restrictions.checkRestrictions(Restrictions.traitRestrictions, trait.def, pawn.def);
+            return pawn.def is RimValiRaceDef rDef ? (!rDef.restrictions.disabledTraits.NullOrEmpty() && rDef.restrictions.disabledTraits.Contains(trait.def)) || Restrictions.CheckRestrictions(Restrictions.traitRestrictions, trait.def, pawn.def) : Restrictions.CheckRestrictions(Restrictions.traitRestrictions, trait.def, pawn.def);
         }
     }
-    #endregion
+
+    #endregion Trait patch
+
     #region Organ harvest patch
+
     [HarmonyPatch(typeof(ThoughtUtility), "GiveThoughtsForPawnOrganHarvested")]
     public static class OrganPatch
     {
-
-
-
         [HarmonyPostfix]
         public static void Patch(Pawn victim)
         {
@@ -998,8 +984,11 @@ namespace RimValiCore.RVR
             }
         }
     }
-    #endregion
+
+    #endregion Organ harvest patch
+
     #region FactionGen patch
+
     [HarmonyPatch(typeof(Faction), "TryMakeInitialRelationsWith")]
     public static class FactionGenPatch
     {
@@ -1008,7 +997,6 @@ namespace RimValiCore.RVR
         {
             foreach (FactionStartRelationDef def in DefDatabase<FactionStartRelationDef>.AllDefs.Where(fac => fac.faction == __instance.def))
             {
-
                 foreach (FacRelation relation in def.relations)
                 {
                     if (other.def == relation.otherFaction)
@@ -1020,12 +1008,14 @@ namespace RimValiCore.RVR
             }
         }
     }
-    #endregion
+
+    #endregion FactionGen patch
+
     #region Health offset patch
+
     [HarmonyPatch(typeof(BodyPartDef), "GetMaxHealth")]
     public static partial class BodyPartHealthPatch
     {
-
         [HarmonyPostfix]
         public static void Patch(ref float __result, Pawn pawn, BodyPartDef __instance)
         {
@@ -1035,7 +1025,7 @@ namespace RimValiCore.RVR
             {
                 foreach (Hediff hediff in pawn.health.hediffSet.hediffs.Where(hediff => hediff.Part != null && hediff.Part.def == __instance))
                 {
-                    if (hediff.CurStage != null && !hediff.CurStage.statOffsets.NullOrEmpty<StatModifier>())
+                    if (hediff.CurStage != null && !hediff.CurStage.statOffsets.NullOrEmpty())
                     {
                         foreach (StatModifier statModifier in hediff.CurStage.statOffsets.Where((StatModifier x) => x.stat != null && x.stat.defName == "HealthIncreasePercent"))
                         {
@@ -1059,33 +1049,36 @@ namespace RimValiCore.RVR
             return;
         }
     }
-    #endregion
+
+    #endregion Health offset patch
+
     #region Cannibalism patch
+
     [HarmonyPatch(typeof(FoodUtility), "ThoughtsFromIngesting")]
     public static class IngestingPatch
     {
-
         [HarmonyPostfix]
         public static void Patch(Pawn ingester, Thing foodSource, ThingDef foodDef, ref List<FoodUtility.ThoughtFromIngesting> __result)
         {
-
             bool cannibal = ingester.story.traits.HasTrait(TraitDefOf.Cannibal);
             if (ingester.def is RimValiRaceDef rDef)
             {
                 for (int a = 0; a < __result.Count - 1; a++)
                 {
                     ThoughtDef t = __result[a].thought;
+
                     #region raw
+
                     if (t == ThoughtDefOf.AteHumanlikeMeatDirectCannibal || t == ThoughtDefOf.AteHumanlikeMeatDirect)
                     {
                         ThingDef r = foodDef.ingestible.sourceDef;
                         if (r != null)
                         {
-                            if (rDef.getEatenThought(r, true, cannibal) != null)
+                            if (rDef.GetEatenThought(r, true, cannibal) != null)
                             {
                                 __result[a] = new FoodUtility.ThoughtFromIngesting
                                 {
-                                    thought = rDef.getEatenThought(r, true, cannibal)
+                                    thought = rDef.GetEatenThought(r, true, cannibal)
                                 };
                             }
                             else if (!rDef.butcherAndHarvestThoughts.careAboutUndefinedRaces)
@@ -1094,8 +1087,11 @@ namespace RimValiCore.RVR
                             }
                         }
                     }
-                    #endregion
+
+                    #endregion raw
+
                     #region cooked
+
                     if (t == ThoughtDefOf.AteHumanlikeMeatAsIngredientCannibal || t == ThoughtDefOf.AteHumanlikeMeatAsIngredient)
                     {
                         ThingDef r = foodSource.TryGetComp<CompIngredients>().ingredients.Where(food => food.ingestible != null && rDef.butcherAndHarvestThoughts.butcherThoughts.Any(x => x.race == food.ingestible.sourceDef)).ToList()[0];
@@ -1104,34 +1100,35 @@ namespace RimValiCore.RVR
                             for (int b = 0; b < foodSource.TryGetComp<CompIngredients>().ingredients.Count - 1; b++)
                             {
                                 ThingDef ing = foodSource.TryGetComp<CompIngredients>().ingredients[b];
-                                if (rDef.getEatenThought(ing.ingestible.sourceDef, false, cannibal) != null)
+                                if (rDef.GetEatenThought(ing.ingestible.sourceDef, false, cannibal) != null)
                                 {
                                     int pos = __result.FindIndex(x => cannibal ? x.thought == ThoughtDefOf.AteHumanlikeMeatAsIngredientCannibal : x.thought == ThoughtDefOf.AteHumanlikeMeatAsIngredient);
-                                    __result[pos] = new FoodUtility.ThoughtFromIngesting { thought = rDef.getEatenThought(ing.ingestible.sourceDef, false, cannibal) };
+                                    __result[pos] = new FoodUtility.ThoughtFromIngesting { thought = rDef.GetEatenThought(ing.ingestible.sourceDef, false, cannibal) };
                                 }
                             }
                         }
-
                     }
-                    #endregion
-                }
 
+                    #endregion cooked
+                }
             }
         }
     }
 
-    #endregion
+    #endregion Cannibalism patch
 
     #region Thought patches
+
     [HarmonyPatch(typeof(ThoughtUtility), "CanGetThought")]
     public static class ThoughtPatch
     {
         [HarmonyPostfix]
         public static void CanGetPatch(Pawn pawn, ThoughtDef def, bool checkIfNullified, ref bool __result)
         {
-            __result = __result && (pawn.def is RimValiRaceDef rDef ? rDef.canHavethoughts && !(!rDef.restrictions.thoughtBlacklist.NullOrEmpty() && rDef.restrictions.thoughtBlacklist.Contains(def)) : Restrictions.checkRestrictions(Restrictions.thoughtRestrictions, def, pawn.def));
+            __result = __result && (pawn.def is RimValiRaceDef rDef ? rDef.canHavethoughts && !(!rDef.restrictions.thoughtBlacklist.NullOrEmpty() && rDef.restrictions.thoughtBlacklist.Contains(def)) : Restrictions.CheckRestrictions(Restrictions.thoughtRestrictions, def, pawn.def));
         }
     }
+
     [HarmonyPatch(typeof(MemoryThoughtHandler), "GetFirstMemoryOfDef")]
     public static class ThoughtReplacerPatchGetFirstMemoriesOfDef
     {
@@ -1144,6 +1141,7 @@ namespace RimValiCore.RVR
             }
         }
     }
+
     [HarmonyPatch(typeof(MemoryThoughtHandler), "NumMemoriesOfDef")]
     public static class ThoughtReplacerPatchNumMemoriesOfDef
     {
@@ -1156,6 +1154,7 @@ namespace RimValiCore.RVR
             }
         }
     }
+
     [HarmonyPatch(typeof(MemoryThoughtHandler), "OldestMemoryOfDef")]
     public static class ThoughtReplacerPatchOldestMemoriesOfDef
     {
@@ -1181,8 +1180,9 @@ namespace RimValiCore.RVR
             }
         }
     }
+
     [HarmonyPatch(typeof(MemoryThoughtHandler), "RemoveMemoriesOfDefIf")]
-    public static class thoughtReplacerPatchRemoveRemoriesOfDefIf
+    public static class ThoughtReplacerPatchRemoveRemoriesOfDefIf
     {
         [HarmonyPrefix]
         public static void Patch(ref ThoughtDef def, MemoryThoughtHandler __instance)
@@ -1193,25 +1193,23 @@ namespace RimValiCore.RVR
             }
         }
     }
+
     [HarmonyPatch(typeof(MemoryThoughtHandler), "TryGainMemory", new[] { typeof(Thought_Memory), typeof(Pawn) })]
     public static class MemGain
     {
+        // Is newThought supposed to be `ref`? The MakeThought and assignment are useless right now.
         [HarmonyPrefix]
         public static bool Patch(Thought_Memory newThought, MemoryThoughtHandler __instance)
         {
             if (__instance.pawn.def is RimValiRaceDef RVDef)
             {
-                Thought_Memory nT = newThought;
-                RVDef.ReplaceThought(ref nT.def);
+                RVDef.ReplaceThought(ref newThought.def);
 
-                newThought = ThoughtMaker.MakeThought(nT.def, newThought.CurStageIndex);
-
-
+                newThought = ThoughtMaker.MakeThought(newThought.def, newThought.CurStageIndex);
             }
             return true;
         }
     }
-
 
     [HarmonyPatch(typeof(SituationalThoughtHandler), "TryCreateThought")]
     public static class ThoughtReplacerPatchSituational
@@ -1223,12 +1221,14 @@ namespace RimValiCore.RVR
             if (pawn.def is RimValiRaceDef rimValiRaceDef)
             {
                 rimValiRaceDef.ReplaceThought(ref def);
-
             }
         }
     }
-    #endregion
+
+    #endregion Thought patches
+
     #region Name patch
+
     [HarmonyPatch(typeof(PawnBioAndNameGenerator), "GeneratePawnName")]
     public static class NameFix
     {
@@ -1239,7 +1239,7 @@ namespace RimValiCore.RVR
             {
                 string nameString = NameGenerator.GenerateName(rimValiRaceDef.race.GetNameGenerator(pawn.gender));
                 NameTriple name = NameTriple.FromString(nameString);
-                __result = new NameTriple(name.First, name.Nick != null ? name.Nick : name.First, name.Last);
+                __result = new NameTriple(name.First, name.Nick ?? name.First, name.Last);
             }
             else
             {
@@ -1248,9 +1248,11 @@ namespace RimValiCore.RVR
             return false;
         }
     }
-    #endregion
+
+    #endregion Name patch
 
     #region Food Eating
+
     //I dont think these patches interefere with HAR, nor should HAR patches interefere with these?
 
     //Was going to patch WillEat, but this seems better? I'd imagine they still *could* eat it by force if i patched WillEat.
@@ -1258,6 +1260,7 @@ namespace RimValiCore.RVR
     public static class FoodPatch
     {
         private static readonly Dictionary<RaceProperties, ThingDef> cachedDefs = new Dictionary<RaceProperties, ThingDef>();
+
         [HarmonyPostfix]
         public static void EdiblePatch(ref bool __result, RaceProperties __instance, ThingDef t)
         {
@@ -1271,7 +1274,7 @@ namespace RimValiCore.RVR
             {
                 pawn = cachedDefs[__instance];
             }
-            if (pawn != null && !Restrictions.checkRestrictions(Restrictions.consumableRestrictions, t, pawn) && !Restrictions.checkRestrictions(Restrictions.consumableRestrictionsWhiteList, t, pawn))
+            if (pawn != null && !Restrictions.CheckRestrictions(Restrictions.consumableRestrictions, t, pawn) && !Restrictions.CheckRestrictions(Restrictions.consumableRestrictionsWhiteList, t, pawn))
             {
                 JobFailReason.Is(pawn.label + " " + "CannotEatRVR".Translate(pawn.label.Named("RACE")));
                 __result = false;
@@ -1280,7 +1283,9 @@ namespace RimValiCore.RVR
             __result = __result && true;
         }
     }
-    #endregion
+
+    #endregion Food Eating
+
     #region Apparel Equipping
 
     public static class ApparelPatch
@@ -1289,11 +1294,11 @@ namespace RimValiCore.RVR
         {
             if (pawn.def is RimValiRaceDef def1)
             {
-                return Restrictions.checkRestrictions(Restrictions.equipmentRestrictions, def, def1, !def1.restrictions.canOnlyUseApprovedApparel) || Restrictions.checkRestrictions(Restrictions.equipabblbleWhiteLists, def, def1, !def1.restrictions.canOnlyUseApprovedApparel);
+                return Restrictions.CheckRestrictions(Restrictions.equipmentRestrictions, def, def1, !def1.restrictions.canOnlyUseApprovedApparel) || Restrictions.CheckRestrictions(Restrictions.equipabblbleWhiteLists, def, def1, !def1.restrictions.canOnlyUseApprovedApparel);
             }
-            return Restrictions.checkRestrictions(Restrictions.equipmentRestrictions, def, pawn.def) || Restrictions.checkRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, false, false);
-
+            return Restrictions.CheckRestrictions(Restrictions.equipmentRestrictions, def, pawn.def) || Restrictions.CheckRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, false, false);
         }
+
         public static void Equipable(ref bool __result, Thing thing, Pawn pawn, ref string cantReason)
         {
             if (thing.def.IsApparel)
@@ -1304,43 +1309,45 @@ namespace RimValiCore.RVR
                     cantReason = "CannotWearRVR".Translate(pawn.def.label.Named("RACE"));
                 }
             }
-
         }
     }
-    #endregion
+
+    #endregion Apparel Equipping
+
     #region Construction
+
     [HarmonyPatch(typeof(GenConstruct), "CanConstruct", new[] { typeof(Thing), typeof(Pawn), typeof(WorkTypeDef), typeof(bool) })]
     //This was confusing at first, but it works.
     public static class ConstructPatch
     {
         [HarmonyPostfix]
-        public static void constructable(Thing t, Pawn pawn, WorkTypeDef workType, bool forced, ref bool __result)
+        public static void Constructable(Thing t, Pawn pawn, WorkTypeDef workType, bool forced, ref bool __result)
         {
             //Log.Message(t.def.ToString());
-            if (!Restrictions.checkRestrictions<BuildableDef, ThingDef>(Restrictions.buildingRestrictions, t.def.entityDefToBuild, pawn.def))
+            if (!Restrictions.CheckRestrictions(Restrictions.buildingRestrictions, t.def.entityDefToBuild, pawn.def))
             {
                 __result = false;
                 JobFailReason.Is(pawn.def.label + " " + "CannotBuildRVR".Translate(pawn.def.label.Named("RACE")));
             }
             __result = true && __result;
-
         }
     }
-    #endregion
+
+    #endregion Construction
+
     #region ResolveAllGraphics patch
+
     [HarmonyPatch(typeof(PawnGraphicSet), "ResolveAllGraphics")]
     public static class ResolvePatch
     {
         [HarmonyPrefix]
         public static bool ResolveGraphics(PawnGraphicSet __instance)
         {
-
             Pawn pawn = __instance.pawn;
             if (pawn.def is RimValiRaceDef rimvaliRaceDef)
             {
                 try
                 {
-
                     raceColors graphics = rimvaliRaceDef.graphics;
                     ColorComp colorComp = pawn.TryGetComp<ColorComp>();
 
@@ -1381,7 +1388,6 @@ namespace RimValiCore.RVR
                         {
                             //This leads to a blank texture. So the pawn doesnt have hair, visually. I might (and probably should) change this later.
                             hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
-
                         }
                         __instance.hairGraphic = hairGraphic;
 
@@ -1389,12 +1395,10 @@ namespace RimValiCore.RVR
                         __instance.desiccatedHeadStumpGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
                         __instance.skullGraphic = headGraphic;
 
-
                         __instance.MatsBodyBaseAt(pawn.Rotation);
                     }
                     else
                     {
-
                         //This is the "body" texture of the pawn.
 
                         AvaliGraphic nakedGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.bodyTex, ContentFinder<Texture2D>.Get(graphics.bodyTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
@@ -1415,7 +1419,6 @@ namespace RimValiCore.RVR
                         {
                             //This leads to a blank texture. So the pawn doesnt have hair, visually. I might (and probably should) change this later.
                             hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
-
                         }
                         __instance.hairGraphic = hairGraphic;
                     }
@@ -1432,31 +1435,27 @@ namespace RimValiCore.RVR
             return true;
         }
     }
-    #endregion
 
+    #endregion ResolveAllGraphics patch
 
     public static class ColorInfo
     {
         public static Dictionary<string, PawnGraphicSet> sets = new Dictionary<string, PawnGraphicSet>();
     }
 
-
     #region Rendering patch
+
     [HarmonyPatch(typeof(PawnRenderer), "RenderPawnInternal", new[] { typeof(Vector3), typeof(float), typeof(bool), typeof(Rot4), typeof(RotDrawMode), typeof(PawnRenderFlags) })]
     internal static class RenderPatchTwo
     {
-
         public class RSet
         {
-            public RotDrawMode mode;
-            public PawnRenderer renderer;
+            public RotDrawMode mode = default;
+            public PawnRenderer renderer = default;
         }
+
         public static Dictionary<Pawn, RSet> renders = new Dictionary<Pawn, RSet>();
         public static Dictionary<Pawn, List<RenderableDef>> pawnRenderables = new Dictionary<Pawn, List<RenderableDef>>();
-
-
-
-
 
         public static void RenderBodyParts(bool portrait, float angle, Vector3 vector, PawnRenderer pawnRenderer, Rot4 rotation, RotDrawMode mode, Pawn pawn)
         {
@@ -1473,12 +1472,12 @@ namespace RimValiCore.RVR
                 renderables.AddRange((pawnRenderables.ContainsKey(pawn) ? pawnRenderables[pawn] : new List<RenderableDef>()));
                 foreach (RenderableDef renderable in renderables)
                 {
-
-
                     ColorComp colorComp = pawn.TryGetComp<ColorComp>();
                     Vector3 offset = new Vector3();
                     Vector2 size = new Vector2();
+
                     #region Direction / size / layering stuff
+
                     if (renderable.west == null)
                     {
                         renderable.west = new BodyPartGraphicPos();
@@ -1507,15 +1506,16 @@ namespace RimValiCore.RVR
                         offset = new Vector3(renderable.west.position.x, renderable.west.layer, renderable.west.position.y);
                         size = renderable.west.size;
                     }
-                    #endregion
-                    string path = renderable.texPath(pawn);
-                    AvaliGraphic graphic = Renders.getTex(renderable, path);
+
+                    #endregion Direction / size / layering stuff
+
+                    string path = renderable.TexPath(pawn);
+                    AvaliGraphic graphic = Renders.GetTex(renderable, path);
                     if (renderable.useColorSet != null)
                     {
                         raceColors graphics = rimValiRaceDef.graphics;
                         List<Colors> colors = graphics.colorSets;
-                        TriColor_ColorGenerators generators = colors.First<Colors>(x => x.name == graphics.skinColorSet).colorGenerator;
-
+                        TriColor_ColorGenerators generators = colors.First(x => x.name == graphics.skinColorSet).colorGenerator;
 
                         Color color1 = Color.red;
                         Color color2 = Color.green;
@@ -1532,20 +1532,19 @@ namespace RimValiCore.RVR
                         {
                             Log.ErrorOnce("Pawn graphics does not contain color set: " + renderable.useColorSet + " for " + renderable.defName + ", going to fallback RGB colors. (These should look similar to your mask colors)", 1);
                         }
+
                         #region Rotting/Dessicated Graphic changes
+
                         if (pawn.Dead)
                         {
-
-
-
                             if (mode == RotDrawMode.Dessicated)
                             {
                                 if (pawnRenderer.graphics.dessicatedGraphic.Color != null)
                                 {
                                     //                This will be changed eventually
-                                    color1 = color1 * (pawnRenderer.graphics.rottingGraphic.Color);
-                                    color2 = color2 * (pawnRenderer.graphics.rottingGraphic.Color);
-                                    color3 = color3 * (pawnRenderer.graphics.rottingGraphic.Color);
+                                    color1 *= (pawnRenderer.graphics.rottingGraphic.Color);
+                                    color2 *= (pawnRenderer.graphics.rottingGraphic.Color);
+                                    color3 *= (pawnRenderer.graphics.rottingGraphic.Color);
                                 }
                                 if (renderable.dessicatedTex != null)
                                 {
@@ -1556,9 +1555,9 @@ namespace RimValiCore.RVR
                             {
                                 if (pawnRenderer.graphics.rottingGraphic.color != null)
                                 {
-                                    color1 = color1 * new Color(0.34f, 0.32f, 0.3f);
-                                    color2 = color2 * new Color(0.34f, 0.32f, 0.3f);
-                                    color3 = color3 * new Color(0.34f, 0.32f, 0.3f);
+                                    color1 *= new Color(0.34f, 0.32f, 0.3f);
+                                    color2 *= new Color(0.34f, 0.32f, 0.3f);
+                                    color3 *= new Color(0.34f, 0.32f, 0.3f);
                                 }
                                 if (renderable.rottingTex != null)
                                 {
@@ -1566,16 +1565,16 @@ namespace RimValiCore.RVR
                                 }
                             }
                         }
-                        #endregion
 
-                        graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(renderable.texPath(pawn), AvaliShaderDatabase.Tricolor, size, color1, color2, color3);
+                        #endregion Rotting/Dessicated Graphic changes
+
+                        graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(renderable.TexPath(pawn), AvaliShaderDatabase.Tricolor, size, color1, color2, color3);
                         GenDraw.DrawMeshNowOrLater(graphic.MeshAt(rotation), vector + offset.RotatedBy(Mathf.Acos(Quaternion.Dot(Quaternion.identity, quaternion)) * 114.59156f),
                         quaternion, graphic.MatAt(rotation), true);
                     }
                     else
                     {
-
-                        graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(renderable.texPath(pawn), AvaliShaderDatabase.Tricolor, size, pawn.story.SkinColor);
+                        graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(renderable.TexPath(pawn), AvaliShaderDatabase.Tricolor, size, pawn.story.SkinColor);
                         GenDraw.DrawMeshNowOrLater(graphic.MeshAt(rotation), vector + offset.RotatedBy(Mathf.Acos(Quaternion.Dot(Quaternion.identity, quaternion)) * 114.59156f),
                          quaternion, graphic.MatAt(rotation), true);
                     }
@@ -1588,7 +1587,7 @@ namespace RimValiCore.RVR
         }
 
         [HarmonyPostfix]
-        private static void RenderPawnInternal(Vector3 rootLoc, float angle, bool renderBody, Rot4 bodyFacing, RotDrawMode bodyDrawType, PawnRenderFlags flags, PawnRenderer __instance)
+        public static void RenderPawnInternal(Vector3 rootLoc, float angle, bool renderBody, Rot4 bodyFacing, RotDrawMode bodyDrawType, PawnRenderFlags flags, PawnRenderer __instance)
         {
             if (!(__instance.graphics.pawn.def is RimValiRaceDef))
             {
@@ -1610,12 +1609,15 @@ namespace RimValiCore.RVR
         }
     }
 
-    #endregion
+    #endregion Rendering patch
+
     #region RenderTexture
+
     public class RenderTexturePatch
     {
         private static readonly int texSize = 8000;
-        public static RenderTexture newTex()
+
+        public static RenderTexture NewTexture()
         {
             Vector2Int size = new Vector2Int(GetAtlasSizeWithPawnsOnMap(), GetAtlasSizeWithPawnsOnMap());
             return new RenderTexture(size.x, size.y, 24, RenderTextureFormat.ARGB64, 0)
@@ -1642,22 +1644,23 @@ namespace RimValiCore.RVR
             return texSize;
         }
     }
-    #endregion
+
+    #endregion RenderTexture
+
     #region RenderTextureTranspiler
 
     public static class RenderTextureTranspiler
     {
-
-        public static IEnumerable<CodeInstruction> transpile(IEnumerable<CodeInstruction> instructions, ILGenerator gen)
+        public static IEnumerable<CodeInstruction> Transpile(IEnumerable<CodeInstruction> instructions, ILGenerator gen)
         {
             List<CodeInstruction> codes = instructions.ToList();
             int cont = instructions.Count();
             for (int index = 0; index < cont; index++)
             {
-                if (c(codes, index))
+                if (VerifyLocation(codes, index))
                 {
                     yield return new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(RenderTexturePatch),
-                                                                                      nameof(RenderTexturePatch.newTex)));
+                                                                                      nameof(RenderTexturePatch.NewTexture)));
                     index += 5;
                 }
                 else
@@ -1667,7 +1670,7 @@ namespace RimValiCore.RVR
             }
         }
 
-        public static bool c(List<CodeInstruction> codes, int i)
+        private static bool VerifyLocation(List<CodeInstruction> codes, int i)
         {
             return i < codes.Count - 5 &&
                    codes[i].opcode == OpCodes.Ldc_I4 && (int)codes[i].operand == 0x800 &&
@@ -1678,5 +1681,6 @@ namespace RimValiCore.RVR
                    codes[i + 5].opcode == OpCodes.Newobj;
         }
     }
-    #endregion
+
+    #endregion RenderTextureTranspiler
 }

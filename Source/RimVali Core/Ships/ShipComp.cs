@@ -9,6 +9,7 @@ using Verse;
 namespace RimValiCore.Ships
 {
     #region caravan maker
+
     public class ShipArrivalAction_MakeCaravan : TransportPodsArrivalAction_FormCaravan
     {
         public ShipArrivalAction_MakeCaravan(Thing pod, string arrivalMsg)
@@ -16,6 +17,7 @@ namespace RimValiCore.Ships
             this.pod = pod;
             arrivalMessageKey = arrivalMsg;
         }
+
         public override void Arrived(List<ActiveDropPodInfo> pods, int tile)
         {
             tmpPawns.Clear();
@@ -24,8 +26,7 @@ namespace RimValiCore.Ships
                 ThingOwner innerContainer = pods[i].innerContainer;
                 for (int j = innerContainer.Count - 1; j >= 0; j--)
                 {
-                    Pawn pawn = innerContainer[j] as Pawn;
-                    if (pawn != null)
+                    if (innerContainer[j] is Pawn pawn)
                     {
                         tmpPawns.Add(pawn);
                         innerContainer.Remove(pawn);
@@ -54,30 +55,31 @@ namespace RimValiCore.Ships
             tmpContainedThings.Clear();
             Messages.Message(arrivalMessageKey.Translate(), caravan, MessageTypeDefOf.TaskCompletion, true);
         }
+
         private static readonly List<Pawn> tmpPawns = new List<Pawn>();
 
-        // Token: 0x04007CF4 RID: 31988
         private static readonly List<Thing> tmpContainedThings = new List<Thing>();
+
         private readonly string arrivalMessageKey = "MessageTransportPodsArrived";
         private readonly Thing pod;
     }
-    #endregion
+
+    #endregion caravan maker
+
     #region launchable
+
     public class ShipLauncherProps : CompProperties_Launchable
     {
         public bool mustBeConnectedToFuelingPort = false;
+
         public ShipLauncherProps()
         {
-
             compClass = typeof(ShipLaunchable);
         }
     }
 
-
-
     public class ShipLaunchable : CompLaunchable
     {
-
         public new IEnumerable<FloatMenuOption> GetOptionsForTile(int tile, IEnumerable<IThingHolder> pods, Action<int, TransportPodsArrivalAction> launchAction)
         {
             bool anything = false;
@@ -90,7 +92,6 @@ namespace RimValiCore.Ships
                     launchAction(tile, new ShipArrivalAction_MakeCaravan(parent, "MessageShuttleArrived"));
                 }, MenuOptionPriority.Default, null, null, 0f, null, null);
                 FuelingPortSource.TryGetComp<CompRefuelable>().ConsumeFuel(100);
-
             }
             List<WorldObject> worldObjects = Find.WorldObjects.AllWorldObjects;
             int num;
@@ -116,11 +117,10 @@ namespace RimValiCore.Ships
             yield break;
         }
 
-
         #region target labeler
+
         public string TargetingLabelGetter(GlobalTargetInfo target, int tile, int maxLaunchDistance, IEnumerable<IThingHolder> pods, Action<int, TransportPodsArrivalAction> launchAction, ShipLaunchable launchable)
         {
-
             if (!target.IsValid) { return null; }
             if (Find.WorldGrid.TraversalDistanceBetween(tile, target.Tile, true, 2147483647) > maxLaunchDistance)
             {
@@ -128,24 +128,25 @@ namespace RimValiCore.Ships
                 return "TransportPodDestinationBeyondMaximumRange".Translate();
             }
             IEnumerable<FloatMenuOption> source = (launchable != null) ? launchable.GetTransportPodsFloatMenuOptionsAt(target.Tile) : GetOptionsForTile(target.Tile, pods, launchAction);
-            if (!source.Any<FloatMenuOption>()) { return string.Empty; }
-            if (source.Count<FloatMenuOption>() == 1)
+            if (!source.Any()) { return string.Empty; }
+            if (source.Count() == 1)
             {
-                if (source.First<FloatMenuOption>().Disabled) { GUI.color = Color.red; }
-                return source.First<FloatMenuOption>().Label;
+                if (source.First().Disabled) { GUI.color = Color.red; }
+                return source.First().Label;
             }
-            MapParent mapParent = target.WorldObject as MapParent;
-            if (mapParent != null) { return "ClickToSeeAvailableOrders_WorldObject".Translate(mapParent.LabelCap); }
+            if (target.WorldObject is MapParent mapParent) { return "ClickToSeeAvailableOrders_WorldObject".Translate(mapParent.LabelCap); }
             return "ClickToSeeAvailableOrders_Empty".Translate();
         }
-        #endregion
+
+        #endregion target labeler
+
         public new void StartChoosingDestination()
         {
             CameraJumper.TryJump(CameraJumper.GetWorldTarget(parent));
             Find.WorldSelector.ClearSelection();
             int tile = parent.Map.Tile;
             Log.Message("picking destination");
-            Find.WorldTargeter.BeginTargeting(new Func<GlobalTargetInfo, bool>(ChoseWorldTarget), true, ShipLaunchable.TargeterMouseAttachment, true, delegate
+            Find.WorldTargeter.BeginTargeting(new Func<GlobalTargetInfo, bool>(ChoseWorldTarget), true, TargeterMouseAttachment, true, delegate
             {
                 GenDraw.DrawWorldRadiusRing(tile, MaxLaunchDistance);
             }, (GlobalTargetInfo target) => TargetingLabelGetter(target, tile, MaxLaunchDistance, TransportersInGroup.Cast<IThingHolder>(), new Action<int, TransportPodsArrivalAction>(TryLaunch), this), null);
@@ -153,14 +154,13 @@ namespace RimValiCore.Ships
 
         public override IEnumerable<Gizmo> CompGetGizmosExtra()
         {
-
             if (LoadingInProgressOrReadyToLaunch && CanTryLaunch)
             {
                 Command_Action command_Action = new Command_Action
                 {
                     defaultLabel = "CommandLaunchGroup".Translate(),
                     defaultDesc = "CommandLaunchGroupDesc".Translate(),
-                    icon = ShipLaunchable.LaunchCommandTex,
+                    icon = LaunchCommandTex,
                     alsoClickIfOtherInGroupClicked = false,
 
                     action = delegate ()
@@ -192,23 +192,24 @@ namespace RimValiCore.Ships
         }
 
         public new List<CompTransporter> TransportersInGroup => Transporter.TransportersInGroup(parent.Map);
+
         public new void TryLaunch(int destinationTile, TransportPodsArrivalAction arrivalAction)
         {
             ;
             if (!parent.Spawned)
             {
-                Log.Error("Tried to launch " + parent + ", but it's unspawned.", false);
+                Log.Error("Tried to launch " + parent + ", but it's unspawned.");
                 return;
             }
             List<CompTransporter> transportersInGroup = TransportersInGroup;
             if (transportersInGroup == null)
             {
-                Log.Error("Tried to launch " + parent + ", but it's not in any group.", false);
+                Log.Error("Tried to launch " + parent + ", but it's not in any group.");
                 return;
             }
             if (!LoadingInProgressOrReadyToLaunch || !AllInGroupConnectedToFuelingPort || !AllFuelingPortSourcesInGroupHaveAnyFuel) { return; }
             Map map = parent.Map;
-            int num = Find.WorldGrid.TraversalDistanceBetween(map.Tile, destinationTile, true, int.MaxValue);
+            int num = Find.WorldGrid.TraversalDistanceBetween(map.Tile, destinationTile);
 
             if (num > MaxLaunchDistance)
             {
@@ -216,7 +217,7 @@ namespace RimValiCore.Ships
             }
             Transporter.TryRemoveLord(map);
             int groupID = Transporter.groupID;
-            float amount = Mathf.Max(FuelNeededToLaunchAtDist(num), 1f);
+            // float amount = Mathf.Max(FuelNeededToLaunchAtDist(num), 1f);
             for (int i = 0; i < transportersInGroup.Count; i++)
             {
                 CompTransporter compTransporter = transportersInGroup[i];
@@ -236,8 +237,8 @@ namespace RimValiCore.Ships
             CameraJumper.TryHideWorld();
         }
 
-
         #region menu options
+
         private IEnumerable<FloatMenuOption> GetTransportPodsFloatMenuOptionsAt(int tile)
         {
             Log.Message("getting options");
@@ -273,7 +274,6 @@ namespace RimValiCore.Ships
                         yield return floatMenuOption2;
                         Log.Message("loop2: " + floatMenuOption2.Label);
                     }
-
                 }
                 num = i;
             }
@@ -286,15 +286,16 @@ namespace RimValiCore.Ships
             }
             yield break;
         }
-        #endregion
+
+        #endregion menu options
 
         #region picking world targ
 
-        private bool ChoseWorldTarget(GlobalTargetInfo target)
+        public bool ChoseWorldTarget(GlobalTargetInfo target)
         {
-
             return ChoseWorldTarget(target, parent.Map.Tile, TransportersInGroup.Cast<IThingHolder>(), MaxLaunchDistance, new Action<int, TransportPodsArrivalAction>(TryLaunch), this);
         }
+
         public bool ChoseWorldTarget(GlobalTargetInfo target, int tile, IEnumerable<IThingHolder> pods, int maxLaunchDistance, Action<int, TransportPodsArrivalAction> launchAction, ShipLaunchable launchable)
         {
             if (!target.IsValid)
@@ -308,7 +309,7 @@ namespace RimValiCore.Ships
                 //return false;
             }
             IEnumerable<FloatMenuOption> source = (launchable != null) ? launchable.GetTransportPodsFloatMenuOptionsAt(target.Tile) : GetOptionsForTile(target.Tile, pods, launchAction);
-            if (!source.Any<FloatMenuOption>())
+            if (!source.Any())
             {
                 if (Find.World.Impassable(target.Tile))
                 {
@@ -320,54 +321,49 @@ namespace RimValiCore.Ships
             }
             else
             {
-                if (source.Count<FloatMenuOption>() != 1)
+                if (source.Count() != 1)
                 {
-                    Find.WindowStack.Add(new FloatMenu(source.ToList<FloatMenuOption>()));
+                    Find.WindowStack.Add(new FloatMenu(source.ToList()));
                     return false;
                 }
-                if (!source.First<FloatMenuOption>().Disabled)
+                if (!source.First().Disabled)
                 {
-                    source.First<FloatMenuOption>().action();
+                    source.First().action();
                     return true;
                 }
                 return false;
             }
         }
-        #endregion
 
-
+        #endregion picking world targ
 
         public new bool AllFuelingPortSourcesInGroupHaveAnyFuel => true;
         public new bool AllInGroupConnectedToFuelingPort => true;
 
-        private int MaxLaunchDistance => Props.fixedLaunchDistanceMax;
+        private new int MaxLaunchDistance => Props.fixedLaunchDistanceMax;
+
         public static new int MaxLaunchDistanceAtFuelLevel(float fuelLevel)
         {
             int range = Mathf.FloorToInt(fuelLevel / 2.25f);
             return range;
         }
 
-
         public new ShipLauncherProps Props => props as ShipLauncherProps;
         public new bool ConnectedToFuelingPort => !Props.mustBeConnectedToFuelingPort || (!Props.requireFuel || FuelingPortSource != null);
 
-
         public new Building FuelingPortSource => parent.TryGetComp<CompRefuelable>() != null ? parent as Building : FuelingPortUtility.FuelingPortGiverAtFuelingPortCell(parent.Position, parent.Map);
 
-
-
-        public new bool CanTryLaunch
+        public bool CanTryLaunch
         {
             get
             {
                 CompShuttle compShuttle = parent.TryGetComp<CompShuttle>();
-                return compShuttle == null || ((compShuttle.permitShuttle) && Transporter.innerContainer.Any<Thing>());
+                return compShuttle == null || ((compShuttle.permitShuttle) && Transporter.innerContainer.Any());
             }
         }
 
-        private static readonly Texture2D DismissTex = ContentFinder<Texture2D>.Get("UI/Commands/DismissShuttle", true);
+        public static readonly Texture2D DismissTex = ContentFinder<Texture2D>.Get("UI/Commands/DismissShuttle", true);
     }
-    #endregion
 
-
+    #endregion launchable
 }

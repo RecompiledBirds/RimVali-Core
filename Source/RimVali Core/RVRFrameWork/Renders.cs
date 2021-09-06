@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text;
 using Verse;
+
 namespace RimValiCore.RVR
 {
     public class RenderObject
@@ -21,7 +22,7 @@ namespace RimValiCore.RVR
         public static Dictionary<RenderableDef, List<RenderTex>> graphics = new Dictionary<RenderableDef, List<RenderTex>>();
         public static IEnumerable<RenderableDef> renderableDefs = DefDatabase<RenderableDef>.AllDefs;
 
-        public static AvaliGraphic getTex(RenderableDef def, string path)
+        public static AvaliGraphic GetTex(RenderableDef def, string path)
         {
             if (!graphics.ContainsKey(def))
             {
@@ -44,7 +45,7 @@ namespace RimValiCore.RVR
             int cont = 0;
             foreach (RenderableDef render in renderableDefs)
             {
-                foreach (string tex in render.findAllTextures())
+                foreach (string tex in render.FindAllTextures())
                 {
                     if (!graphics.ContainsKey(render)) { graphics.Add(render, new List<RenderTex>()); }
                     RenderTex rTex = new RenderTex
@@ -60,6 +61,5 @@ namespace RimValiCore.RVR
             builder.AppendLine($"[RimVali Core/RVR]: Successfully loaded {cont} textures.");
             Log.Message($"{builder}");
         }
-
     }
 }

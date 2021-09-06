@@ -1,24 +1,26 @@
 ﻿using Verse;
+
 namespace RimValiCore.Cloning
 {
     public class StorageCompProps : CompProperties
     {
-
     }
+
     public class StorageComp : ThingComp
     {
         public Pawn p2;
+
         public override void PostExposeData()
         {
             Scribe_Values.Look(ref p2, "storedPawn");
             base.PostExposeData();
         }
 
-
         public void GetPersonalityFromPawn(Pawn pawn)
         {
             p2 = pawn;
         }
+
         public void ClonePersonalityToPawn(ref Pawn pawn)
         {
             pawn.story.adulthood = p2.story.adulthood;

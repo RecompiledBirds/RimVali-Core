@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Verse;
+
 namespace RimValiCore.RVR
 {
     public class DyeComp : HediffComp
@@ -12,7 +13,7 @@ namespace RimValiCore.RVR
 
         public override void CompExposeData()
         {
-            Scribe_Collections.Look<string, ColorSet>(ref oldColors, "colors", LookMode.Value, LookMode.Deep, ref colorKey, ref colorValue);
+            Scribe_Collections.Look(ref oldColors, "colors", LookMode.Value, LookMode.Deep, ref colorKey, ref colorValue);
             if (oldColors == null)
             {
                 oldColors = new Dictionary<string, ColorSet>();
@@ -67,6 +68,7 @@ namespace RimValiCore.RVR
             base.CompPostPostRemoved();
         }
     }
+
     public class DyeCompProps : HediffCompProperties
     {
         public TriColor_ColorGenerators colors;

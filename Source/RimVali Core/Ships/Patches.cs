@@ -9,10 +9,11 @@ using Verse.Sound;
 namespace RimValiCore.Ships
 {
     [StaticConstructorOnStartup]
-    public static class shipPatches
+    public static class ShipPatches
     {
         public static readonly Texture2D LoadCommandTex = ContentFinder<Texture2D>.Get("UI/Commands/LoadTransporter", true);
-        static shipPatches()
+
+        static ShipPatches()
         {
             // Harmony rVC_Ships_Harmony = new Harmony("RimValiCore.Ships");
             try
@@ -32,7 +33,7 @@ namespace RimValiCore.Ships
     public static class GizmosPatch
     {
         [HarmonyPostfix]
-        public static void patch(ref IEnumerable<Gizmo> __result, CompTransporter __instance)
+        public static void Patch(ref IEnumerable<Gizmo> __result, CompTransporter __instance)
         {
             ShipLaunchable shipLaunchable = __instance.parent.TryGetComp<ShipLaunchable>();
             bool isRVCship = shipLaunchable != null;
@@ -57,18 +58,13 @@ namespace RimValiCore.Ships
                         };
                         gizmos.Add(action);
                     }
-
                 }
                 else
                 {
-
-
-
                     int num = 0;
                     for (int i = 0; i < Find.Selector.NumSelected; i++)
                     {
-                        Thing thing = Find.Selector.SelectedObjectsListForReading[i] as Thing;
-                        if (thing != null && thing.def == __instance.parent.def)
+                        if (Find.Selector.SelectedObjectsListForReading[i] is Thing thing && thing.def == __instance.parent.def)
                         {
                             CompLaunchable compLaunchable = thing.TryGetComp<CompLaunchable>();
                             if (compLaunchable == null || (compLaunchable.FuelingPortSource != null && compLaunchable.FuelingPortSourceHasAnyFuel))
@@ -77,7 +73,9 @@ namespace RimValiCore.Ships
                             }
                         }
                     }
+
                     #region launch gizmo
+
                     Command_LoadToTransporter command_LoadToTransporter = new Command_LoadToTransporter();
                     if (__instance.Props.max1PerGroup)
                     {
@@ -94,14 +92,13 @@ namespace RimValiCore.Ships
                     }
                     else
                     {
-
                         command_LoadToTransporter.defaultLabel = "CommandLoadTransporter".Translate(num.ToString());
                         command_LoadToTransporter.defaultDesc = "CommandLoadTransporterDesc".Translate();
                     }
-                    command_LoadToTransporter.icon = shipPatches.LoadCommandTex;
+                    command_LoadToTransporter.icon = ShipPatches.LoadCommandTex;
                     command_LoadToTransporter.transComp = __instance;
 
-
+                    /*
                     if (false)
                     {
                         command_LoadToTransporter.Disable("CommandLoadTransporterFailNotConnectedToFuelingPort".Translate());
@@ -110,14 +107,15 @@ namespace RimValiCore.Ships
                     {
                         command_LoadToTransporter.Disable("CommandLoadTransporterFailNoFuel".Translate());
                     }
+                    */
+
                     command_LoadToTransporter.defaultLabel = "test";
                     gizmos.Add(command_LoadToTransporter);
-                    #endregion
 
+                    #endregion launch gizmo
                 }
                 __result = gizmos;
             }
-
         }
     }
 }

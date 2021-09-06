@@ -7,7 +7,7 @@ namespace RimValiCore
 {
     public struct AvaliGraphicRequest : IEquatable<AvaliGraphicRequest>
     {
-        public System.Type graphicClass;
+        public Type graphicClass;
         public string path;
         public Shader shader;
         public Vector2 drawSize;
@@ -19,7 +19,7 @@ namespace RimValiCore
         public List<ShaderParameter> shaderParameters;
 
         public AvaliGraphicRequest(
-          System.Type graphicClass,
+          Type graphicClass,
           string path,
           Shader shader,
           Vector2 drawSize,
@@ -39,7 +39,7 @@ namespace RimValiCore
             this.colorThree = colorThree;
             this.graphicData = graphicData;
             this.renderQueue = renderQueue;
-            this.shaderParameters = shaderParameters.NullOrEmpty<ShaderParameter>() ? null : shaderParameters;
+            this.shaderParameters = shaderParameters.NullOrEmpty() ? null : shaderParameters;
         }
 
         public override int GetHashCode()
@@ -49,7 +49,7 @@ namespace RimValiCore
                 path = BaseContent.BadTexPath;
             }
 
-            return Gen.HashCombine<List<ShaderParameter>>(Gen.HashCombine<int>(Gen.HashCombine<AvaliGraphicData>(Gen.HashCombineStruct<Color>(Gen.HashCombineStruct<Color>(Gen.HashCombineStruct<Vector2>(Gen.HashCombine<Shader>(Gen.HashCombine<string>(Gen.HashCombine<System.Type>(0, graphicClass), path), shader), drawSize), color), colorTwo), graphicData), renderQueue), shaderParameters);
+            return Gen.HashCombine(Gen.HashCombine(Gen.HashCombine(Gen.HashCombineStruct(Gen.HashCombineStruct(Gen.HashCombineStruct(Gen.HashCombine(Gen.HashCombine(Gen.HashCombine(0, graphicClass), path), shader), drawSize), color), colorTwo), graphicData), renderQueue), shaderParameters);
         }
 
         public override bool Equals(object obj)

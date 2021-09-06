@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text;
 using Verse;
 
+// Why is this AvaliMod
 namespace AvaliMod
 {
     [StaticConstructorOnStartup]
@@ -17,6 +18,7 @@ namespace AvaliMod
         public static HashSet<TerrainDef> floorsMade = new HashSet<TerrainDef>();
         public static StringBuilder builder = new StringBuilder();
         public static bool canGenerate = true;
+
         /// <summary>
         /// Creates all versions of a floor from a material; it's on the label
         /// </summary>
@@ -219,12 +221,14 @@ namespace AvaliMod
                     frameDef.entityDefToBuild = output;
                     output.frameDef = frameDef;
 
-
                     //This makes sure everything is setup how it should be
                     output.PostLoad();
                     output.ResolveReferences();
                     builder.AppendLine("---------------------------------------------");
-                    builder.AppendLine($"[RimVali Core/FloorConstructor] Generated {output.label}\n Mat color: { tDef.stuffProps.color.ToString()},\n Floor color: {output.color} \n UI Icon color: {output.uiIconColor}");
+                    builder.AppendLine($"[RimVali Core/FloorConstructor] Generated {output.label}");
+                    builder.AppendLine($" Mat color: {tDef.stuffProps.color}");
+                    builder.AppendLine($" Floor color: {output.color}");
+                    builder.AppendLine($" UI Icon color: {output.uiIconColor}");
                     floorsMade.Add(output);
                 }
             }
@@ -233,7 +237,6 @@ namespace AvaliMod
         static FloorConstructor()
         {
             Log.Message("[RimVali Core] Starting up floor constructor...");
-
 
             List<TerrainDef> workOn = new List<TerrainDef>();
             workOn.AddRange(DefDatabase<TerrainDef>.AllDefs);
@@ -259,7 +262,6 @@ namespace AvaliMod
                         }
                         catch
                         {
-
                         }
                     }
                 }
@@ -278,11 +280,9 @@ namespace AvaliMod
                             string res = cS.Substring(cS.IndexOf("removeFromResearch_") + "removeFromResearch_".Length, (cS.IndexOf("[ENDRESNAME]") - ("[ENDRESNAME]".Length + 7)) - cS.IndexOf("removeFromResearch_"));
                             Log.Message(res);
                             def.researchPrerequisites.RemoveAll(x => x.defName == res);
-
                         }
                         catch
                         {
-
                         }
                     }
                 }
@@ -311,14 +311,12 @@ namespace AvaliMod
             {
                 def.PostLoad();
                 def.ResolveReferences();
-
             }
 
             foreach (DesignatorDropdownGroupDef def in toUpdateDropdownDesDefs)
             {
                 def.PostLoad();
                 def.ResolveReferences();
-
             }
             Log.Message($"[RimVali Core/FloorConstructor] Updated {toUpdateDesignationCatDefs.Count} designation categories & {toUpdateDropdownDesDefs.Count} dropdown designations.");
             //We need to do this or RW has a fit

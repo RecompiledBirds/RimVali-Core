@@ -5,6 +5,7 @@ using Verse;
 
 namespace RimValiCore.RVR
 {
+    // TODO: Rename these
     public class raceOrganHarvestThought
     {
         public string organDefName = "any";
@@ -13,6 +14,7 @@ namespace RimValiCore.RVR
         public ThoughtDef colonistThought;
         public ThoughtDef guestThought;
     }
+
     public class raceButcherThought
     {
         public ThingDef race;
@@ -43,8 +45,10 @@ namespace RimValiCore.RVR
     {
         public List<raceButcherThought> butcherThoughts;
         public List<raceOrganHarvestThought> harvestedThoughts;
+
         //If a race isnt defined in the above, it gets the default thought.
         public bool careAboutUndefinedRaces = true;
+
         public ThoughtDef myOrganHarvested = ThoughtDefOf.MyOrganHarvested;
     }
 
@@ -62,12 +66,14 @@ namespace RimValiCore.RVR
         public Vector2 bodySize = new Vector2(1f, 1f);
         public List<Colors> colorSets;
     }
+
     public class headOffset
     {
         public Vector2 south = new Vector2(0, 0);
         public Vector2 east;
         public Vector2 north;
         public Vector2 west;
+
         public headOffset()
         {
             if (east == null)
@@ -84,29 +90,36 @@ namespace RimValiCore.RVR
             }
         }
     }
+
     public class restrictions
     {
         public List<ResearchProjectDef> researchProjectDefs = new List<ResearchProjectDef>();
+
         //ThingDefs
         public List<ThingDef> equippables = new List<ThingDef>();
+
         public List<ThingDef> consumables = new List<ThingDef>();
         public List<ThingDef> buildables = new List<ThingDef>();
         public List<ThingDef> bedDefs = new List<ThingDef>();
+
         //Thoughts
         public List<ThoughtDef> thoughtDefs = new List<ThoughtDef>();
+
         public List<ThoughtDef> thoughtBlacklist = new List<ThoughtDef>();
 
         //Traits
         public List<TraitDef> traits = new List<TraitDef>();
+
         public List<TraitDef> disabledTraits = new List<TraitDef>();
 
         //Bodytypes
         public List<BodyTypeDef> bodyTypes = new List<BodyTypeDef>();
 
-
         public bool canOnlyUseApprovedApparel = false;
+
         //Whitelists
         public List<ThingDef> equippablesWhitelist = new List<ThingDef>();
+
         public List<ThingDef> consumablesWhitelist = new List<ThingDef>();
         public List<ThingDef> buildablesWhitelist = new List<ThingDef>();
 
@@ -117,13 +130,19 @@ namespace RimValiCore.RVR
 
         //-Apparel
         public List<string> modContentRestrictionsApparelWhiteList = new List<string>();
+
         public List<string> modContentRestrictionsApparelList = new List<string>();
+
         //-Research
         public List<string> modResearchRestrictionsList = new List<string>();
+
         public List<string> modResearchRestrictionsWhiteList = new List<string>();
+
         //-Traits
         public List<string> modTraitRestrictions = new List<string>();
+
         public List<string> modDisabledTraits = new List<string>();
+
         //-Buildings
         public List<string> modBuildingRestrictions = new List<string>();
     }
@@ -132,11 +151,8 @@ namespace RimValiCore.RVR
     {
         public restrictions restrictions = new restrictions();
 
-
         public List<BodyTypeDef> bodyTypeDefs = new List<BodyTypeDef>();
     }
-
-
 
     public class ColorSet : IExposable
     {
@@ -145,7 +161,10 @@ namespace RimValiCore.RVR
         public Color colorThree = Color.white;
         public bool dyeable = true;
 
-        public ColorSet() { }
+        public ColorSet()
+        {
+        }
+
         public ColorSet(Color colorOne, Color colorTwo, Color colorThree, bool dyeable = true)
         {
             this.colorOne = colorOne;
@@ -196,7 +215,6 @@ namespace RimValiCore.RVR
         public List<string> colorKey = new List<string>();
         public List<ColorSet> colorValue = new List<ColorSet>();
 
-
         public Dictionary<string, int> renderableDefIndexes = new Dictionary<string, int>();
         public List<string> renderableKeys = new List<string>();
         public List<int> index = new List<int>();
@@ -205,9 +223,9 @@ namespace RimValiCore.RVR
         {
             Scribe_Collections.Look(ref colors, "colors", LookMode.Value, LookMode.Deep, ref colorKey, ref colorValue);
             Scribe_Collections.Look(ref renderableDefIndexes, "renderables", LookMode.Value, LookMode.Value, ref renderableKeys, ref index);
-
         }
     }
+
     public class colorCompProps : CompProperties
     {
         public colorCompProps()
@@ -215,6 +233,7 @@ namespace RimValiCore.RVR
             compClass = typeof(ColorComp);
         }
     }
+
     public class Entry
     {
         public PawnKindDef pawnkind;
@@ -224,6 +243,7 @@ namespace RimValiCore.RVR
         public bool isWanderer = true;
         public bool isVillager = true;
     }
+
     public class RVRRaceInsertion
     {
         public int globalChance = 50;

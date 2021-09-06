@@ -1,18 +1,22 @@
 ﻿using System.Collections.Generic;
 using Verse;
+
 namespace RimValiCore.HealableMaterial
 {
     public class HealableGameComp : GameComponent
     {
-        public HealableGameComp(Game game) { ticks = new Dictionary<Thing, int>(); }
+        public HealableGameComp(Game game)
+        {
+            ticks = new Dictionary<Thing, int>();
+        }
 
         private readonly Dictionary<Thing, int> ticks = new Dictionary<Thing, int>();
-        private readonly HashSet<Thing> things = new HashSet<Thing>();/*
+        private readonly HashSet<Thing> things = new HashSet<Thing>();
+        /*
         public override void GameComponentTick()
         {
             if (!Current.Game.Maps.NullOrEmpty()&&Current.Game.Maps.Any(x=>x.spawnedThings.Any(y=>HealableMatFinder.thingDefs.ContainsKey(y.def)||y.Stuff!=null&& HealableMatFinder.thingDefs.ContainsKey(y.Stuff))))
             {
-                
                 foreach(Map map in Current.Game.Maps.Where(x => x.spawnedThings.Any(y => HealableMatFinder.thingDefs.ContainsKey(y.def) || y.Stuff != null && HealableMatFinder.thingDefs.ContainsKey(y.Stuff)))){things.AddRange(map.spawnedThings.Where(y => !things.Contains(y)&&(HealableMatFinder.thingDefs.ContainsKey(y.def) || y.Stuff != null && HealableMatFinder.thingDefs.ContainsKey(y.Stuff))&&y.HitPoints<y.MaxHitPoints));}
                 foreach(Thing thing in things)
                 {
@@ -30,8 +34,8 @@ namespace RimValiCore.HealableMaterial
                 }
                 ticks.RemoveAll(x => !x.Key.Spawned|| x.Key.Destroyed || x.Key.HitPoints == x.Key.MaxHitPoints);
                 things.RemoveWhere(x => !x.Spawned || x.Destroyed || x.HitPoints==x.MaxHitPoints);
-
             }
-        }*/
+        }
+        */
     }
 }

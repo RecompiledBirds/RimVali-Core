@@ -9,10 +9,10 @@ using Verse;
 
 namespace RimValiCore
 {
-
     public static class RimValiUtility
     {
         #region Pawn
+
         public static bool Alive(this Pawn pawn)
         {
             return !pawn.Dead;
@@ -22,12 +22,15 @@ namespace RimValiCore
         {
             return pawn != null ? pawn.def.defName == race.defName : false;
         }
-        #endregion
+
+        #endregion Pawn
 
         //private static readonly bool enableDebug = LoadedModManager.GetMod<RimValiMod>().GetSettings<RimValiModSettings>().enableDebugMode;
 
         #region asset and shader loading
+
         public static string dir;
+
         public static void AssetBundleFinder(DirectoryInfo info)
         {
             foreach (FileInfo file in info.GetFiles())
@@ -37,8 +40,7 @@ namespace RimValiCore
                     AssetBundle bundle = AssetBundle.LoadFromFile(file.FullName);
                     if (!(bundle == null))
                     {
-
-                        UnityEngine.Shader[] shaders = bundle.LoadAllAssets<UnityEngine.Shader>();
+                        Shader[] shaders = bundle.LoadAllAssets<Shader>();
                     }
                     else
                     {
@@ -52,10 +54,11 @@ namespace RimValiCore
         {
             AssetBundle assetBundle = AssetBundle.LoadFromFile(info);
 
-
             return assetBundle;
         }
-        #endregion
+
+        #endregion asset and shader loading
+
         public static Dictionary<Trait, int> Traits(this Pawn pawn)
         {
             IEnumerable<Trait> traits = pawn.story.traits.allTraits;
@@ -66,14 +69,16 @@ namespace RimValiCore
             }
             return traitDataToReturn;
         }
+
         #region room stuff
+
         public static float GetRoomQuality(this Pawn pawn)
         {
             Room room = pawn.GetRoom();
             RoomStatWorker_Beauty b = new RoomStatWorker_Beauty();
             return room.GetStat(RoomStatDefOf.Impressiveness);
-
         }
+
         public static bool SharedBedroom(this Pawn pawn)
         {
             Room room = pawn.GetRoom();
@@ -84,23 +89,26 @@ namespace RimValiCore
             }
             return false;
         }
-        #endregion
+
+        #endregion room stuff
 
         #region Reflection stuff
+
         public static void SetFieldType<T>(string fieldName, T obj, Type type, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
         {
             obj.GetType().GetField(fieldName, flags).ChangeType<T>();
         }
 
-
         public static MethodInfo GetMethod<T>(string methodName, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
         {
             return typeof(T).GetMethod(methodName, flags);
         }
+
         public static MethodInfo GetMethod<T>(string methodName, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic, ParameterModifier[] modifiers = null)
         {
             return typeof(T).GetMethod(methodName, flags, null, new Type[0], modifiers);
         }
+
         public static void InvokeMethod<T>(string name, T obj, object[] parameters, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
         {
             ParameterModifier pMod = new ParameterModifier(parameters.Count());
@@ -112,15 +120,16 @@ namespace RimValiCore
             obj.GetType().InvokeMember(name, flags, null, obj, parameters, mods, null, null);
         }
 
-
         public static void InvokeMethodTMP<T>(string name, T obj, object[] parameters, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
         {
             GetMethod<T>(name, flags)?.Invoke(obj, parameters);
         }
+
         public static void InvokeMethod<T>(string name, T obj, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic)
         {
             GetMethod<T>(name, flags)?.Invoke(obj, new object[1]);
         }
+
         public static T GetVar<T>(string fieldName, BindingFlags flags = BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic, object obj = null)
         {
             return (T)obj.GetType().GetField(fieldName, flags).GetValue(obj);
@@ -136,9 +145,7 @@ namespace RimValiCore
             return (T)typeof(T).GetProperty(propName, flags).GetValue(obj);
         }
 
-
-
-        #endregion
+        #endregion Reflection stuff
 
         #region finding pawns of races and factions
 
@@ -225,6 +232,7 @@ namespace RimValiCore
             }
             return val;
         }
+
         public static List<Pawn> FetchAllAliveOrDeadPawns()
         {
             List<Pawn> val = new List<Pawn>();
@@ -249,7 +257,7 @@ namespace RimValiCore
             }
             return val;
         }
-        #endregion
 
+        #endregion finding pawns of races and factions
     }
 }

@@ -8,13 +8,14 @@ namespace RimValiCore
     [StaticConstructorOnStartup]
     public static class ClassTMPDecompiler
     {
-        private static readonly int dC;
         private static readonly string path = $"{Application.dataPath}";
+
         static ClassTMPDecompiler()
         {
-            path = Path.GetFullPath(Path.Combine(path, @"..\"));
-            path = $"{path}/RIMVALICORE/DecompiledTex";
+            path = Path.GetFullPath(Path.Combine(path, "..", "RimValiCore", "DecompiledTex"));
             Log.Message("Starting texture decompiler");
+
+            int totalCount = 0;
             foreach (AssetBundle bundle in AssetBundle.GetAllLoadedAssetBundles())
             {
                 int count = 0;
@@ -29,12 +30,11 @@ namespace RimValiCore
                     Graphics.CopyTexture(tex, copyTex);
                     WriteTex(copyTex, $"{bundle.name}_dectexture_{count}");
                     count++;
-                    dC++;
+                    totalCount++;
                 }
             }
-            Log.Message($"Decompiled {dC} textures");
+            Log.Message($"Decompiled {totalCount} textures");
         }
-
 
         public static void WriteTex(Texture2D tex, string name)
         {
@@ -44,14 +44,12 @@ namespace RimValiCore
         }
     }
 
-
     [StaticConstructorOnStartup]
     public class AvaliShaderDatabase
     {
         static AvaliShaderDatabase()
         {
-            string dir = RimValiUtility.dir;
-            string path = dir + "/RimValiAssetBundles/shader";
+            string path = Path.Combine(RimValiUtility.dir, "RimValiAssetBundles", "shader");
             AssetBundle bundle = RimValiUtility.shaderLoader(path);
             Tricolor = (Shader)bundle.LoadAsset("assets/resources/materials/avalishader.shader");
             lookup.Add(Tricolor.name, Tricolor);
@@ -60,6 +58,6 @@ namespace RimValiCore
         public static Shader Tricolor;
         public static Dictionary<string, Shader> lookup = new Dictionary<string, Shader>();
 
-        public static Shader DefaultShader => AvaliShaderDatabase.Tricolor;
+        public static Shader DefaultShader => Tricolor;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using RimWorld;
 using Verse;
+
 namespace RimValiCore.ThingComps
 {
     public class FuelConsumerProps : CompProperties
@@ -8,27 +9,31 @@ namespace RimValiCore.ThingComps
         public float amountConsumed = 1;
         public HediffDef effectAppliedOnNoFuel;
 
-        private FuelConsumerProps() { compClass = typeof(FuelConsumer); }
+        private FuelConsumerProps()
+        {
+            compClass = typeof(FuelConsumer);
+        }
     }
+
     public class FuelConsumer : ThingComp
     {
         public FuelConsumerProps Props => (FuelConsumerProps)props;
-        public CompRefuelable fuelComp => parent.TryGetComp<CompRefuelable>();
+        public CompRefuelable FuelComp => parent.TryGetComp<CompRefuelable>();
 
         private int ticks = 0;
+
         public override void CompTick()
         {
-
             if (ticks == Props.ticksBetweenConsumption)
             {
-                float fuel = RimValiUtility.GetVar<float>(fieldName: "fuel", obj: fuelComp);
+                float fuel = RimValiUtility.GetVar<float>(fieldName: "fuel", obj: FuelComp);
                 ticks = 0;
                 if (fuel > 0 && (fuel -= Props.amountConsumed) > 0)
                 {
                     Pawn p = parent as Pawn;
                     if (p.health.hediffSet.HasHediff(Props.effectAppliedOnNoFuel)) { p.health.RemoveHediff(HediffMaker.MakeHediff(Props.effectAppliedOnNoFuel, p)); }
                     fuel -= Props.amountConsumed;
-                    RimValiUtility.SetVar<float>(fieldName: "fuel", obj: fuelComp, val: fuel);
+                    RimValiUtility.SetVar(fieldName: "fuel", obj: FuelComp, val: fuel);
                 }
                 else if (Props.effectAppliedOnNoFuel != null)
                 {
@@ -39,6 +44,5 @@ namespace RimValiCore.ThingComps
             ticks++;
             base.CompTick();
         }
-
     }
 }

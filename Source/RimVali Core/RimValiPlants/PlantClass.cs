@@ -1,4 +1,6 @@
-﻿/*
+﻿// Does this need fixing or can it be deleted?
+
+/*
 using Verse;
 namespace RimValiCore.RimValiPlants
 {
@@ -6,8 +8,6 @@ namespace RimValiCore.RimValiPlants
     {
         public int maxTemp;
         public int minTemp;
-
-
     }
 
     public class Plant : RimWorld.Plant
@@ -18,8 +18,6 @@ namespace RimValiCore.RimValiPlants
         }
         public float RC_GRF(RimValiCore.RVR.RimValiRaceDef rDef)
         {
-
-               
                 float num;
                 if (!GenTemperature.TryGetTemperatureForCell(base.Position, base.Map, out num))
                 {

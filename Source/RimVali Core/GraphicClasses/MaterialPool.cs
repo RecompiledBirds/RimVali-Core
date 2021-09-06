@@ -1,31 +1,31 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using Verse;
+
+// This was decompiled from <somewhere>
+
 namespace RimValiCore
 {
-    // Token: 0x02000476 RID: 1142
     public static class AvaliMaterialPool
     {
+        private static readonly Dictionary<AvaliMaterialRequest, Material> matDictionary = new Dictionary<AvaliMaterialRequest, Material>();
 
-
-
-        // Token: 0x06001CE6 RID: 7398 RVA: 0x000F20B4 File Offset: 0x000F02B4
         public static Material MatFrom(AvaliMaterialRequest req)
         {
             //Log.Message("thisine");
             if (!UnityData.IsInMainThread)
             {
-                Log.Error("Tried to get a material from a different thread.", false);
+                Log.Error("Tried to get a material from a different thread.");
                 return null;
             }
             if (req.mainTex == null)
             {
-                Log.Error("MatFrom with null sourceTex.", false);
+                Log.Error("MatFrom with null sourceTex.");
                 return AvaliBaseContent.BadMat;
             }
             if (req.shader == null)
             {
-                Log.Warning("Matfrom with null shader.", false);
+                Log.Warning("Matfrom with null shader.");
                 return AvaliBaseContent.BadMat;
             }
             /*
@@ -35,12 +35,13 @@ namespace RimValiCore
 				req.maskTex = null;
 			}
 			*/
+            // What's the reasoning behind this?
 #pragma warning disable CS1717 // Assignment made to same variable
             req.color = req.color;
             req.colorTwo = req.colorTwo;
             req.colorThree = req.colorThree;
 #pragma warning restore CS1717
-            if (!AvaliMaterialPool.matDictionary.TryGetValue(req, out Material material))
+            if (!matDictionary.TryGetValue(req, out Material material))
             {
                 material = AvaliMaterialAllocator.Create(req.shader);
                 material.name = req.shader.name + "_" + req.mainTex.name;
@@ -56,14 +57,14 @@ namespace RimValiCore
                 {
                     material.renderQueue = req.renderQueue;
                 }
-                if (!req.shaderParameters.NullOrEmpty<ShaderParameter>())
+                if (!req.shaderParameters.NullOrEmpty())
                 {
                     for (int i = 0; i < req.shaderParameters.Count; i++)
                     {
                         req.shaderParameters[i].Apply(material);
                     }
                 }
-                AvaliMaterialPool.matDictionary.Add(req, material);
+                matDictionary.Add(req, material);
                 if (req.shader == ShaderDatabase.CutoutPlant || req.shader == ShaderDatabase.TransparentPlant)
                 {
                     WindManager.Notify_PlantMaterialCreated(material);
@@ -71,8 +72,5 @@ namespace RimValiCore
             }
             return material;
         }
-
-        // Token: 0x0400149D RID: 5277
-        private static readonly Dictionary<AvaliMaterialRequest, Material> matDictionary = new Dictionary<AvaliMaterialRequest, Material>();
     }
 }

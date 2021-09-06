@@ -1,22 +1,26 @@
 ﻿using UnityEngine;
 using Verse;
+
 namespace RimValiCore
 {
-
     public class AvaliGraphic_LinkedCornerFiller : AvaliGraphic_Linked
     {
+        /*
         private static readonly float CoverSizeCornerCorner = new Vector2(0.5f, 0.5f).magnitude;
         private static readonly float DistCenterCorner = new Vector2(0.5f, 0.5f).magnitude;
-        private static readonly float CoverOffsetDist = AvaliGraphic_LinkedCornerFiller.DistCenterCorner - AvaliGraphic_LinkedCornerFiller.CoverSizeCornerCorner * 0.5f;
+        private static readonly float CoverOffsetDist = DistCenterCorner - CoverSizeCornerCorner * 0.5f;
+
         private static readonly Vector2[] CornerFillUVs = new Vector2[4]
         {
-      new Vector2(0.5f, 0.6f),
-      new Vector2(0.5f, 0.6f),
-      new Vector2(0.5f, 0.6f),
-      new Vector2(0.5f, 0.6f)
+            new Vector2(0.5f, 0.6f),
+            new Vector2(0.5f, 0.6f),
+            new Vector2(0.5f, 0.6f),
+            new Vector2(0.5f, 0.6f)
         };
+
         private const float ShiftUp = 0.09f;
         private const float CoverSize = 0.5f;
+        */
 
         public override LinkDrawerType LinkerType => LinkDrawerType.CornerFiller;
 
@@ -37,9 +41,8 @@ namespace RimValiCore
             };
             return linkedCornerFiller;
         }
-
-
     }
+
     public class AvaliGraphic_LinkedTransmitterOverlay : AvaliGraphic_Linked
     {
         public AvaliGraphic_LinkedTransmitterOverlay()
@@ -55,9 +58,7 @@ namespace RimValiCore
         {
             return c.InBounds(parent.Map) && parent.Map.powerNetGrid.TransmittedPowerNetAt(c) != null;
         }
-
     }
-
 
     public class AvaliGraphic_LinkedTransmitter : AvaliGraphic_Linked
     {
@@ -70,6 +71,5 @@ namespace RimValiCore
         {
             return c.InBounds(parent.Map) && (base.ShouldLinkWith(c, parent) || parent.Map.powerNetGrid.TransmittedPowerNetAt(c) != null);
         }
-
     }
 }

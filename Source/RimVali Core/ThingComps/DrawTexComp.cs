@@ -1,5 +1,4 @@
-﻿
-using RimWorld;
+﻿using RimWorld;
 using System.Collections.Generic;
 using UnityEngine;
 using Verse;
@@ -15,6 +14,7 @@ namespace RimValiCore
         public int ticksBetweenTexture;
         public bool lockAtLastTex;
         public List<string> textures = new List<string>();
+
         public DrawCompProps()
         {
             compClass = typeof(DrawComp);
@@ -27,6 +27,7 @@ namespace RimValiCore
         public Graphic graphic;
         public int tex;
         public int tick;
+
         public override void CompTick()
         {
             if (Props.isAnimated)
@@ -51,7 +52,6 @@ namespace RimValiCore
             pos.z += offset.z;
             pos.x += offset.x;
 
-
             if (!Props.isAnimated)
             {
                 if (graphic == null)
@@ -64,13 +64,11 @@ namespace RimValiCore
                     if (parent.TryGetComp<CompPowerTrader>().PowerOn && FlickUtility.WantsToBeOn(parent))
                     {
                         graphic.Draw(pos, parent.Rotation, parent);
-
                     }
                 }
                 else
                 {
                     graphic.Draw(pos, parent.Rotation, parent);
-
                 }
             }
             else
@@ -82,7 +80,6 @@ namespace RimValiCore
                     if (parent.TryGetComp<CompPowerTrader>().PowerOn && FlickUtility.WantsToBeOn(parent))
                     {
                         graphic.Draw(pos, parent.Rotation, parent);
-
                     }
                 }
                 else

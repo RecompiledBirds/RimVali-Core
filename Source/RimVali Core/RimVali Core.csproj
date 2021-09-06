@@ -42,7 +42,7 @@
   <ItemGroup>
     <Compile Include="FloorConstructor.cs" />
     <Compile Include="GraphicClasses\BaseContent.cs" />
-    <Compile Include="GraphicClasses\CodeFile4.cs" />
+    <Compile Include="GraphicClasses\MaterialAllocator.cs" />
     <Compile Include="GraphicClasses\Graphic.cs" />
     <Compile Include="GraphicClasses\GraphicClasses.cs" />
     <Compile Include="GraphicClasses\GraphicData.cs" />
@@ -50,7 +50,6 @@
     <Compile Include="GraphicClasses\GraphicRequest.cs" />
     <Compile Include="GraphicClasses\GraphicUtility.cs" />
     <Compile Include="GraphicClasses\Linked.cs" />
-    <Compile Include="GraphicClasses\MaterialAllocator.cs" />
     <Compile Include="GraphicClasses\MaterialPool.cs" />
     <Compile Include="GraphicClasses\MaterialRequest.cs" />
     <Compile Include="HealableMaterial\Finder.cs" />
@@ -65,7 +64,7 @@
     </Compile>
     <Compile Include="GraphicClasses\ShaderDatabase.cs" />
     <Compile Include="GraphicClasses\ShaderIDs.cs" />
-    <Compile Include="RimValiPlants\patches.cs" />
+    <Compile Include="RimValiPlants\Patches.cs" />
     <Compile Include="RimValiPlants\PlantClass.cs" />
     <Compile Include="RimValiUtils.cs" />
     <Compile Include="RVRFrameWork\Backstories.cs" />
@@ -73,11 +72,11 @@
     <Compile Include="RVRFrameWork\Misc_Classes.cs" />
     <Compile Include="RVRFrameWork\DyeComp.cs" />
     <Compile Include="RVRFrameWork\FactionRelatedDefs.cs" />
-    <Compile Include="RVRFrameWork\patches.cs" />
+    <Compile Include="RVRFrameWork\Patches.cs" />
     <Compile Include="RVRFrameWork\RenderDef.cs" />
     <Compile Include="RVRFrameWork\Renders.cs" />
     <Compile Include="RVRFrameWork\ThingDef.cs" />
-    <Compile Include="Ships\patches.cs" />
+    <Compile Include="Ships\Patches.cs" />
     <Compile Include="Ships\ShipComp.cs" />
     <Compile Include="ThingComps\Cloning\StorageComp.cs" />
     <Compile Include="ThingComps\DrawTexComp.cs" />

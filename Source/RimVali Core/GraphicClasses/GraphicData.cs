@@ -14,8 +14,10 @@ namespace RimValiCore
         public Vector3 drawOffset = Vector3.zero;
         public bool drawRotated = true;
         public bool allowFlip = true;
+
         [NoTranslate]
         public string texPath;
+
         public System.Type graphicClass;
         public ShaderTypeDef shaderType;
         public List<ShaderParameter> shaderParameters;
@@ -29,6 +31,7 @@ namespace RimValiCore
         public DamageGraphicData damageData;
         public LinkDrawerType linkType;
         public LinkFlags linkFlags;
+
         [Unsaved(false)]
         private AvaliGraphic cachedGraphic;
 
@@ -104,7 +107,6 @@ namespace RimValiCore
 
             damageData.ResolveReferencesSpecial();
         }
-
 
         public AvaliGraphic GraphicColoredFor(Thing t)
         {

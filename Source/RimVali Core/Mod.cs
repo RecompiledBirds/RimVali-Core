@@ -9,6 +9,7 @@ namespace RimValiCore
         public bool smartPawnScaling;
         public int textureSizeScaling;
         public int smallestTexSize;
+
         public RVCModSettings()
         {
             expMode = false;
@@ -16,6 +17,7 @@ namespace RimValiCore
             textureSizeScaling = 10;
             smallestTexSize = 200;
         }
+
         public override void ExposeData()
         {
             Scribe_Values.Look(ref expMode, "mode", false, false);
@@ -25,24 +27,27 @@ namespace RimValiCore
             base.ExposeData();
         }
     }
+
     public class RimValiCoreMod : Mod
     {
         public override string SettingsCategory()
         {
             return "RimValiCore";
         }
+
         private static RVCModSettings settings;
         public static RVCModSettings Settings => settings;
         public ModContentPack mod;
+
         public RimValiCoreMod(ModContentPack content) : base(content)
         {
             RimValiUtility.dir = content.RootDir.ToString();
             mod = content;
             settings = GetSettings<RVCModSettings>();
         }
+
         public override void DoSettingsWindowContents(Rect inRect)
         {
-
             Listing_Standard ls = new Listing_Standard();
             ls.Begin(inRect);
             ls.CheckboxLabeled("Experimental mode: ", ref settings.expMode, "Only enable if you are willing to risk damage to saves and other such things!");

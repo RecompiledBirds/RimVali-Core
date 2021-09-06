@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using Verse;
+
 namespace RimValiCore
 {
     public static class AvaliGraphicUtility
@@ -11,8 +12,10 @@ namespace RimValiCore
             {
                 case AvaliGraphic_Random graphicRandom:
                     return graphicRandom.SubGraphicFor(thing);
+
                 case AvaliGraphic_Appearances graphicAppearances:
                     return graphicAppearances.SubGraphicFor(thing);
+
                 default:
                     return outerGraphic;
             }
@@ -26,19 +29,25 @@ namespace RimValiCore
             {
                 case LinkDrawerType.None:
                     return null;
+
                 case LinkDrawerType.Basic:
                     return new AvaliGraphic_Linked(subGraphic);
+
                 case LinkDrawerType.CornerFiller:
                     return new AvaliGraphic_LinkedCornerFiller(subGraphic);
+
                 case LinkDrawerType.Transmitter:
                     return new AvaliGraphic_LinkedTransmitter(subGraphic);
+
                 case LinkDrawerType.TransmitterOverlay:
                     return new AvaliGraphic_LinkedTransmitterOverlay(subGraphic);
+
                 default:
                     throw new ArgumentException();
             }
         }
     }
+
     public class AvaliGraphic_Linked : AvaliGraphic
     {
         protected AvaliGraphic subGraphic;
@@ -69,7 +78,6 @@ namespace RimValiCore
             };
             return graphicLinked;
         }
-
 
         public override Material MatSingleFor(Thing thing)
         {

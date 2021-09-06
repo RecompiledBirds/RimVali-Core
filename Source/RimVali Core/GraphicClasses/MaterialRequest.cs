@@ -2,19 +2,27 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Verse;
+
+// This was decompiled from <somewhere>
+
 namespace RimValiCore
 {
-    // Token: 0x02000477 RID: 1143
     public struct AvaliMaterialRequest : IEquatable<AvaliMaterialRequest>
     {
-        // Token: 0x17000583 RID: 1411
-        // (set) Token: 0x06001CE8 RID: 7400 RVA: 0x0001A15A File Offset: 0x0001835A
+        public Shader shader;
+        public Texture2D mainTex;
+        public Color color;
+        public Color colorTwo;
+        public Texture2D maskTex;
+        public int renderQueue;
+        public List<ShaderParameter> shaderParameters;
+        public Color colorThree;
+
         public string BaseTexPath
         {
-            set => mainTex = ContentFinder<Texture2D>.Get(value, true);
+            set => mainTex = ContentFinder<Texture2D>.Get(value);
         }
 
-        // Token: 0x06001CE9 RID: 7401 RVA: 0x000F228C File Offset: 0x000F048C
         public AvaliMaterialRequest(Texture2D tex)
         {
             Log.Message("this mat req");
@@ -28,7 +36,6 @@ namespace RimValiCore
             shaderParameters = null;
         }
 
-        // Token: 0x06001CEA RID: 7402 RVA: 0x000F22E4 File Offset: 0x000F04E4
         public AvaliMaterialRequest(Texture2D tex, Shader shader)
         {
             Log.Message("matreq2");
@@ -42,7 +49,6 @@ namespace RimValiCore
             shaderParameters = null;
         }
 
-        // Token: 0x06001CEB RID: 7403 RVA: 0x000F2338 File Offset: 0x000F0538
         public AvaliMaterialRequest(Texture2D tex, Shader shader, Color color)
         {
             Log.Message("matreq3");
@@ -56,81 +62,34 @@ namespace RimValiCore
             shaderParameters = null;
         }
 
-        // Token: 0x06001CEC RID: 7404 RVA: 0x000F2388 File Offset: 0x000F0588
         public override int GetHashCode()
         {
-            return Gen.HashCombine<List<ShaderParameter>>(Gen.HashCombineInt(Gen.HashCombine<Texture2D>(Gen.HashCombine<Texture2D>(Gen.HashCombineStruct<Color>(Gen.HashCombineStruct<Color>(Gen.HashCombine<Shader>(0, shader), color), colorTwo), mainTex), maskTex), renderQueue), shaderParameters);
+            return Gen.HashCombine(Gen.HashCombineInt(Gen.HashCombine(Gen.HashCombine(Gen.HashCombineStruct(Gen.HashCombineStruct(Gen.HashCombine(0, shader), color), colorTwo), mainTex), maskTex), renderQueue), shaderParameters);
         }
 
-        // Token: 0x06001CED RID: 7405 RVA: 0x0001A169 File Offset: 0x00018369
         public override bool Equals(object obj)
         {
-            return obj is AvaliMaterialRequest && Equals((AvaliMaterialRequest)obj);
+            return obj is AvaliMaterialRequest request && Equals(request);
         }
 
-        // Token: 0x06001CEE RID: 7406 RVA: 0x000F23E4 File Offset: 0x000F05E4
         public bool Equals(AvaliMaterialRequest other)
         {
             return other.shader == shader && other.mainTex == mainTex && other.color == color && other.colorTwo == colorTwo && other.maskTex == maskTex && other.renderQueue == renderQueue && other.shaderParameters == shaderParameters;
         }
 
-        // Token: 0x06001CEF RID: 7407 RVA: 0x0001A181 File Offset: 0x00018381
         public static bool operator ==(AvaliMaterialRequest lhs, AvaliMaterialRequest rhs)
         {
             return lhs.Equals(rhs);
         }
 
-        // Token: 0x06001CF0 RID: 7408 RVA: 0x0001A18B File Offset: 0x0001838B
         public static bool operator !=(AvaliMaterialRequest lhs, AvaliMaterialRequest rhs)
         {
             return !(lhs == rhs);
         }
 
-        // Token: 0x06001CF1 RID: 7409 RVA: 0x000F2470 File Offset: 0x000F0670
         public override string ToString()
         {
-            return string.Concat(new string[]
-            {
-                "AvaliMaterialRequest(",
-                shader.name,
-                ", ",
-                mainTex.name,
-                ", ",
-                color.ToString(),
-                ", ",
-                colorTwo.ToString(),
-                ", ",
-                colorThree.ToString(),
-                ",",
-                maskTex.ToString(),
-                ", ",
-                renderQueue.ToString(),
-                ")"
-            });
+            return $"AvaliMaterialRequest({shader.name}, {mainTex.name}, {color}, {colorTwo}, {colorThree}, {maskTex}, {renderQueue})";
         }
-
-        // Token: 0x0400149E RID: 5278
-        public Shader shader;
-
-        // Token: 0x0400149F RID: 5279
-        public Texture2D mainTex;
-
-        // Token: 0x040014A0 RID: 5280
-        public Color color;
-
-        // Token: 0x040014A1 RID: 5281
-        public Color colorTwo;
-
-        // Token: 0x040014A2 RID: 5282
-        public Texture2D maskTex;
-
-        // Token: 0x040014A3 RID: 5283
-        public int renderQueue;
-
-        // Token: 0x040014A4 RID: 5284
-        public List<ShaderParameter> shaderParameters;
-
-        // Token: 0x040014A5 RID: 5285
-        public Color colorThree;
     }
 }

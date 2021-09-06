@@ -6,7 +6,7 @@ using Verse;
 
 namespace RimValiCore.RVR
 {
-
+    // TODO: Rename these
     public class BodyPartToAffect
     {
         public HediffDef hediffDef;
@@ -18,11 +18,13 @@ namespace RimValiCore.RVR
         public SkillDef skill;
         public int amount;
     }
+
     public class traitList
     {
         public TraitDef def;
         public int degree;
     }
+
     public class RVRBackstory : Def
     {
         public string storyDesc;
@@ -35,14 +37,15 @@ namespace RimValiCore.RVR
         public bool canSpawnFemale = true;
 
         public bool shuffable = true;
+
         //These stack!
         //A global chance of 50 and a female chance of 50 would be 25 for female pawns.
         public int femaleChance = 100;
+
         public int maleChance = 100;
         public int globalChance = 100;
 
         public BackstorySlot backstorySlot = BackstorySlot.Adulthood;
-
 
         public List<string> spawnInCategories = new List<string>();
         public List<skillGains> skillGains = new List<skillGains>();
@@ -59,12 +62,12 @@ namespace RimValiCore.RVR
         public butcherAndHarvestThoughts butcherAndHarvestThoughtOverrides = new butcherAndHarvestThoughts();
         public BodyDef bodyDefOverride;
         public BodyTypeDef bodyType;
+
         //Not accessible in XML, dont use them.
         public Backstory story;
+
         private readonly List<TraitEntry> traitsToForce = new List<TraitEntry>();
         private readonly List<TraitEntry> traitsToDisable = new List<TraitEntry>();
-
-
 
         public bool CanSpawn(Pawn pawn)
         {
@@ -86,7 +89,6 @@ namespace RimValiCore.RVR
             }
             if (Rand.Range(0, 100) < globalChance)
             {
-
                 if (!canSpawnFemale && pawn.gender == Gender.Female)
                 {
                     return false;
@@ -117,6 +119,7 @@ namespace RimValiCore.RVR
             // Log.Message("Story can't spawn: chance roll (global)");
             return false;
         }
+
         public override void ResolveReferences()
         {
             Dictionary<SkillDef, int> skills = new Dictionary<SkillDef, int>();
@@ -158,7 +161,6 @@ namespace RimValiCore.RVR
                 })(),
                 shuffleable = shuffable
             };
-
 
             BackstoryDatabase.AddBackstory(story);
             //Log.Message("created story: " + this.defName);
