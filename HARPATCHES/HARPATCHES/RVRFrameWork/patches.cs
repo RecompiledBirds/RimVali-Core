@@ -55,11 +55,7 @@ namespace RimValiCore.RVR
         {
             if (!RimValiCoreMod.Settings.expMode)
             {
-                if (pairs.ContainsKey(item))
-                {
-                    if (!pairs[item].NullOrEmpty() && pairs[item].Contains(race)) { return true; }
-                }
-                return !pairs.ContainsKey(item) && keyNotInReturn;
+                return pairs.ContainsKey(item) ? pairs[item] is List<V> ? !pairs[item].NullOrEmpty() && pairs[item].Contains(race) : false : keyNotInReturn
             }
             else
             {
