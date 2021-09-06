@@ -21,7 +21,8 @@ namespace RimValiCore.RVR
         public Patcher(Harmony har)
         {
             this.harmony = har;
-           // harmony.Patch(AccessTools.Method(typeof(ModAssemblyHandler), "ReloadAll"),prefix:new HarmonyMethod(typeof(AssemblyLoadingPatch), "Patch"));
+            harmony.Patch(AccessTools.Method(typeof(ModAssemblyHandler), "ReloadAll"),prefix:new HarmonyMethod(typeof(AssemblyLoadingPatch), "Patch"));
+            Log.Message("Loading patch completed!");
         }
     }
 
@@ -424,6 +425,7 @@ namespace RimValiCore.RVR
     {
         private static bool AssemblyIsUsable(Assembly asm)
         {
+            
             if (asm == null)
                 return false;
             try
@@ -469,7 +471,6 @@ namespace RimValiCore.RVR
        // [HarmonyPrefix]
         public static void Patch(ModAssemblyHandler __instance)
         {
-            Log.Message("test");
             if (resolverIsSet)
             {
                 ResolveEventHandler @object = (object obj, ResolveEventArgs args) => Assembly.GetExecutingAssembly();
@@ -484,19 +485,6 @@ namespace RimValiCore.RVR
                 try
                 {
                     assembly = Assembly.Load(fileInfo.FullName);
-                    /*
-                    byte[] rawAssembly = File.ReadAllBytes(fileInfo.FullName);
-                    FileInfo fileInfo2 = new FileInfo(Path.Combine(fileInfo.DirectoryName, Path.GetFileNameWithoutExtension(fileInfo.FullName)) + ".pdb");
-                    if (fileInfo2.Exists)
-                    {
-                        byte[] rawSymbolStore = File.ReadAllBytes(fileInfo2.FullName);
-                        assembly = AppDomain.CurrentDomain.Load(rawAssembly, rawSymbolStore);
-                    }
-                    else
-                    {
-                        assembly = AppDomain.CurrentDomain.Load(rawAssembly);
-                    }
-                    */
                 }
                 catch (Exception ex)
                 {

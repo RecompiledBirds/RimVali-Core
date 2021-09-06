@@ -100,7 +100,7 @@ namespace AvaliMod
 			}
 			foreach (string text in Enumerable.Take<string>(Enumerable.Select<KeyValuePair<string, int>, string>(Enumerable.OrderByDescending<KeyValuePair<string, int>, int>(Enumerable.Select<string, KeyValuePair<string, int>>(enumerable, (string k) => new KeyValuePair<string, int>(k, currentSnapshot.TryGetValue(k, 0) - AvaliMaterialAllocator.snapshot.TryGetValue(k, 0))), (KeyValuePair<string, int> kvp) => kvp.Value), (KeyValuePair<string, int> g) => string.Format("{0}: {1}", g.Value, g.Key)), 20))
 			{
-				Log.Error(text, false);
+				Log.Error(text);
 			}
 		}
 

@@ -70,7 +70,6 @@ namespace RimValiCore
             Room room = pawn.GetRoom();
             RoomStatWorker_Beauty b = new RoomStatWorker_Beauty();
             return room.GetStat(RoomStatDefOf.Impressiveness);
-
         }
         public static bool SharedBedroom(this Pawn pawn)
         {

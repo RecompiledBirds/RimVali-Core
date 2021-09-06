@@ -401,7 +401,7 @@ namespace RimValiCore.Ships
 
 
 
-		public new bool CanTryLaunch
+		public bool CanTryLaunch
         {
             get
             {

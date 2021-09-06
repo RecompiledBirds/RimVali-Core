@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using RimValiCore.RVR;
+using RimWorld;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -52,7 +53,8 @@ namespace RimValiCore
             try
             {
                 Log.Message("Starting loading patch");
-                new Patcher(new Harmony("RimValiCore.Loading"));
+               // new Patcher(new Harmony("RimValiCore.Loading"));
+               
             }
             catch(Exception e)
             {

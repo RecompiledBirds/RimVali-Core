@@ -300,7 +300,10 @@ namespace RimValiCore.RVR
             }
         }
 
-
+        public override void PostLoad()
+        {
+            base.PostLoad();
+        }
         public class ReplaceableThoughts
         {
             public ThoughtDef thoughtToReplace;

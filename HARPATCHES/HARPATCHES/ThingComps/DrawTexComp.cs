@@ -45,11 +45,13 @@ namespace RimValiCore
                     tex = tex < Props.textures.Count - 1 ? tex++ : !Props.lockAtLastTex ? tex = 0 : tex = Props.textures.Count - 1;
                 }
             }
-            Draw();
             base.CompTick();
         }
 
-        
+        public override void PostDraw()
+        {
+            Draw();
+        }
         void Draw()
         {
             Vector3 offset = Props.offset;
@@ -98,12 +100,5 @@ namespace RimValiCore
                 }
             }
         }
-
-        public override void PostDraw()
-        {
-            Log.Message("postdraw is called");
-            Draw();
-            base.PostDraw();
-        }
-    }
+   }
 }

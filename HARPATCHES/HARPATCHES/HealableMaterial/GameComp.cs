@@ -9,55 +9,93 @@ namespace RimValiCore.HealableMaterial
 {
     public class HealableGameComp : GameComponent
     {
-        public HealableGameComp(Game game){ticks = new Dictionary<Thing, int>();}
+        public HealableGameComp(Game game)
+        {
+            ticks = new Dictionary<Thing, int>();
+            refreshTick = refreshATTick-2;
+        }
 
+        private void CleanupThing(Thing thing)
+        {
+            if (ticks.ContainsKey(thing))
+            {
+                ticks.Remove(thing);
+            }
+            things.Remove(thing);
+        }
+
+        private int refreshTick;
+        private int refreshATTick=480;
+        private float slowDown()
+        {
+            int area = Current.Game.AnyPlayerHomeMap.Area;
+            return area / (float)(Current.Game.Maps.Count+0.2)*area;
+        }
+        private List<Thing> GetThings
+        {
+            get
+            {
+                List<Thing> val = new List<Thing>();
+                foreach (Map map in Current.Game.Maps)
+                {
+                    foreach (Thing thing in map.spawnedThings)
+                    {
+                        if (thing.def.race == null && thing.def.projectile == null)
+                        {
+                            val.Add(thing);
+                        }
+                    }
+                }
+                return val;
+            }
+        }
         Dictionary<Thing, int> ticks = new Dictionary<Thing, int>();
-        HashSet<Thing> things = new HashSet<Thing>();
-        int refreshData = 0;
+        List<Thing> things = new List<Thing>();
+        private bool threadIsRunning;
         public override void GameComponentTick()
         {
-            if (!Current.Game.Maps.NullOrEmpty()&&Current.Game.Maps.Any(x=>x.spawnedThings.Any(y=>HealableMatFinder.thingDefs.ContainsKey(y.def)||y.Stuff!=null&& HealableMatFinder.thingDefs.ContainsKey(y.Stuff))))
+            void update()
             {
-                if (refreshData == 120)
+                if (!Current.Game.Maps.NullOrEmpty())
                 {
-                    foreach (Map map in Current.Game.Maps.Where(x => x.spawnedThings.Any(y => HealableMatFinder.thingDefs.ContainsKey(y.def) || y.Stuff != null && HealableMatFinder.thingDefs.ContainsKey(y.Stuff))))
+                    if (refreshTick == refreshATTick)
                     {
-                        things.AddRange(map.spawnedThings.Where(y => !things.Contains(y) && (HealableMatFinder.thingDefs.ContainsKey(y.def) || y.Stuff != null && HealableMatFinder.thingDefs.ContainsKey(y.Stuff)) && y.HitPoints < y.MaxHitPoints));
+                        things = GetThings;
+                        refreshTick = 0;
                     }
-                    refreshData = 0;
-                }
-                refreshData++;
-                foreach (Thing thing in things.Where(x=>x!=null))
-                {
-                    try
+                    for (int i = 0; i < things.Count; i++)
                     {
-                        if (!ticks.ContainsKey(thing)) {
-                            Log.Message("Adding thing");
-                            ticks.Add(thing, 0);
-                            Log.Message("added thing");
-                        }
-                        else
+                        Thing thing = things[i];
+                       
+                        if (thing != null && thing.Spawned)
                         {
-                            if ((thing.Stuff!=null &&( HealableMatFinder.thingDefs.ContainsKey(thing.Stuff) && ticks[thing] == HealableMatFinder.thingDefs[thing.Stuff].ticks)) || (HealableMatFinder.thingDefs.ContainsKey(thing.def) && ticks[thing] == HealableMatFinder.thingDefs[thing.def].ticks) && thing.HitPoints < thing.MaxHitPoints)
+                            if (!ticks.ContainsKey(thing))
                             {
-                                Log.Message("Getting thing");
-                                ThingDef def = (thing.Stuff != null ? thing.Stuff : thing.def);
-                                int amount = HealableMatFinder.thingDefs[def].amount;
-                                Log.Message("Got thing");
-                                thing.HitPoints = thing.HitPoints + amount <= thing.MaxHitPoints ? HealableMatFinder.thingDefs[def].amount + thing.HitPoints : thing.MaxHitPoints;
+                                ticks.Add(thing, 0);
+                            }
+                            HealStuff targ = HealableMatFinder.FindThing(thing);
+                            if (targ !=null && thing.HitPoints < thing.MaxHitPoints && targ.ticks == ticks[thing])
+                            {
+                                int wantedHP = thing.HitPoints + targ.amount;
+                                thing.HitPoints = wantedHP > thing.MaxHitPoints ? thing.MaxHitPoints : wantedHP;
                                 ticks[thing] = 0;
                             }
                             ticks[thing]++;
                         }
+                        else
+                        {
+                            CleanupThing(thing);
+                        }
                     }
-                    catch (Exception e)
-                    {
-                        Log.Error(e.Message);
-                    }
+                    refreshTick++;
                 }
-                ticks.RemoveAll(x => !x.Key.Spawned|| x.Key.Destroyed || x.Key.HitPoints == x.Key.MaxHitPoints);
-                things.RemoveWhere(x => !x.Spawned || x.Destroyed || x.HitPoints==x.MaxHitPoints);
-
+                threadIsRunning = false;
+            }
+            if (!threadIsRunning)
+            {
+                threadIsRunning = true;
+                Task task = new Task(update);
+                task.Start();
             }
         }
     }

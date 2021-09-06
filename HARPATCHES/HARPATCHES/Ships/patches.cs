@@ -17,18 +17,10 @@ namespace RimValiCore.Ships
     {
 		public static readonly Texture2D LoadCommandTex = ContentFinder<Texture2D>.Get("UI/Commands/LoadTransporter", true);
 		static shipPatches()
-        {
-           // Harmony rVC_Ships_Harmony = new Harmony("RimValiCore.Ships");
-            try
-            {
-                Log.Message("[RimVali: Core/Ships & Drones]: Ready for launch!");
-               // rVC_Ships_Harmony.PatchAll();
-              //  Log.Message($"[RimVali: Core/Ships]: Patched {rVC_Ships_Harmony.GetPatchedMethods().Count()} methods succesfully!");
-            }catch(Exception e)
-            {
-              //  Log.Error($"[RimVali: Core/Ships]: Patches failed!!! Patched {rVC_Ships_Harmony.GetPatchedMethods().Count()} methods. \n Error: {e}");
-            }
-        }
+		{
+			Log.Message("[RimVali: Core/Ships & Drones]: Ready for launch!");
+
+		}
     }
 
     [HarmonyPatch(typeof(CompTransporter), "CompGetGizmosExtra")]
@@ -104,15 +96,6 @@ namespace RimValiCore.Ships
 					command_LoadToTransporter.icon = shipPatches.LoadCommandTex;
 					command_LoadToTransporter.transComp = __instance;
 
-
-					if (false)
-					{
-						command_LoadToTransporter.Disable("CommandLoadTransporterFailNotConnectedToFuelingPort".Translate());
-					}
-					else if (false)
-					{
-						command_LoadToTransporter.Disable("CommandLoadTransporterFailNoFuel".Translate());
-					}
 					command_LoadToTransporter.defaultLabel = "test";
 					gizmos.Add(command_LoadToTransporter);
 					#endregion
