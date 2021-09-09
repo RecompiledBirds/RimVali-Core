@@ -1,0 +1,114 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{C26A8B61-8B01-4A81-835D-42B2FB8C3A65}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>RimValiCore</RootNamespace>
+    <AssemblyName>RimValiCore</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ReferencePath>$(SolutionDir)Refs</ReferencePath>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>none</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\..\..\RimValiCore\1.3\Assemblies\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\1.3\Assemblies\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System.ComponentModel" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="FloorConstructor.cs" />
+    <Compile Include="GraphicClasses\BaseContent.cs" />
+    <Compile Include="GraphicClasses\MaterialAllocator.cs" />
+    <Compile Include="GraphicClasses\Graphic.cs" />
+    <Compile Include="GraphicClasses\GraphicClasses.cs" />
+    <Compile Include="GraphicClasses\GraphicData.cs" />
+    <Compile Include="GraphicClasses\GraphicDatabase.cs" />
+    <Compile Include="GraphicClasses\GraphicRequest.cs" />
+    <Compile Include="GraphicClasses\GraphicUtility.cs" />
+    <Compile Include="GraphicClasses\Linked.cs" />
+    <Compile Include="GraphicClasses\MaterialPool.cs" />
+    <Compile Include="GraphicClasses\MaterialRequest.cs" />
+    <Compile Include="HealableMaterial\Finder.cs" />
+    <Compile Include="HealableMaterial\GameComp.cs" />
+    <Compile Include="HealableMaterial\HealableComp.cs" />
+    <Compile Include="Mod.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
+    <Compile Include="GraphicClasses\ShaderDatabase.cs" />
+    <Compile Include="GraphicClasses\ShaderIDs.cs" />
+    <Compile Include="RimValiPlants\Patches.cs" />
+    <Compile Include="RimValiPlants\PlantClass.cs" />
+    <Compile Include="RimValiUtils.cs" />
+    <Compile Include="RVRFrameWork\Backstories.cs" />
+    <Compile Include="RVRFrameWork\DefOf.cs" />
+    <Compile Include="RVRFrameWork\Misc_Classes.cs" />
+    <Compile Include="RVRFrameWork\DyeComp.cs" />
+    <Compile Include="RVRFrameWork\FactionRelatedDefs.cs" />
+    <Compile Include="RVRFrameWork\Patches.cs" />
+    <Compile Include="RVRFrameWork\RenderDef.cs" />
+    <Compile Include="RVRFrameWork\Renders.cs" />
+    <Compile Include="RVRFrameWork\ThingDef.cs" />
+    <Compile Include="Ships\Patches.cs" />
+    <Compile Include="Ships\ShipComp.cs" />
+    <Compile Include="ThingComps\Cloning\StorageComp.cs" />
+    <Compile Include="ThingComps\DrawTexComp.cs" />
+    <Compile Include="ThingComps\FuelConsumer.cs" />
+    <Compile Include="WallPlaceworker.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.7.2">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.7.2 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Krafs.Rimworld.Ref">
+      <Version>1.3.3102</Version>
+    </PackageReference>
+    <PackageReference Include="Lib.Harmony">
+      <IncludeAssets>compile</IncludeAssets>
+      <Version>2.1.1</Version>
+    </PackageReference>
+  </ItemGroup>
+</Project>
