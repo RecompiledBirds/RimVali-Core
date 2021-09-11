@@ -1011,7 +1011,8 @@ namespace RimValiCore.RVR
         public static bool TraitGain(Trait trait, TraitSet __instance)
         {
             Pawn pawn = Traverse.Create(__instance).Field("pawn").GetValue<Pawn>();
-            return pawn.def is RimValiRaceDef rDef ? (!rDef.restrictions.disabledTraits.NullOrEmpty() && rDef.restrictions.disabledTraits.Contains(trait.def)) || Restrictions.CheckRestrictions(Restrictions.traitRestrictions, trait.def, pawn.def) : Restrictions.CheckRestrictions(Restrictions.traitRestrictions, trait.def, pawn.def);
+            bool value = pawn.def is RimValiRaceDef rDef ? (!rDef.restrictions.disabledTraits.NullOrEmpty() && rDef.restrictions.disabledTraits.Contains(trait.def)) || Restrictions.CheckRestrictions(Restrictions.traitRestrictions, trait.def, pawn.def) : Restrictions.CheckRestrictions(Restrictions.traitRestrictions, trait.def, pawn.def);
+            return value;
         }
     }
 
@@ -1392,11 +1393,9 @@ namespace RimValiCore.RVR
     {
         public static bool CanWearHeavyRestricted(ThingDef def, Pawn pawn)
         {
-            if (pawn.def is RimValiRaceDef def1)
-            {
-                return Restrictions.CheckRestrictions(Restrictions.equipmentRestrictions, def, def1, !def1.restrictions.canOnlyUseApprovedApparel) || Restrictions.CheckRestrictions(Restrictions.equipabblbleWhiteLists, def, def1, !def1.restrictions.canOnlyUseApprovedApparel);
-            }
-            return Restrictions.CheckRestrictions(Restrictions.equipmentRestrictions, def, pawn.def) || Restrictions.CheckRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, false, false);
+            bool couldWearNormally = Restrictions.CheckRestrictions(Restrictions.equipmentRestrictions, def, pawn.def);
+            bool couldWearIfRVR = Restrictions.CheckRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, (pawn.def is RimValiRaceDef rDef && rDef.restrictions.canOnlyUseApprovedApparel));
+            return couldWearIfRVR || couldWearNormally;
         }
 
         public static void Equipable(ref bool __result, Thing thing, Pawn pawn, ref string cantReason)
@@ -1720,11 +1719,11 @@ namespace RimValiCore.RVR
         public static RenderTexture NewTexture()
         {
             Vector2Int size = new Vector2Int(GetAtlasSizeWithPawnsOnMap(), GetAtlasSizeWithPawnsOnMap());
-            return new RenderTexture(size.x, size.y, 24, RenderTextureFormat.ARGB64, 0)
+            return new RenderTexture(size.x, size.y, 40, RenderTextureFormat.ARGBFloat, 0)
             {
                 antiAliasing = 0,
                 useMipMap = true,
-                mipMapBias = -0.7f
+                mipMapBias = -100f
             };
         }
 

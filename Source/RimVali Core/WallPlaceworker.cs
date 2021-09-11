@@ -10,6 +10,6 @@ namespace RimValiCore
         {
             IEnumerable<Thing> things = map.thingGrid.ThingsAt(loc);
             return !things.EnumerableNullOrEmpty() && things.Any(x => x.def.holdsRoof);
-        }
+        }  
     }
 }

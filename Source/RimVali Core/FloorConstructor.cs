@@ -278,7 +278,7 @@ namespace AvaliMod
                             //Gets the category name between cloneMaterial_ and [ENDCATNAME]
                             string cS = string.Copy(s);
                             string res = cS.Substring(cS.IndexOf("removeFromResearch_") + "removeFromResearch_".Length, (cS.IndexOf("[ENDRESNAME]") - ("[ENDRESNAME]".Length + 7)) - cS.IndexOf("removeFromResearch_"));
-                            Log.Message(res);
+                            //Log.Message(res);
                             ResearchProjectDef proj = def.researchPrerequisites.Find(x => x.defName == res);
                             def.researchPrerequisites.Remove(proj);
                             proj.PostLoad();
@@ -292,8 +292,8 @@ namespace AvaliMod
                 }
                 if (hasDoneTask)
                 {
-                    // def.PostLoad();
-                    //def.ResolveReferences();
+                     def.PostLoad();
+                    def.ResolveReferences();               
                 }
             }
             //Ensures we are adding to the DefDatabase. Just a saftey check.
