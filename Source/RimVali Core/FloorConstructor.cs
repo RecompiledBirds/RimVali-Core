@@ -16,7 +16,6 @@ namespace AvaliMod
         public static List<DesignatorDropdownGroupDef> toUpdateDropdownDesDefs = new List<DesignatorDropdownGroupDef>();
         public static List<string> materials = new List<string>();
         public static HashSet<TerrainDef> floorsMade = new HashSet<TerrainDef>();
-        public static StringBuilder builder = new StringBuilder();
         public static bool canGenerate = true;
 
         /// <summary>
@@ -26,12 +25,16 @@ namespace AvaliMod
         /// <param name="name">The NAME of the category we want to duplicate.</param>
         public static void CreateAllVersions(TerrainDef def, string name)
         {
-            foreach (ThingDef tDef in DefDatabase<ThingDef>.AllDefs.Where(d => d.stuffProps != null && !d.stuffProps.categories.NullOrEmpty() && d.stuffProps.categories.Any(cat => cat.defName == name)))
+            Log.Message($"[RimVali Core/FloorConstructor] CreateAllVersions of {def.defName}, {name}");
+            IEnumerable<ThingDef> floors = DefDatabase<ThingDef>.AllDefs
+                .Where(d => d.stuffProps?.categories?.Any(cat => cat.defName == name) ?? false);
+            foreach (ThingDef tDef in floors)
             {
                 if (!materials.Contains(tDef.defName))
                 {
                     materials.Add(tDef.defName);
                 }
+
                 //I have NO IDEA why, but one of those archotech mods has something called archotechmatteraddingsomecraptoavoidproblems and it hates me.
                 //So lets assume they arent a special case
                 //And do this?
@@ -224,14 +227,16 @@ namespace AvaliMod
                     //This makes sure everything is setup how it should be
                     output.PostLoad();
                     output.ResolveReferences();
-                    builder.AppendLine("---------------------------------------------");
+                    StringBuilder builder = new StringBuilder();
                     builder.AppendLine($"[RimVali Core/FloorConstructor] Generated {output.label}");
                     builder.AppendLine($" Mat color: {tDef.stuffProps.color}");
                     builder.AppendLine($" Floor color: {output.color}");
                     builder.AppendLine($" UI Icon color: {output.uiIconColor}");
+                    Log.Message(builder.ToString());
                     floorsMade.Add(output);
                 }
             }
+            Log.Message($"[RimVali Core/FloorConstructor] Done with CreateAllVersions");
         }
 
         static FloorConstructor()
@@ -250,19 +255,16 @@ namespace AvaliMod
                 }
                 if (def.tags.Any(str => str.Contains("cloneMaterial")))
                 {
-                    IEnumerable<string> tags = def.tags.Where(x => x.Contains("cloneMaterial") && !x.NullOrEmpty());
+                    List<string> tags = def.tags.Where(x => x.Contains("cloneMaterial") && !x.NullOrEmpty()).ToList();
                     foreach (string s in tags)
                     {
-                        try
-                        {
-                            //Gets the category name between cloneMaterial_ and [ENDCATNAME]
-                            string cS = string.Copy(s);
-                            string res = cS.Substring(cS.IndexOf("cloneMaterial_") + "cloneMaterial_".Length, cS.IndexOf("[ENDCATNAME]") - "[ENDCATNAME]".Length + 2 - cS.IndexOf("cloneMaterial_"));
-                            CreateAllVersions(def, res);
-                        }
-                        catch
-                        {
-                        }
+                        //Gets the category name between cloneMaterial_ and [ENDCATNAME]
+                        string cS = string.Copy(s);
+                        int startIndex = cS.IndexOf("cloneMaterial_") + "cloneMaterial_".Length;
+                        int endIndex = cS.IndexOf("[ENDCATNAME]");
+                        int length = endIndex - startIndex;
+                        string res = cS.Substring(startIndex, length);
+                        CreateAllVersions(def, res);
                     }
                 }
 
@@ -272,42 +274,35 @@ namespace AvaliMod
                     for (int a = 0; a < tags.Count; a++)
                     {
                         string s = tags[a];
-                        try
-                        {
-                            hasDoneTask = true;
-                            //Gets the category name between cloneMaterial_ and [ENDCATNAME]
-                            string cS = string.Copy(s);
-                            string res = cS.Substring(cS.IndexOf("removeFromResearch_") + "removeFromResearch_".Length, (cS.IndexOf("[ENDRESNAME]") - ("[ENDRESNAME]".Length + 7)) - cS.IndexOf("removeFromResearch_"));
-                            //Log.Message(res);
-                            ResearchProjectDef proj = def.researchPrerequisites.Find(x => x.defName == res);
-                            def.researchPrerequisites.Remove(proj);
-                            proj.PostLoad();
-                            proj.ResolveReferences();
-                        }
-                        catch
-                        {
-
-                        }
+                        hasDoneTask = true;
+                        //Gets the category name between cloneMaterial_ and [ENDCATNAME]
+                        string cS = string.Copy(s);
+                        int startIndex = cS.IndexOf("removeFromResearch_") + "removeFromResearch_".Length;
+                        int endIndex = cS.IndexOf("[ENDRESNAME]");
+                        int length = endIndex - startIndex;
+                        string res = cS.Substring(startIndex, length);
+                        ResearchProjectDef proj = def.researchPrerequisites.Find(x => x.defName == res);
+                        def.researchPrerequisites.Remove(proj);
+                        proj.PostLoad();
+                        proj.ResolveReferences();
                     }
                 }
                 if (hasDoneTask)
                 {
-                     def.PostLoad();
-                    def.ResolveReferences();               
+                    def.PostLoad();
+                    def.ResolveReferences();
                 }
             }
             //Ensures we are adding to the DefDatabase. Just a saftey check.
             foreach (TerrainDef def in floorsMade)
             {
-                def.PostLoad();
-
-                if (!DefDatabase<TerrainDef>.AllDefs.Contains(def))
+                if (!DefDatabase<TerrainDef>.AllDefs.Select(terrainDef => terrainDef.defName).Contains(def.defName))
                 {
+                    def.PostLoad();
                     DefDatabase<TerrainDef>.Add(def);
                 }
             }
 
-            Log.Message($"[RimVali Core/FloorConstructor] {builder}");
             Log.Message("[RimVali Core/FloorConstructor] Updating architect menu..");
 
             //Updates/refreshes menus
