@@ -1394,7 +1394,7 @@ namespace RimValiCore.RVR
         public static bool CanWearHeavyRestricted(ThingDef def, Pawn pawn)
         {
             bool couldWearNormally = Restrictions.CheckRestrictions(Restrictions.equipmentRestrictions, def, pawn.def);
-            bool couldWearIfRVR = Restrictions.CheckRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, (pawn.def is RimValiRaceDef rDef && rDef.restrictions.canOnlyUseApprovedApparel));
+            bool couldWearIfRVR = Restrictions.CheckRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, (pawn.def is RimValiRaceDef rDef && !rDef.restrictions.canOnlyUseApprovedApparel));
             return couldWearIfRVR || couldWearNormally;
         }
 
