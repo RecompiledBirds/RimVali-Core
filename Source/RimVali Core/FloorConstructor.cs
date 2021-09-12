@@ -222,8 +222,8 @@ namespace AvaliMod
                     output.frameDef = frameDef;
 
                     //This makes sure everything is setup how it should be
-                    output.PostLoad();
-                    output.ResolveReferences();
+                    //output.PostLoad();
+                    //output.ResolveReferences();
                     builder.AppendLine("---------------------------------------------");
                     builder.AppendLine($"[RimVali Core/FloorConstructor] Generated {output.label}");
                     builder.AppendLine($" Mat color: {tDef.stuffProps.color}");
@@ -257,11 +257,13 @@ namespace AvaliMod
                         {
                             //Gets the category name between cloneMaterial_ and [ENDCATNAME]
                             string cS = string.Copy(s);
-                            string res = cS.Substring(cS.IndexOf("cloneMaterial_") + "cloneMaterial_".Length, cS.IndexOf("[ENDCATNAME]") - "[ENDCATNAME]".Length + 2 - cS.IndexOf("cloneMaterial_"));
+                            string res = cS.Substring(cS.IndexOf("cloneMaterial_") + "cloneMaterial_".Length, cS.IndexOf("[ENDCATNAME]") - "[ENDCATNAME]".Length - 2 - cS.IndexOf("cloneMaterial_"));
                             CreateAllVersions(def, res);
+                            Log.Message(res);
                         }
                         catch
                         {
+                            
                         }
                     }
                 }
@@ -279,10 +281,10 @@ namespace AvaliMod
                             string cS = string.Copy(s);
                             string res = cS.Substring(cS.IndexOf("removeFromResearch_") + "removeFromResearch_".Length, (cS.IndexOf("[ENDRESNAME]") - ("[ENDRESNAME]".Length + 7)) - cS.IndexOf("removeFromResearch_"));
                             //Log.Message(res);
-                            ResearchProjectDef proj = def.researchPrerequisites.Find(x => x.defName == res);
-                            def.researchPrerequisites.Remove(proj);
-                            proj.PostLoad();
-                            proj.ResolveReferences();
+                            //ResearchProjectDef proj = def.researchPrerequisites.Find(x => x.defName == res);
+                           // def.researchPrerequisites.Remove(proj);
+                            //proj.PostLoad();
+                            //proj.ResolveReferences();
                         }
                         catch
                         {
@@ -290,17 +292,19 @@ namespace AvaliMod
                         }
                     }
                 }
+                /*
                 if (hasDoneTask)
                 {
                      def.PostLoad();
                     def.ResolveReferences();               
                 }
+                */
             }
             //Ensures we are adding to the DefDatabase. Just a saftey check.
             foreach (TerrainDef def in floorsMade)
             {
                 def.PostLoad();
-
+                def.ResolveReferences();
                 if (!DefDatabase<TerrainDef>.AllDefs.Contains(def))
                 {
                     DefDatabase<TerrainDef>.Add(def);
