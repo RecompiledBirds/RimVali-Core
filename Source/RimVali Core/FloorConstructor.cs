@@ -274,17 +274,22 @@ namespace AvaliMod
                     for (int a = 0; a < tags.Count; a++)
                     {
                         string s = tags[a];
-                        hasDoneTask = true;
-                        //Gets the category name between cloneMaterial_ and [ENDCATNAME]
-                        string cS = string.Copy(s);
-                        int startIndex = cS.IndexOf("removeFromResearch_") + "removeFromResearch_".Length;
-                        int endIndex = cS.IndexOf("[ENDRESNAME]");
-                        int length = endIndex - startIndex;
-                        string res = cS.Substring(startIndex, length);
-                        ResearchProjectDef proj = def.researchPrerequisites.Find(x => x.defName == res);
-                        def.researchPrerequisites.Remove(proj);
-                        proj.PostLoad();
-                        proj.ResolveReferences();
+                        try
+                        {
+                            hasDoneTask = true;
+                            //Gets the category name between cloneMaterial_ and [ENDCATNAME]
+                            string cS = string.Copy(s);
+                            string res = cS.Substring(cS.IndexOf("removeFromResearch_") + "removeFromResearch_".Length, (cS.IndexOf("[ENDRESNAME]") - ("[ENDRESNAME]".Length + 7)) - cS.IndexOf("removeFromResearch_"));
+                            //Log.Message(res);
+                            ResearchProjectDef proj = def.researchPrerequisites.Find(x => x.defName == res);
+                            def.researchPrerequisites.Remove(proj);
+                            proj.PostLoad();
+                            proj.ResolveReferences();
+                        }
+                        catch
+                        {
+
+                        }
                     }
                 }
                 if (hasDoneTask)
