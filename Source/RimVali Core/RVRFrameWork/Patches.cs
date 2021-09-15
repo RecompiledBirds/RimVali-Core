@@ -1714,16 +1714,14 @@ namespace RimValiCore.RVR
 
     public class RenderTexturePatch
     {
-        private static readonly int texSize = 8000;
+        private const int texSize = 8192;
 
         public static RenderTexture NewTexture()
         {
-            Vector2Int size = new Vector2Int(GetAtlasSizeWithPawnsOnMap(), GetAtlasSizeWithPawnsOnMap());
-            return new RenderTexture(size.x, size.y, 40, RenderTextureFormat.ARGBFloat, 0)
+            int size = GetAtlasSizeWithPawnsOnMap();
+            return new RenderTexture(size, size, 24, RenderTextureFormat.ARGB32, 0)
             {
                 antiAliasing = 0,
-                useMipMap = true,
-                mipMapBias = -100f
             };
         }
 
