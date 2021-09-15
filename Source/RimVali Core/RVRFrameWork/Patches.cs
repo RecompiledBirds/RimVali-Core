@@ -81,7 +81,6 @@ namespace RimValiCore.RVR
             }
         }
 
-        // Token: 0x060000EA RID: 234 RVA: 0x00006D2C File Offset: 0x00004F2C
         public static bool AddRestriction<T, V>(ref Dictionary<T, List<V>> pairs, T item, V race) where T : Def where V : Def
         {
             if (!RimValiCoreMod.Settings.expMode)
@@ -712,27 +711,22 @@ namespace RimValiCore.RVR
 
         private static void FillBackstorySlotShuffled(Pawn pawn, BackstorySlot slot, ref Backstory backstory, Backstory backstoryOtherSlot, List<BackstoryCategoryFilter> backstoryCategories, FactionDef factionType)
         {
-            BackstoryCategoryFilter backstoryCategoryFilter = backstoryCategories.RandomElementByWeight((BackstoryCategoryFilter c) => c.commonality);
+            BackstoryCategoryFilter backstoryCategoryFilter = backstoryCategories.RandomElementByWeight(category => category.commonality);
             if (backstoryCategoryFilter == null)
             {
                 Log.Error("Backstory category filter was null");
             }
-            if (!(from bs in BackstoryDatabase.ShuffleableBackstoryList(slot, backstoryCategoryFilter).TakeRandom(20)
-                  where slot != BackstorySlot.Adulthood || !bs.requiredWorkTags.OverlapsWithOnAnyWorkType(pawn.story.childhood.workDisables)
-                  select bs).TryRandomElementByWeight(new Func<Backstory, float>(BackstorySelectionWeight), out backstory))
+            if (!BackstoryDatabase.ShuffleableBackstoryList(slot, backstoryCategoryFilter).TakeRandom(20)
+                .Where(bs => slot != BackstorySlot.Adulthood || !bs.requiredWorkTags.OverlapsWithOnAnyWorkType(pawn.story.childhood.workDisables))
+                .TryRandomElementByWeight(BackstorySelectionWeight, out backstory))
             {
                 Log.Error($"No shuffled {slot} found for {pawn.ToStringSafe()} of {factionType.ToStringSafe()}. Choosing random.");
-                backstory = (from kvp in BackstoryDatabase.allBackstories
-                             where kvp.Value.slot == slot
-                             select kvp).RandomElement().Value;
+                backstory = BackstoryDatabase.allBackstories.Where(kvp => kvp.Value.slot == slot).RandomElement().Value;
                 foreach (RVRBackstory story in DefDatabase<RVRBackstory>.AllDefsListForReading)
                 {
-                    if (story.defName == backstory.identifier)
+                    if (story.defName == backstory.identifier && !story.CanSpawn(pawn))
                     {
-                        if (!story.CanSpawn(pawn))
-                        {
-                            FillBackstorySlotShuffled(pawn, slot, ref backstory, backstoryOtherSlot, pawn.Faction.def.backstoryFilters, factionType);
-                        }
+                        FillBackstorySlotShuffled(pawn, slot, ref backstory, backstoryOtherSlot, pawn.Faction.def.backstoryFilters, factionType);
                     }
                 }
             }
@@ -743,12 +737,16 @@ namespace RimValiCore.RVR
         {
             foreach (RVRBackstory story in DefDatabase<RVRBackstory>.AllDefsListForReading)
             {
-                if (story.defName == backstory.identifier)
+                if (story.defName == backstory.identifier && !story.CanSpawn(pawn))
                 {
-                    if (!story.CanSpawn(pawn))
-                    {
-                        FillBackstorySlotShuffled(pawn, slot, ref backstory, backstoryOtherSlot, pawn.Faction.def.backstoryFilters, factionType);
-                    }
+                    FillBackstorySlotShuffled(pawn,
+                        slot,
+                        ref backstory,
+                        backstoryOtherSlot,
+                        Traverse.Create(typeof(PawnBioAndNameGenerator))
+                            .Method("GetBackstoryCategoryFiltersFor", pawn, factionType)
+                            .GetValue<List<BackstoryCategoryFilter>>(pawn, factionType),
+                        factionType);
                 }
             }
         }
@@ -838,7 +836,7 @@ namespace RimValiCore.RVR
                 if (pawn.def.GetType().Name != "ThingDef_AlienRace")
                 {
                     if (pawn.story.bodyType == null || !BodyTypes(pawn).Contains(pawn.story.bodyType)) { pawn.story.bodyType = BodyTypes(pawn).RandomElement(); };
-                    Log.Message(pawn.story.bodyType.defName);
+                    // Log.Message(pawn.story.bodyType.defName);
                 }
             }
         }
@@ -890,7 +888,7 @@ namespace RimValiCore.RVR
 
     #region Pawnkind replacement
 
-    [HarmonyPatch(typeof(PawnGenerator), "GeneratePawn", new Type[] { typeof(PawnGenerationRequest) })]
+    [HarmonyPatch(typeof(PawnGenerator), "GeneratePawn", typeof(PawnGenerationRequest))]
     public static class GeneratorPatch
     {
         [HarmonyPrefix]
