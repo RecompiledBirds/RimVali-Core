@@ -9,8 +9,8 @@
   <packageId>RimVali.Core</packageId>
   <description>
     RimVali core functions.
-    This  mod does nothing on it's own, however it contains many tools used in RimVali and other mods by me (Nesi),
-    so rather then re-write them each time, they're kept here.
+    This mod does nothing on it's own, however it contains many tools used in RimVali and other mods by me (Nesi),
+    so rather than re-write them each time, they're kept here.
   </description>
   <modDependencies>
     <li>
