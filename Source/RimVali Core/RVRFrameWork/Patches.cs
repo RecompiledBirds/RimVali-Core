@@ -14,16 +14,7 @@ using Verse.AI;
 
 namespace RimValiCore.RVR
 {
-    public class Patcher
-    {
-        private readonly Harmony harmony;
-        public Patcher(Harmony har)
-        {
-            harmony = har;
-            harmony.Patch(AccessTools.Method(typeof(ModAssemblyHandler), "ReloadAll"), prefix: new HarmonyMethod(typeof(AssemblyLoadingPatch), "Patch"));
-            Log.Message("Loading patch completed!");
-        }
-    }
+
 
     #region Restrictions and patching
 
@@ -144,8 +135,16 @@ namespace RimValiCore.RVR
             try
             {
                 harmony.PatchAll();
-                HarmonyMethod transpiler = new HarmonyMethod(typeof(RenderTextureTranspiler), nameof(RenderTextureTranspiler.Transpile));
-                harmony.Patch(original: AccessTools.Constructor(typeof(PawnTextureAtlas)), transpiler: transpiler);
+                if (!ModLister.HasActiveModWithName("Vanilla Expanded Framework"))
+                {
+                    HarmonyMethod transpiler = new HarmonyMethod(typeof(RenderTextureTranspiler), nameof(RenderTextureTranspiler.Transpile));
+                    harmony.Patch(original: AccessTools.Constructor(typeof(PawnTextureAtlas)), transpiler: transpiler);
+                }
+                else
+                {
+                    Log.Message("[RimVali Core] Found VEF framework was loaded, applying render patch");
+                    harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnAt"), prefix: new HarmonyMethod(typeof(RenderAtPatch_VEF), "RenderAtPatch"));
+                }
                 harmony.Patch(AccessTools.Method(typeof(EquipmentUtility), "CanEquip", new[] { typeof(Thing), typeof(Pawn), typeof(string).MakeByRefType(), typeof(bool) }), postfix: new HarmonyMethod(typeof(ApparelPatch), "Equipable"));
                 Log.Message($"[RimVali Core] Patches completed. {harmony.GetPatchedMethods().EnumerableCount()} methods patched.");
             }
@@ -400,93 +399,7 @@ namespace RimValiCore.RVR
 
     #endregion Restrictions and patching
 
-    // [HarmonyPatch(typeof(ModAssemblyHandler), "ReloadAll")]
-    public static class AssemblyLoadingPatch
-    {
-        private static bool AssemblyIsUsable(Assembly asm)
-        {
-            if (asm == null)
-            {
-                return false;
-            }
-
-            try
-            {
-                asm.GetTypes();
-            }
-            catch (ReflectionTypeLoadException ex)
-            {
-                StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.AppendLine(string.Concat(new object[]
-                {
-                    "ReflectionTypeLoadException getting types in assembly ",
-                    asm.GetName().Name,
-                    ": ",
-                    ex
-                }));
-                stringBuilder.AppendLine();
-                stringBuilder.AppendLine("Loader exceptions:");
-                if (ex.LoaderExceptions != null)
-                {
-                    foreach (Exception ex2 in ex.LoaderExceptions)
-                    {
-                        stringBuilder.AppendLine("   => " + ex2.ToString());
-                    }
-                }
-                Log.Error(stringBuilder.ToString());
-                return false;
-            }
-            catch (Exception ex3)
-            {
-                Log.Error(string.Concat(new object[]
-                {
-                    "Exception getting types in assembly ",
-                    asm.GetName().Name,
-                    ": ",
-                    ex3
-                }));
-                return false;
-            }
-            return true;
-        }
-
-        private static bool resolverIsSet = false;
-
-        // [HarmonyPrefix]
-        public static void Patch(ModAssemblyHandler __instance)
-        {
-            if (resolverIsSet)
-            {
-                ResolveEventHandler @object = (object obj, ResolveEventArgs args) => Assembly.GetExecutingAssembly();
-                AppDomain.CurrentDomain.AssemblyResolve += @object.Invoke;
-                // if (var is true) set var to true ; ?
-                resolverIsSet = true;
-            }
-            ModContentPack mod = RimValiCore.RimValiUtility.GetVar<ModContentPack>("mod", obj: __instance);
-            foreach (FileInfo fileInfo in from f in ModContentPack.GetAllFilesForModPreserveOrder(mod, "Assemblies/", (string e) => e.ToLower() == ".dll", null)
-                                          select f.Item2)
-            {
-                Assembly assembly = null;
-                try
-                {
-                    assembly = Assembly.Load(fileInfo.FullName);
-                }
-                catch (Exception ex)
-                {
-                    Log.Error("Exception loading " + fileInfo.Name + ": " + ex.ToString());
-                    break;
-                }
-                if (AssemblyIsUsable(assembly))
-                {
-                    GenTypes.ClearCache();
-                    __instance.loadedAssemblies.Add(assembly);
-                    Log.Message($"Loaded {assembly.GetName()}");
-                }
-            }
-        }
-    }
-
-
+   
     #region Apparel score gain patch
 
     [HarmonyPatch(typeof(JobGiver_OptimizeApparel), "ApparelScoreGain")]
@@ -983,18 +896,25 @@ namespace RimValiCore.RVR
     [HarmonyPatch(typeof(PawnApparelGenerator), "GenerateStartingApparelFor")]
     public class ApparelGenPatch
     {
+        private static List<ThingStuffPair> pairs = new List<ThingStuffPair>();
+        public static void GenerateStartingApparelForPostfix() =>
+            Traverse.Create(typeof(PawnApparelGenerator)).Field(name: "allApparelPairs").GetValue<List<ThingStuffPair>>().AddRange(pairs);
         [HarmonyPrefix]
         public static void GenerateStartingApparelForPrefix(Pawn pawn)
         {
             try
             {
                 Traverse apparelInfo = Traverse.Create(typeof(PawnApparelGenerator)).Field(name: "allApparelPairs");
-                List<ThingStuffPair> pairs = apparelInfo.GetValue<List<ThingStuffPair>>().ListFullCopy();
-                if (!pairs.NullOrEmpty())
+                List<ThingStuffPair> thingStuffPairs = apparelInfo.GetValue<List<ThingStuffPair>>().ListFullCopy();
+                foreach(ThingStuffPair p in thingStuffPairs)
                 {
-                    pairs.RemoveAll(x => !ApparelPatch.CanWearHeavyRestricted(x.thing, pawn));
-                    apparelInfo.SetValue(pairs);
+                    ThingDef e = p.thing;
+                    if (!ApparelPatch.CanWearHeavyRestricted(e, pawn))
+                    {
+                        pairs.Add(p);
+                    }
                 }
+                apparelInfo.GetValue<List<ThingStuffPair>>().RemoveAll(x => pairs.Contains(x));
             }
             catch (Exception e) { Log.Error($"Oops! RV:C had an issue generating apparel: {e.Message}"); }
         }
@@ -1340,7 +1260,14 @@ namespace RimValiCore.RVR
             {
                 string nameString = NameGenerator.GenerateName(rimValiRaceDef.race.GetNameGenerator(pawn.gender));
                 NameTriple name = NameTriple.FromString(nameString);
+                if (pawn.def.defName == "RimVali" && UnityEngine.Random.Range(1, 100) == 30)
+                {
+
+                    __result = new NameTriple(UnityEngine.Random.Range(1, 5) != 30 ? name.First : SteamUtility.SteamPersonaName, name.Nick ?? name.First, name.Last);
+                    return true;
+                }
                 __result = new NameTriple(name.First, name.Nick ?? name.First, name.Last);
+
             }
             else
             {
@@ -1393,9 +1320,26 @@ namespace RimValiCore.RVR
     {
         public static bool CanWearHeavyRestricted(ThingDef def, Pawn pawn)
         {
-            bool couldWearNormally = Restrictions.CheckRestrictions(Restrictions.equipmentRestrictions, def, pawn.def);
-            bool couldWearIfRVR = Restrictions.CheckRestrictions(Restrictions.equipabblbleWhiteLists, def, pawn.def, (pawn.def is RimValiRaceDef rDef && !rDef.restrictions.canOnlyUseApprovedApparel));
-            return couldWearIfRVR || couldWearNormally;
+            Restrictions.equipmentRestrictions.TryGetValue(def, out List<ThingDef> raceList);
+            Restrictions.equipabblbleWhiteLists.TryGetValue(def, out List<ThingDef> raceWhiteList);
+            bool inMainList = (raceList != null && !raceList.NullOrEmpty() && raceList.Contains(pawn.def));
+            bool fallback = (pawn.def is RimValiRaceDef rimValiDef) ? !rimValiDef.restrictions.canOnlyUseApprovedApparel : !Restrictions.equipmentRestrictions.ContainsKey(def);
+            bool whiteList = (raceWhiteList != null && !raceWhiteList.NullOrEmpty() && raceWhiteList.Contains(pawn.def)) || fallback;
+            bool result = inMainList || whiteList;
+            return result;
+
+            /*
+             if (!raceList.NullOrEmpty())
+             {
+                 return raceList.Contains(pawn.def) || raceWhiteList.Contains(pawn.def);
+             }
+             else
+             {
+                 return pawn.def is RimValiRaceDef rimValiDef ? !rimValiDef.restrictions.canOnlyUseApprovedApparel : true;
+             }
+             //VS wants me to put a thing here.
+             return true;
+             */
         }
 
         public static void Equipable(ref bool __result, Thing thing, Pawn pawn, ref string cantReason)
@@ -1544,8 +1488,49 @@ namespace RimValiCore.RVR
 
     #region Rendering patch
 
+
+    /// <summary>
+    /// For some reason, VEF causes pawns to be invisible.
+    /// We only load this patch if VEF is loaded.
+    /// </summary>
+    [HarmonyAfter("OskarPotocki.VFECore")]
+    public static class RenderAtPatch_VEF
+    {
+        /// <summary>
+        /// A postfix that calls our renderer.
+        /// </summary>
+        /// <param name="drawLoc"></param>
+        /// <param name="rotOverride"></param>
+        /// <param name="neverAimWeapon"></param>
+        public static void RenderAtPatch(Vector3 drawLoc, Rot4 rotOverride, bool neverAimWeapon, PawnRenderer __instance)
+        {
+            //Annoyingly, a bit of code has to be re-written, unless we want to pull values using system.Reflection. may add later
+            Pawn p = __instance.graphics.pawn;
+            Rot4 rotation = rotOverride != null ? rotOverride : p.Rotation;
+            RotDrawMode mode = RotDrawMode.Fresh;
+            PawnRenderFlags flags = PawnRenderFlags.None;
+            if (p.IsInvisible())
+            {
+                flags |= PawnRenderFlags.Invisible;
+            }
+            if (!p.health.hediffSet.HasHead)
+            {
+                flags |= PawnRenderFlags.HeadStump;
+            }
+            if(p.Dead&& p.Corpse != null)
+            {
+                mode = p.Corpse.CurRotDrawMode;
+            }
+
+
+            RendererPatch.RenderPawnInternal(drawLoc, 0f, true, rotation, mode,flags,__instance);
+            RendererPatch.RenderBodyParts(false, 0f, drawLoc, __instance, rotation, mode, p);
+        }
+    }
+
+
     [HarmonyPatch(typeof(PawnRenderer), "RenderPawnInternal", new[] { typeof(Vector3), typeof(float), typeof(bool), typeof(Rot4), typeof(RotDrawMode), typeof(PawnRenderFlags) })]
-    internal static class RenderPatchTwo
+    internal static class RendererPatch
     {
         public class RSet
         {
@@ -1704,7 +1689,6 @@ namespace RimValiCore.RVR
                 RenderBodyParts(portrait, angle, rootLoc, __instance, rot, bodyDrawType, pawn);
             }
             Render();
-            ;
         }
     }
 
@@ -1723,7 +1707,7 @@ namespace RimValiCore.RVR
             {
                 antiAliasing = 0,
                 useMipMap = true,
-                mipMapBias = -100f
+                mipMapBias = 50f
             };
         }
 
