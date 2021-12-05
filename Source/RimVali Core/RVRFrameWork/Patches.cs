@@ -1263,7 +1263,7 @@ namespace RimValiCore.RVR
                 if (pawn.def.defName == "RimVali" && UnityEngine.Random.Range(1, 100) == 30)
                 {
 
-                    __result = new NameTriple(UnityEngine.Random.Range(1, 5) != 30 ? name.First : SteamUtility.SteamPersonaName, name.Nick ?? name.First, name.Last);
+                    __result = new NameTriple(UnityEngine.Random.Range(1, 100) != 30 ? name.First : SteamUtility.SteamPersonaName, name.Nick ?? name.First, name.Last);
                     return true;
                 }
                 __result = new NameTriple(name.First, name.Nick ?? name.First, name.Last);
