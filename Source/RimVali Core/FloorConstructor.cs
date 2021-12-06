@@ -12,12 +12,12 @@ namespace AvaliMod
     [StaticConstructorOnStartup]
     public static class FloorConstructor
     {
-        public static List<DesignationCategoryDef> toUpdateDesignationCatDefs = new List<DesignationCategoryDef>();
-        public static List<DesignatorDropdownGroupDef> toUpdateDropdownDesDefs = new List<DesignatorDropdownGroupDef>();
-        public static List<string> materials = new List<string>();
-        public static HashSet<TerrainDef> floorsMade = new HashSet<TerrainDef>();
-        public static bool canGenerate = true;
-
+        private static List<DesignationCategoryDef> toUpdateDesignationCatDefs = new List<DesignationCategoryDef>();
+        private static List<DesignatorDropdownGroupDef> toUpdateDropdownDesDefs = new List<DesignatorDropdownGroupDef>();
+        private static List<string> materials = new List<string>();
+        private static HashSet<TerrainDef> floorsMade = new HashSet<TerrainDef>();
+        private static bool canGenerate = true;
+        private static StringBuilder builder = new StringBuilder();
         /// <summary>
         /// Creates all versions of a floor from a material; it's on the label
         /// </summary>
@@ -25,7 +25,6 @@ namespace AvaliMod
         /// <param name="name">The NAME of the category we want to duplicate.</param>
         public static void CreateAllVersions(TerrainDef def, string name)
         {
-            Log.Message($"[RimVali Core/FloorConstructor] CreateAllVersions of {def.defName}, {name}");
             IEnumerable<ThingDef> floors = DefDatabase<ThingDef>.AllDefs
                 .Where(d => d.stuffProps?.categories?.Any(cat => cat.defName == name) ?? false);
             foreach (ThingDef tDef in floors)
@@ -227,16 +226,15 @@ namespace AvaliMod
                     //This makes sure everything is setup how it should be
                     output.PostLoad();
                     output.ResolveReferences();
-                    StringBuilder builder = new StringBuilder();
+
                     builder.AppendLine($"[RimVali Core/FloorConstructor] Generated {output.label}");
                     builder.AppendLine($" Mat color: {tDef.stuffProps.color}");
                     builder.AppendLine($" Floor color: {output.color}");
                     builder.AppendLine($" UI Icon color: {output.uiIconColor}");
-                    Log.Message(builder.ToString());
+                    
                     floorsMade.Add(output);
                 }
             }
-            Log.Message($"[RimVali Core/FloorConstructor] Done with CreateAllVersions");
         }
 
         static FloorConstructor()
@@ -246,7 +244,7 @@ namespace AvaliMod
             List<TerrainDef> workOn = new List<TerrainDef>();
             workOn.AddRange(DefDatabase<TerrainDef>.AllDefs);
             //Tells us to clone a terrain
-            foreach (TerrainDef def in DefDatabase<TerrainDef>.AllDefs)
+            foreach (TerrainDef def in workOn)
             {
                 bool hasDoneTask = false;
                 if (def.tags.NullOrEmpty())
@@ -317,6 +315,7 @@ namespace AvaliMod
                 def.PostLoad();
                 def.ResolveReferences();
             }
+            Log.Message(builder.ToString());
             Log.Message($"[RimVali Core/FloorConstructor] Updated {toUpdateDesignationCatDefs.Count} designation categories & {toUpdateDropdownDesDefs.Count} dropdown designations.");
             //We need to do this or RW has a fit
             WealthWatcher.ResetStaticData();

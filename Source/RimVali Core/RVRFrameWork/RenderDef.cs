@@ -261,16 +261,7 @@ namespace RimValiCore.RVR
         {
             IEnumerable<BodyPartRecord> bodyParts = pawn.health.hediffSet.GetNotMissingParts();
             bool bodyIsHiding = bodyPart == null || bodyParts.Any(x => x.def.defName.ToLower() == bodyPart.ToLower() || x.Label.ToLower() == bodyPart.ToLower());
-            if (!bodyIsHiding)
-            {
-                return bodyIsHiding;
-            }
-
-            if (!portrait)
-            {
-                return !pawn.InBed() || (pawn.CurrentBed().def.building.bed_showSleeperBody) || showsInBed;
-            }
-            return true;
+            return !portrait ? (!pawn.InBed() || (pawn.CurrentBed().def.building.bed_showSleeperBody)  ||showsInBed) && bodyIsHiding : bodyIsHiding ;
         }
 
         #endregion general show check
