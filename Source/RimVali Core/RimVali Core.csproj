@@ -90,7 +90,8 @@
     </Compile>
     <Compile Include="GraphicClasses\ShaderDatabase.cs" />
     <Compile Include="GraphicClasses\ShaderIDs.cs" />
-    <Compile Include="QuestLine\questline.cs" />
+    <Compile Include="QLine\QLine.cs" />
+    <Compile Include="QLine\QL_Quest.cs" />
     <Compile Include="RimValiPlants\Patches.cs" />
     <Compile Include="RimValiPlants\PlantClass.cs" />
     <Compile Include="RimValiUtils.cs" />

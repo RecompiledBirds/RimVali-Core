@@ -16,7 +16,7 @@ namespace RimValiCore
         [HarmonyPostfix]
         public static void Patch()
         {
-            bool button = Widgets.ButtonText(new Rect(new Vector2(0, 0), new Vector2(100, 50)),"Edit pawn");
+            bool button = Widgets.ButtonText(new Rect(new Vector2(870, 0), new Vector2(100, 30)),"Edit pawn");
             if (button)
             {
                 RVGUI.FindFirstPawn();
@@ -96,8 +96,11 @@ namespace RimValiCore
                 RenderTexture image = PortraitsCache.Get(p, PawnPortraitSize, Rot4.South, new Vector2(0, 0), 1f, true, true, true, true, null, null, true);
                 Widgets.DrawTextureFitted(pawnRect,image,1);
                 Widgets.Label(label, p.Name.ToStringShort);
-                Widgets.ButtonText(new Rect(new Vector2(0, pos),new Vector2(95, pawnRect.yMin-label.yMax)),"purble");
-                Widgets.DrawBoxSolid(new Rect(new Vector2(0, pos), new Vector2(95, pawnRect.yMin - label.yMax)), Color.white);
+                bool button =Widgets.ButtonInvisible(new Rect(new Vector2(0, pos),new Vector2(95, 95 + 30)));
+                if (button)
+                {
+                    pawn = p;
+                } 
                 pos += 120;
             }
             Widgets.EndScrollView();
@@ -180,15 +183,18 @@ namespace RimValiCore
             Text.Anchor = textAnchor;
 
             //Textfield pass
-
+            NameTriple pawnName = (NameTriple)pawn.Name;
+            string first = pawnName.First;
+            string nick = pawnName.Nick;
+            string last = pawnName.Last;
             prevFont = Text.Font;
             textAnchor = Text.Anchor;
             Text.Font = GameFont.Tiny;
             Text.Anchor = TextAnchor.MiddleLeft;
 
             //ohboy how do we pawn name thing a
-            EditableFirstName = Widgets.TextField(PawnFirstName, EditableFirstName);
-
+            first=Widgets.TextField(PawnFirstName,first);
+           
             Text.Font = prevFont;
             Text.Anchor = textAnchor;
             prevFont = Text.Font;
@@ -196,7 +202,7 @@ namespace RimValiCore
             Text.Font = GameFont.Tiny;
             Text.Anchor = TextAnchor.MiddleLeft;
             
-            EditableNicknameMiddleName = Widgets.TextField(PawnMiddleName, EditableNicknameMiddleName);
+            nick = Widgets.TextField(PawnMiddleName, nick);
 
             Text.Font = prevFont;
             Text.Anchor = textAnchor;
@@ -206,10 +212,10 @@ namespace RimValiCore
             Text.Anchor = TextAnchor.MiddleLeft;
 
             
-            EditableLastName = Widgets.TextField(PawnLastName, EditableLastName);
+            last = Widgets.TextField(PawnLastName, last);
+            pawnName= new NameTriple(first,nick,last);
 
-
-
+            pawn.Name = pawnName;
             Text.Font = prevFont;
             Text.Anchor = textAnchor;
 

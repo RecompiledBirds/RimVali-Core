@@ -12,22 +12,40 @@ namespace RimValiCore.RVR
     {
         public string tex;
         public string femaleTex;
+
+        public virtual bool CanApply(Pawn p)
+        {
+            return true;
+        }
     }
 
     public class HediffTex : BaseTex
     {
         public HediffDef hediff;
+        public override bool CanApply(Pawn p)
+        {
+            return p.health.hediffSet.HasHediff(hediff);
+        }
     }
 
     public class BackstoryTex : BaseTex
     {
         public string backstoryTitle;
+
+        public override bool CanApply(Pawn p)
+        {
+            return p.story.adulthood.identifier == backstoryTitle || p.story.childhood.identifier == backstoryTitle;
+        }
     }
 
     public class HediffStoryTex : BaseTex
     {
         public string backstoryTitle;
         public HediffDef hediffDef;
+        public override bool CanApply(Pawn p)
+        {
+            return (p.story.adulthood.identifier == backstoryTitle || p.story.childhood.identifier == backstoryTitle) && p.health.hediffSet.HasHediff(hediffDef);
+        }
     }
 
     #endregion texture types
@@ -94,6 +112,7 @@ namespace RimValiCore.RVR
 
         public string TexPath(Pawn pawn, int index)
         {
+
             string path = textures[index].tex;
 
             if (textures[index].femaleTex != null && pawn.gender == Gender.Female)

@@ -79,6 +79,10 @@ namespace RimValiCore.RVR
             {
                 if (!pairs.ContainsKey(item))
                 {
+                    if (item is ThingDef tDef && tDef.IsApparel)
+                    {
+                        Log.Message($"Restricting item: {item}");
+                    }
                     pairs.Add(item, new List<V>());
                     pairs[item].Add(race);
                 }
@@ -86,6 +90,10 @@ namespace RimValiCore.RVR
                 {
                     if (pairs[item] != null)
                     {
+                        if (item is ThingDef tDef && tDef.IsApparel)
+                        {
+                            Log.Message($"Restricting item: {item}");
+                        }
                         pairs[item].Add(race);
                         return true;
                     }
@@ -225,6 +233,7 @@ namespace RimValiCore.RVR
                 {
                     foreach (BodyTypeDef item9 in raceDef.restrictions.bodyTypes)
                     {
+                       
                         AddRestriction(ref bodyTypeRestrictions, item9, raceDef);
                     }
                 }
@@ -243,6 +252,7 @@ namespace RimValiCore.RVR
                 {
                     foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef && (thingDef.IsApparel)))
                     {
+                       
                         AddRestriction(ref equipmentRestrictions, def, raceDef);
                     }
                 }
@@ -409,7 +419,7 @@ namespace RimValiCore.RVR
         public static void ApparelScoreGain_NewTmp(Pawn pawn, Apparel ap, List<float> wornScoresCache, ref float __result)
         {
             ThingDef def = ap.def;
-            if (!ApparelPatch.CanWearHeavyRestricted(def, pawn))
+            if (!ApparelPatch.CanWear(def, pawn.def))
             {
                 __result = -100;
                 return;
@@ -906,15 +916,7 @@ namespace RimValiCore.RVR
             {
                 Traverse apparelInfo = Traverse.Create(typeof(PawnApparelGenerator)).Field(name: "allApparelPairs");
                 List<ThingStuffPair> thingStuffPairs = apparelInfo.GetValue<List<ThingStuffPair>>().ListFullCopy();
-                foreach(ThingStuffPair p in thingStuffPairs)
-                {
-                    ThingDef e = p.thing;
-                    if (!ApparelPatch.CanWearHeavyRestricted(e, pawn))
-                    {
-                        pairs.Add(p);
-                    }
-                }
-                apparelInfo.GetValue<List<ThingStuffPair>>().RemoveAll(x => pairs.Contains(x));
+                apparelInfo.SetValue(apparelInfo.GetValue<List<ThingStuffPair>>().Where(x=>ApparelPatch.CanWear(x.thing,pawn.def)).ToList());
             }
             catch (Exception e) { Log.Error($"Oops! RV:C had an issue generating apparel: {e.Message}"); }
         }
@@ -1318,35 +1320,61 @@ namespace RimValiCore.RVR
 
     public static class ApparelPatch
     {
-        public static bool CanWearHeavyRestricted(ThingDef def, Pawn pawn)
+       public static bool CanWear(ThingDef def, ThingDef race)
         {
-            Restrictions.equipmentRestrictions.TryGetValue(def, out List<ThingDef> raceList);
-            Restrictions.equipabblbleWhiteLists.TryGetValue(def, out List<ThingDef> raceWhiteList);
-            bool inMainList = (raceList != null && !raceList.NullOrEmpty() && raceList.Contains(pawn.def));
-            bool fallback = (pawn.def is RimValiRaceDef rimValiDef) ? !rimValiDef.restrictions.canOnlyUseApprovedApparel : !Restrictions.equipmentRestrictions.ContainsKey(def);
-            bool whiteList = (raceWhiteList != null && !raceWhiteList.NullOrEmpty() && raceWhiteList.Contains(pawn.def)) || fallback;
-            bool result = inMainList || whiteList;
-            return result;
-
-            /*
-             if (!raceList.NullOrEmpty())
-             {
-                 return raceList.Contains(pawn.def) || raceWhiteList.Contains(pawn.def);
-             }
-             else
-             {
-                 return pawn.def is RimValiRaceDef rimValiDef ? !rimValiDef.restrictions.canOnlyUseApprovedApparel : true;
-             }
-             //VS wants me to put a thing here.
-             return true;
-             */
+            if(race is RimValiRaceDef rDef)
+            {
+                if (Restrictions.equipmentRestrictions.ContainsKey(def))
+                {
+                    if (Restrictions.equipmentRestrictions[def].Contains(race))
+                    {
+                        Log.Message($"Returning false for: {def.defName}");
+                        return true;
+                    }
+                }
+                if (Restrictions.equipabblbleWhiteLists.ContainsKey(def))
+                {
+                  
+                    if (Restrictions.equipabblbleWhiteLists[def].Contains(race))
+                    {
+                        return true;
+                    }
+                }
+                if (!Restrictions.equipmentRestrictions.ContainsKey(def) && !rDef.restrictions.canOnlyUseApprovedApparel)
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                if (Restrictions.equipmentRestrictions.ContainsKey(def))
+                {
+                    if (Restrictions.equipmentRestrictions[def].Contains(race))
+                    {
+                        return true;
+                    }
+                }
+                if (Restrictions.equipabblbleWhiteLists.ContainsKey(def))
+                {
+                    if (Restrictions.equipabblbleWhiteLists[def].Contains(race))
+                    {
+                        return true;
+                    }
+                }
+                if (!Restrictions.equipmentRestrictions.ContainsKey(def))
+                {
+                    return true;
+                }
+            }
+           
+            return false;
         }
 
         public static void Equipable(ref bool __result, Thing thing, Pawn pawn, ref string cantReason)
         {
             if (thing.def.IsApparel)
             {
-                __result = __result && CanWearHeavyRestricted(thing.def, pawn);
+                __result = __result && CanWear(thing.def, pawn.def);
                 if (!__result)
                 {
                     cantReason = "CannotWearRVR".Translate(pawn.def.label.Named("RACE"));
