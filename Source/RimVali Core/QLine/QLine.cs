@@ -13,7 +13,25 @@ namespace RimValiCore.QLine
     {
         public static void Trigger_Quest(QL_Quest quest)
         {
+            quest.QuestWorker.Action();
+        }
 
+        public static void EndQuestPositive(QL_Quest quest)
+        {
+            //Do more with this later to trigger quests
+            //quest.positiveQuestResult;
+
+            //Reward actions and the like
+            quest.QuestWorker.PositiveEndAction();
+        }
+
+        public static void EndQuestNegative(QL_Quest quest)
+        {
+            //Do more with this later to trigger quests
+            //quest.positiveQuestResult;
+
+            //Reward actions and the like
+            quest.QuestWorker.NegativeEndAction();
         }
     }
 }

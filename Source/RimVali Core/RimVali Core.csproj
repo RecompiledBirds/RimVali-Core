@@ -92,6 +92,8 @@
     <Compile Include="GraphicClasses\ShaderIDs.cs" />
     <Compile Include="QLine\QLine.cs" />
     <Compile Include="QLine\QL_Quest.cs" />
+    <Compile Include="QLine\QL_Window.cs" />
+    <Compile Include="QLine\Quest_Tracker.cs" />
     <Compile Include="RimValiPlants\Patches.cs" />
     <Compile Include="RimValiPlants\PlantClass.cs" />
     <Compile Include="RimValiUtils.cs" />
