@@ -135,11 +135,6 @@ namespace RimValiCore.RVR
             return result;
         }
 
-        public override void PostLoad()
-        {
-            Restrictions.raceCount++;
-            base.PostLoad();
-        }
 
         public void HeadOffsetPawn(Rot4 rot, Pawn pawn, ref Vector3 __result)
         {

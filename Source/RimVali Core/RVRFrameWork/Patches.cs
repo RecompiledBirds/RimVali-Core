@@ -45,7 +45,6 @@ namespace RimValiCore.RVR
     public static class Restrictions
     {
         public static Hashtable expRes = new Hashtable();
-        public static int raceCount=0;
         public static bool CheckRestrictions<T, V>(Dictionary<T, List<V>> pairs, T item, V race, bool keyNotInReturn = true, bool raceNotFound = false) where V : Def where T : Def
         {
             if (!RimValiCoreMod.Settings.expMode)
@@ -350,7 +349,7 @@ namespace RimValiCore.RVR
                     factionResearchBlacklist[factionResearchRestriction2.factionDef].Add(item16);
                 }
             }
-            Log.Message($"Loaded {raceCount} races");
+            Log.Message($"Loaded {DefDatabase<RimValiRaceDef>.AllDefs.Count()} races");
         }
 
         // Token: 0x04000116 RID: 278
