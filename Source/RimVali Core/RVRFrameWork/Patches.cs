@@ -14,8 +14,6 @@ using Verse.AI;
 
 namespace RimValiCore.RVR
 {
-
-
     #region Restrictions and patching
 
     //Eventually I want to switch from dictionaries to this, and potentially keep a dictionary of restriction types and and objects instead. Eg. Dictionary<Type,RestrictionObject> restrictions
@@ -398,7 +396,6 @@ namespace RimValiCore.RVR
 
     #endregion Restrictions and patching
 
-   
     #region Apparel score gain patch
 
     [HarmonyPatch(typeof(JobGiver_OptimizeApparel), "ApparelScoreGain")]
@@ -895,8 +892,10 @@ namespace RimValiCore.RVR
     public class ApparelGenPatch
     {
         private static List<ThingStuffPair> pairs = new List<ThingStuffPair>();
+
         public static void GenerateStartingApparelForPostfix() =>
             Traverse.Create(typeof(PawnApparelGenerator)).Field(name: "allApparelPairs").GetValue<List<ThingStuffPair>>().AddRange(pairs);
+
         [HarmonyPrefix]
         public static void GenerateStartingApparelForPrefix(Pawn pawn)
         {
@@ -904,7 +903,7 @@ namespace RimValiCore.RVR
             {
                 Traverse apparelInfo = Traverse.Create(typeof(PawnApparelGenerator)).Field(name: "allApparelPairs");
                 List<ThingStuffPair> thingStuffPairs = apparelInfo.GetValue<List<ThingStuffPair>>().ListFullCopy();
-                foreach(ThingStuffPair p in thingStuffPairs)
+                foreach (ThingStuffPair p in thingStuffPairs)
                 {
                     ThingDef e = p.thing;
                     if (!ApparelPatch.CanWearHeavyRestricted(e, pawn))
@@ -1260,12 +1259,10 @@ namespace RimValiCore.RVR
                 NameTriple name = NameTriple.FromString(nameString);
                 if (pawn.def.defName == "RimVali" && UnityEngine.Random.Range(1, 100) == 30)
                 {
-
                     __result = new NameTriple(UnityEngine.Random.Range(1, 100) != 30 ? name.First : SteamUtility.SteamPersonaName, name.Nick ?? name.First, name.Last);
                     return true;
                 }
                 __result = new NameTriple(name.First, name.Nick ?? name.First, name.Last);
-
             }
             else
             {
@@ -1358,7 +1355,6 @@ namespace RimValiCore.RVR
     #region Construction
 
     [HarmonyPatch(typeof(GenConstruct), "CanConstruct", new[] { typeof(Thing), typeof(Pawn), typeof(WorkTypeDef), typeof(bool) })]
-    //This was confusing at first, but it works.
     public static class ConstructPatch
     {
         [HarmonyPostfix]
@@ -1428,12 +1424,12 @@ namespace RimValiCore.RVR
                         if (!rimvaliRaceDef.hasHair)
                         {
                             //This leads to a blank texture. So the pawn doesnt have hair, visually. I might (and probably should) change this later.
-                            hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
+                            hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("Avali/Heads/AvaliHead");
                         }
                         __instance.hairGraphic = hairGraphic;
 
-                        __instance.headStumpGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
-                        __instance.desiccatedHeadStumpGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
+                        __instance.headStumpGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("Avali/Heads/AvaliHead");
+                        __instance.desiccatedHeadStumpGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("Avali/Heads/AvaliHead");
                         __instance.skullGraphic = headGraphic;
 
                         __instance.MatsBodyBaseAt(pawn.Rotation);
@@ -1459,7 +1455,7 @@ namespace RimValiCore.RVR
                         if (!rimvaliRaceDef.hasHair)
                         {
                             //This leads to a blank texture. So the pawn doesnt have hair, visually. I might (and probably should) change this later.
-                            hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
+                            hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("Avali/Heads/AvaliHead");
                         }
                         __instance.hairGraphic = hairGraphic;
                     }
@@ -1485,7 +1481,6 @@ namespace RimValiCore.RVR
     }
 
     #region Rendering patch
-
 
     /// <summary>
     /// For some reason, VEF causes pawns to be invisible.
@@ -1515,17 +1510,15 @@ namespace RimValiCore.RVR
             {
                 flags |= PawnRenderFlags.HeadStump;
             }
-            if(p.Dead&& p.Corpse != null)
+            if (p.Dead && p.Corpse != null)
             {
                 mode = p.Corpse.CurRotDrawMode;
             }
 
-
-            RendererPatch.RenderPawnInternal(drawLoc, 0f, true, rotation, mode,flags,__instance);
+            RendererPatch.RenderPawnInternal(drawLoc, 0f, true, rotation, mode, flags, __instance);
             RendererPatch.RenderBodyParts(false, 0f, drawLoc, __instance, rotation, mode, p);
         }
     }
-
 
     [HarmonyPatch(typeof(PawnRenderer), "RenderPawnInternal", new[] { typeof(Vector3), typeof(float), typeof(bool), typeof(Rot4), typeof(RotDrawMode), typeof(PawnRenderFlags) })]
     internal static class RendererPatch
