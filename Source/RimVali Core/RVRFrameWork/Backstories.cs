@@ -24,6 +24,24 @@ namespace RimValiCore.RVR
         public TraitDef def;
         public int degree;
     }
+    public static class BackstoryTagManager
+    {
+        private static Dictionary<Backstory, List<string>> tags = new Dictionary<Backstory, List<string>>();
+
+        public static List<string> GetTags(this Backstory story)
+        {
+            if (tags.ContainsKey(story))
+            {
+                return tags[story];
+            }
+            return new List<string>();
+        }
+
+        public static void SetTags(this Backstory story, List<string> setTags)
+        {
+            tags[story] = setTags;
+        }
+    }
 
     public class RVRBackstory : Def
     {
@@ -53,6 +71,7 @@ namespace RimValiCore.RVR
         public List<traitList> disabledTraits = new List<traitList>();
         public List<WorkTags> disabledWorkTypes = new List<WorkTags>();
         public List<WorkTags> enabledWorkTypes = new List<WorkTags>();
+        public List<string> tags = new List<string>();
 
         public string linkedStoryIdentifier;
 
@@ -148,7 +167,7 @@ namespace RimValiCore.RVR
                 skillGainsResolved = skills,
                 forcedTraits = traitsToForce,
                 disallowedTraits = traitsToDisable,
-
+                
                 workDisables = ((Func<WorkTags>)delegate
                 {
                     WorkTags work = WorkTags.None;
@@ -161,7 +180,7 @@ namespace RimValiCore.RVR
                 })(),
                 shuffleable = shuffable
             };
-
+            BackstoryTagManager.SetTags(story, tags);
             BackstoryDatabase.AddBackstory(story);
             //Log.Message("created story: " + this.defName);
         }

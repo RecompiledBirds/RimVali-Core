@@ -35,11 +35,21 @@ namespace RimValiCore.QLine
         /// For adding events when a quest is dismissed.
         /// </summary>
         public static Action dismissQuest;
+        public static Action acceptQuest;
+        private Vector2 listScroll;
+
+        public override Vector2 InitialSize
+        {
+            get
+            {
+                return new Vector2(800, 500);
+            }
+        }
 
         public QL_Window()
         {
-            this.resizeable = true;
             this.draggable = true;
+            listScroll = Vector2.zero;
         }
         QL_Quest quest;
         Vector2 scrollPos;
@@ -55,12 +65,13 @@ namespace RimValiCore.QLine
 
             //Rect pass
 
-            Rect list = new Rect(new Vector2(5f, 5f), new Vector2(160f, 460f));
+            Rect list = new Rect(new Vector2(1f, 5f), new Vector2(130f, 460f));
+            Rect listViewRect = new Rect(new Vector2(5f, 5f), new Vector2(160f, 460f));
             Rect PawnsListRect = new Rect(new Vector2(5, 5), new Vector2(160, 460 + (tracker.Quests.Count * 2f)));
-            Rect questtitle = new Rect(new Vector2(165f, 5f), new Vector2(560f, 50f));
-            Rect questdesc = new Rect(new Vector2(165f, 55f), new Vector2(560f, 345f));
+            Rect questtitle = new Rect(new Vector2(165f, 10f), new Vector2(560f, 50f));
+            Rect questdesc = new Rect(new Vector2(165f, 65f), new Vector2(560f, 345f));
             Rect delete = new Rect(new Vector2(555f, 400f), new Vector2(170f, 55f));
-            Rect Label = new Rect(new Vector2(5f, 465f), new Vector2(720f, 45f));
+            Rect accept = new Rect(new Vector2(375f, 400f), new Vector2(170f, 55f));
 
             //Button pass
 
@@ -71,6 +82,13 @@ namespace RimValiCore.QLine
                 {
                     dismissQuest?.Invoke();
                     tracker.RemoveQuest(quest);
+                }
+
+                bool AcceptQuest = Widgets.ButtonText(accept, "Accept quest");
+                if (AcceptQuest)
+                {
+                    quest.QuestWorker?.Action();
+                    acceptQuest?.Invoke();
                 }
 
                 Widgets.Label(questdesc, quest.description);
@@ -88,28 +106,24 @@ namespace RimValiCore.QLine
                 Text.Font = prevFont;
                 Text.Anchor = textAnchor;
             }
+            Widgets.DrawLine(new Vector2(questtitle.xMin, questtitle.yMax), new Vector2(questtitle.xMax, questtitle.yMax), Color.white, 1);
 
-
-            //Label pass
-
-            Text.Font = GameFont.Small;
-            Text.Anchor = TextAnchor.UpperLeft;
-
-            Widgets.Label(Label, "RimVali QLine\n Built with NesGUI");
-
-            Text.Font = prevFont;
-            Text.Anchor = textAnchor;
 
 
             //END NESGUI CODE
             #endregion
 
             #region quest select
-            Widgets.BeginScrollView(list, ref scrollPos, PawnsListRect);
-            int pos = 90;
+            Widgets.BeginScrollView(listViewRect, ref scrollPos, list);
+            int pos = 30;
             Rect label = new Rect(new Vector2(0, pos), new Vector2(list.width, 30));
+            Text.Font = GameFont.Medium;
+            Text.Anchor = TextAnchor.MiddleLeft;
             Widgets.Label(label, "Quests");
-            pos += 90;
+            Widgets.DrawLine(new Vector2(label.xMin, label.yMax), new Vector2(label.xMax, label.yMax),Color.white,1);
+            Text.Font = prevFont;
+            Text.Anchor = textAnchor;
+            pos += 40;
             foreach (QL_Quest q in tracker.Quests)
             {
                 label = new Rect(new Vector2(0, pos), new Vector2(list.width, 30));
@@ -119,7 +133,7 @@ namespace RimValiCore.QLine
                 {
                     quest = q;
                 }
-                pos += 90;
+                pos += 30;
             }
             Widgets.EndScrollView();
 

@@ -26,7 +26,8 @@ namespace RimValiCore.QLine
         {
             get
             {
-                return quests;
+                return DefDatabase<QL_Quest>.AllDefs.ToHashSet();
+                //return quests;
             }
         }
         public List<QL_Quest> QuestsLists

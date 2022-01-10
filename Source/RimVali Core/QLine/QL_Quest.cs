@@ -24,7 +24,7 @@ namespace RimValiCore.QLine
         }
         public override void PostLoad()
         {
-            if (!questAction.IsAssignableFrom(typeof(QuestWorker)))
+            if (questAction!=null && !questAction.IsAssignableFrom(typeof(QuestWorker)))
             {
                 Log.Error($"{questAction.FullName} is not a QuestWorker, and cannot be assigned to {defName}!");
                 questAction = null;

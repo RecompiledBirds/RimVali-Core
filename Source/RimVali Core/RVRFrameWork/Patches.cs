@@ -143,7 +143,6 @@ namespace RimValiCore.RVR
                 {
                     Log.Message("[RimVali Core] Found VEF framework was loaded, applying render patch");
                     harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnAt"), prefix: new HarmonyMethod(typeof(RenderAtPatch_VEF), "RenderAtPatch"));
-                    harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "DrawHeadHair"), prefix: new HarmonyMethod(typeof(HairRendering), "Postfix"));
                 }
                 harmony.Patch(AccessTools.Method(typeof(EquipmentUtility), "CanEquip", new[] { typeof(Thing), typeof(Pawn), typeof(string).MakeByRefType(), typeof(bool) }), postfix: new HarmonyMethod(typeof(ApparelPatch), "Equipable"));
                 Log.Message($"[RimVali Core] Patches completed. {harmony.GetPatchedMethods().EnumerableCount()} methods patched.");
@@ -640,14 +639,13 @@ namespace RimValiCore.RVR
                 backstory = (from kvp in BackstoryDatabase.allBackstories
                              where kvp.Value.slot == slot
                              select kvp).RandomElement().Value;
-                foreach (RVRBackstory story in DefDatabase<RVRBackstory>.AllDefsListForReading)
+                string id = backstory.identifier;
+                if (DefDatabase<RVRBackstory>.AllDefsListForReading.Any(x => x.defName == id))
                 {
-                    if (story.defName == backstory.identifier)
+                    RVRBackstory story = DefDatabase<RVRBackstory>.AllDefsListForReading.First(x => x.defName == id);
+                    if (story.defName == backstory.identifier && !story.CanSpawn(pawn))
                     {
-                        if (!story.CanSpawn(pawn))
-                        {
-                            FillBackstorySlotShuffled(pawn, slot, ref backstory, backstoryOtherSlot, pawn.Faction.def.backstoryFilters, factionType);
-                        }
+                        FillBackstorySlotShuffled(pawn, slot, ref backstory, backstoryOtherSlot, pawn.Faction.def.backstoryFilters, factionType);
                     }
                 }
             }
@@ -656,14 +654,13 @@ namespace RimValiCore.RVR
         [HarmonyPostfix]
         public static void CheckStory(Pawn pawn, BackstorySlot slot, ref Backstory backstory, Backstory backstoryOtherSlot, List<BackstoryCategoryFilter> backstoryCategories, FactionDef factionType)
         {
-            foreach (RVRBackstory story in DefDatabase<RVRBackstory>.AllDefsListForReading)
+            string id = backstory.identifier;
+            if (DefDatabase<RVRBackstory>.AllDefsListForReading.Any(x => x.defName == id))
             {
-                if (story.defName == backstory.identifier)
+                RVRBackstory story = DefDatabase<RVRBackstory>.AllDefsListForReading.First(x => x.defName == id);
+                if (story.defName == backstory.identifier && !story.CanSpawn(pawn))
                 {
-                    if (!story.CanSpawn(pawn))
-                    {
-                        FillBackstorySlotShuffled(pawn, slot, ref backstory, backstoryOtherSlot, pawn.Faction.def.backstoryFilters, factionType);
-                    }
+                    FillBackstorySlotShuffled(pawn, slot, ref backstory, backstoryOtherSlot, pawn.Faction.def.backstoryFilters, factionType);
                 }
             }
         }
@@ -1537,26 +1534,21 @@ namespace RimValiCore.RVR
             {
                 flags |= PawnRenderFlags.HeadStump;
             }
-            if(p.Dead&& p.Corpse != null)
+            if (p.Dead && p.Corpse != null)
             {
                 mode = p.Corpse.CurRotDrawMode;
             }
 
-
-            RendererPatch.RenderPawnInternal(drawLoc, 0f, true, rotation, mode,flags,__instance);
-         //   RendererPatch.RenderBodyParts(false, 0f, drawLoc, __instance, rotation, mode, p,flags);
+            bool isStanding = p.GetPosture() == PawnPosture.Standing;
+            if (isStanding)
+            {
+                RendererPatch.RenderPawnInternal(drawLoc, __instance.BodyAngle(), true, rotation, mode, flags, __instance);
+            }
         }
     }
 
     
-    public static class HairRendering
-    {
-        public static void Postfix(Vector3 rootLoc, Vector3 headOffset, float angle, Rot4 bodyFacing, Rot4 headFacing, RotDrawMode bodyDrawType, PawnRenderFlags flags, PawnRenderer __instance)
-        {
-            Log.Message("I did this");
-          //  RendererPatch.RenderBodyParts(flags.HasFlag(PawnRenderFlags.Portrait), angle, rootLoc, __instance, bodyFacing, bodyDrawType, __instance.graphics.pawn,flags);
-        }
-    }
+   
 
     [HarmonyPatch(typeof(PawnRenderer), "RenderPawnInternal", new[] { typeof(Vector3), typeof(float), typeof(bool), typeof(Rot4), typeof(RotDrawMode), typeof(PawnRenderFlags) })]
     internal static class RendererPatch
