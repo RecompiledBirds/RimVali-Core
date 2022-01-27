@@ -77,6 +77,8 @@ namespace RimValiCore.QLine
 
             if (quest != null)
             {
+                Text.Font = GameFont.Small;
+                Text.Anchor = TextAnchor.MiddleCenter;
                 bool Dismissquest = Widgets.ButtonText(delete, "Dismiss quest");
                 if (Dismissquest)
                 {
@@ -90,7 +92,8 @@ namespace RimValiCore.QLine
                     quest.QuestWorker?.Action();
                     acceptQuest?.Invoke();
                 }
-
+                Text.Font = prevFont;
+                Text.Anchor = textAnchor;
                 Widgets.Label(questdesc, quest.description);
                 Text.Font = GameFont.Medium;
                 Text.Anchor = TextAnchor.MiddleLeft;

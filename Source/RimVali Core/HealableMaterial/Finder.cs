@@ -10,8 +10,7 @@ namespace RimValiCore.HealableMaterial
         public int ticks;
     }
 
-    [StaticConstructorOnStartup]
-    public static class HealableMatFinder
+    public static class HealableMats
     {
         private static readonly Dictionary<ThingDef, HealStuff> thingDefs = new Dictionary<ThingDef, HealStuff>();
 
@@ -31,7 +30,7 @@ namespace RimValiCore.HealableMaterial
             return healStuff;
         }
 
-        static HealableMatFinder()
+        public static void Intialize()
         {
             foreach (ThingDef def in DefDatabase<ThingDef>.AllDefs.Where(x => x.HasComp(typeof(HealableComp))))
             {
@@ -41,7 +40,7 @@ namespace RimValiCore.HealableMaterial
                     ticks = def.GetCompProperties<HealableCompProps>().ticksBetweenHeal
                 });
             }
-            Log.Message(($"[RimVali Core/ Healable mats]: found {thingDefs.Count()} valid materials."));
+            Log.Message(($"[RimVali Core]: We found {thingDefs.Count} healable materials."));
         }
     }
 }

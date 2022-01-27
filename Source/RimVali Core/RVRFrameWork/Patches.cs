@@ -25,6 +25,38 @@ namespace RimValiCore.RVR
         public List<V> allowed;
     }
 
+    public static class RVR
+    {
+        public static void DoPatches()
+        {
+            Log.Message("[RimVali Core]: Starting RVR patches.");
+            Harmony harmony = new Harmony("RimVali.Core");
+            try
+            {
+                harmony.PatchAll();
+                if (!ModLister.HasActiveModWithName("Vanilla Expanded Framework"))
+                {
+                    HarmonyMethod transpiler = new HarmonyMethod(typeof(RenderTextureTranspiler), nameof(RenderTextureTranspiler.Transpile));
+                    harmony.Patch(original: AccessTools.Constructor(typeof(PawnTextureAtlas)), transpiler: transpiler);
+                }
+                else
+                {
+                    Log.Message("[RimVali Core] Found VEF framework was loaded, applying render patch");
+                    harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnAt"), prefix: new HarmonyMethod(typeof(RenderAtPatch_VEF), "RenderAtPatch"));
+                }
+                harmony.Patch(AccessTools.Method(typeof(EquipmentUtility), "CanEquip", new[] { typeof(Thing), typeof(Pawn), typeof(string).MakeByRefType(), typeof(bool) }), postfix: new HarmonyMethod(typeof(ApparelPatch), "Equipable"));
+                Log.Message($"[RimVali Core] Patches completed. {harmony.GetPatchedMethods().EnumerableCount()} methods patched.");
+            }
+            catch (Exception ex)
+            {
+                Log.Warning($"[RimVali Core] A patch has failed! Patches completed: {harmony.GetPatchedMethods().EnumerableCount()}");
+                Log.Error(ex.ToString());
+            }
+
+        }
+    }
+
+
     #region FactionResearch
 
     public class FacRes
@@ -41,7 +73,6 @@ namespace RimValiCore.RVR
 
     #endregion FactionResearch
 
-    [StaticConstructorOnStartup]
     public static class Restrictions
     {
         public static Hashtable expRes = new Hashtable();
@@ -128,103 +159,127 @@ namespace RimValiCore.RVR
             }
         }
 
-        static Restrictions()
+
+        // Token: 0x04000116 RID: 278
+        public static Dictionary<ThingDef, List<ThingDef>> equipmentRestrictions = new Dictionary<ThingDef, List<ThingDef>>();
+
+        // Token: 0x04000117 RID: 279
+        public static Dictionary<ThingDef, List<ThingDef>> consumableRestrictions = new Dictionary<ThingDef, List<ThingDef>>();
+
+        // Token: 0x04000118 RID: 280
+        public static Dictionary<ThingDef, List<ThingDef>> consumableRestrictionsWhiteList = new Dictionary<ThingDef, List<ThingDef>>();
+
+        // Token: 0x04000119 RID: 281
+        public static Dictionary<BuildableDef, List<ThingDef>> buildingRestrictions = new Dictionary<BuildableDef, List<ThingDef>>();
+
+        // Token: 0x0400011A RID: 282
+        public static Dictionary<ResearchProjectDef, List<ThingDef>> researchRestrictions = new Dictionary<ResearchProjectDef, List<ThingDef>>();
+
+        // Token: 0x0400011B RID: 283
+        public static Dictionary<TraitDef, List<ThingDef>> traitRestrictions = new Dictionary<TraitDef, List<ThingDef>>();
+
+        // Token: 0x0400011C RID: 284
+        public static Dictionary<BodyTypeDef, List<ThingDef>> bodyTypeRestrictions = new Dictionary<BodyTypeDef, List<ThingDef>>();
+
+        // Token: 0x0400011D RID: 285
+        public static Dictionary<ThingDef, List<ThingDef>> bedRestrictions = new Dictionary<ThingDef, List<ThingDef>>();
+
+        // Token: 0x0400011E RID: 286
+        public static Dictionary<ThoughtDef, List<ThingDef>> thoughtRestrictions = new Dictionary<ThoughtDef, List<ThingDef>>();
+
+        // Token: 0x0400011F RID: 287
+        public static Dictionary<ThingDef, List<ThingDef>> buildingWhitelists = new Dictionary<ThingDef, List<ThingDef>>();
+
+        // Token: 0x04000120 RID: 288
+        public static Dictionary<ThingDef, List<ThingDef>> equipabblbleWhiteLists = new Dictionary<ThingDef, List<ThingDef>>();
+
+        // Token: 0x04000121 RID: 289
+        public static Dictionary<ResearchProjectDef, bool> hackedProjects = new Dictionary<ResearchProjectDef, bool>();
+
+        // Token: 0x04000122 RID: 290
+        public static Dictionary<ThingDef, List<BodyTypeDef>> bodyDefs = new Dictionary<ThingDef, List<BodyTypeDef>>();
+
+        // Token: 0x04000123 RID: 291
+        public static Dictionary<FactionDef, List<FacRes>> factionResearchRestrictions = new Dictionary<FactionDef, List<FacRes>>();
+
+        // Token: 0x04000124 RID: 292
+        public static Dictionary<FactionDef, List<FacRes>> factionResearchBlacklist = new Dictionary<FactionDef, List<FacRes>>();
+
+        public static void InitRestrictions()
         {
-            Harmony harmony = new Harmony("RimVali.Core");
-            try
+            List<RimValiRaceDef> raceDefs = DefDatabase<RimValiRaceDef>.AllDefsListForReading;
+            int raceCount = raceDefs.Count;
+            for (int race = 0; race < raceCount; race++)
             {
-                harmony.PatchAll();
-                if (!ModLister.HasActiveModWithName("Vanilla Expanded Framework"))
-                {
-                    HarmonyMethod transpiler = new HarmonyMethod(typeof(RenderTextureTranspiler), nameof(RenderTextureTranspiler.Transpile));
-                    harmony.Patch(original: AccessTools.Constructor(typeof(PawnTextureAtlas)), transpiler: transpiler);
-                }
-                else
-                {
-                    Log.Message("[RimVali Core] Found VEF framework was loaded, applying render patch");
-                    harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnAt"), prefix: new HarmonyMethod(typeof(RenderAtPatch_VEF), "RenderAtPatch"));
-                }
-                harmony.Patch(AccessTools.Method(typeof(EquipmentUtility), "CanEquip", new[] { typeof(Thing), typeof(Pawn), typeof(string).MakeByRefType(), typeof(bool) }), postfix: new HarmonyMethod(typeof(ApparelPatch), "Equipable"));
-                Log.Message($"[RimVali Core] Patches completed. {harmony.GetPatchedMethods().EnumerableCount()} methods patched.");
-            }
-            catch (Exception ex)
-            {
-                Log.Warning($"[RimVali Core] A patch has failed! Patches completed: {harmony.GetPatchedMethods().EnumerableCount()}");
-                Log.Error(ex.ToString());
-            }
-            Log.Message("[RimVali Core/RVR]: Setting up race restrictions.");
-            foreach (RimValiRaceDef raceDef in DefDatabase<RimValiRaceDef>.AllDefs)
-            {
-                bool flag = raceDef.restrictions.buildables.Count > 0;
-                if (flag)
+                Log.Message($"[RimVali Core]: Setting up race {race}/{raceCount}");
+                RimValiRaceDef raceDef = raceDefs[race];
+                if (raceDef.restrictions.buildables.Count > 0)
                 {
                     foreach (ThingDef item in raceDef.restrictions.buildables)
                     {
                         AddRestriction(ref buildingRestrictions, item, raceDef);
                     }
                 }
-                bool flag3 = raceDef.restrictions.consumables.Count > 0;
-                if (flag3)
+
+                if (raceDef.restrictions.consumables.Count > 0)
                 {
                     foreach (ThingDef item2 in raceDef.restrictions.consumables)
                     {
                         AddRestriction(ref consumableRestrictions, item2, raceDef);
                     }
                 }
-                bool flag4 = raceDef.restrictions.equippables.Count > 0;
-                if (flag4)
+
+                if (raceDef.restrictions.equippables.Count > 0)
                 {
                     foreach (ThingDef item3 in raceDef.restrictions.equippables)
                     {
                         AddRestriction(ref equipmentRestrictions, item3, raceDef);
                     }
                 }
-                bool flag5 = raceDef.restrictions.researchProjectDefs.Count > 0;
-                if (flag5)
+
+                if (raceDef.restrictions.researchProjectDefs.Count > 0)
                 {
                     foreach (ResearchProjectDef item4 in raceDef.restrictions.researchProjectDefs)
                     {
                         AddRestriction(ref researchRestrictions, item4, raceDef);
                     }
                 }
-                bool flag6 = raceDef.restrictions.traits.Count > 0;
-                if (flag6)
+
+                if (raceDef.restrictions.traits.Count > 0)
                 {
                     foreach (TraitDef item5 in raceDef.restrictions.traits)
                     {
                         AddRestriction(ref traitRestrictions, item5, raceDef);
                     }
                 }
-                bool flag7 = raceDef.restrictions.thoughtDefs.Count > 0;
-                if (flag7)
+                if (raceDef.restrictions.thoughtDefs.Count > 0)
                 {
                     foreach (ThoughtDef item6 in raceDef.restrictions.thoughtDefs)
                     {
                         AddRestriction(ref thoughtRestrictions, item6, raceDef);
                     }
                 }
-                bool flag8 = raceDef.restrictions.equippablesWhitelist.Count > 0;
-                if (flag8)
+                if (raceDef.restrictions.equippablesWhitelist.Count > 0)
                 {
                     foreach (ThingDef item7 in raceDef.restrictions.equippablesWhitelist)
                     {
                         AddRestriction(ref equipabblbleWhiteLists, item7, raceDef);
                     }
                 }
-                bool flag9 = raceDef.restrictions.bedDefs.Count > 0;
-                if (flag9)
+
+                if (raceDef.restrictions.bedDefs.Count > 0)
                 {
                     foreach (ThingDef item8 in raceDef.restrictions.bedDefs)
                     {
                         AddRestriction(ref bedRestrictions, item8, raceDef);
                     }
                 }
-                bool flag10 = raceDef.restrictions.bodyTypes.Count > 0;
-                if (flag10)
+
+                if (raceDef.restrictions.bodyTypes.Count > 0)
                 {
                     foreach (BodyTypeDef item9 in raceDef.restrictions.bodyTypes)
                     {
-                       
+
                         AddRestriction(ref bodyTypeRestrictions, item9, raceDef);
                     }
                 }
@@ -243,7 +298,7 @@ namespace RimValiCore.RVR
                 {
                     foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef && (thingDef.IsApparel)))
                     {
-                       
+
                         AddRestriction(ref equipmentRestrictions, def, raceDef);
                     }
                 }
@@ -291,9 +346,9 @@ namespace RimValiCore.RVR
                         }
                     }
                 }
-                foreach (BodyTypeDef race in raceDef.bodyTypes)
+                foreach (BodyTypeDef bodyType in raceDef.bodyTypes)
                 {
-                    AddRestriction(ref bodyDefs, raceDef, race);
+                    AddRestriction(ref bodyDefs, raceDef, bodyType);
                 }
 
                 bool useHumanRecipes = raceDef.useHumanRecipes;
@@ -325,77 +380,34 @@ namespace RimValiCore.RVR
                 }
             }
             Log.Message("[RimVali Core/RVR]: Setting up faction restrictions.");
-            foreach (FactionResearchRestrictionDef factionResearchRestrictionDef in DefDatabase<FactionResearchRestrictionDef>.AllDefsListForReading)
+            List<FactionResearchRestrictionDef> factionDefs = DefDatabase<FactionResearchRestrictionDef>.AllDefsListForReading;
+            int factionResDefCount = factionDefs.Count;
+            for (int faction = 0; faction < factionResDefCount; faction++)
             {
+                Log.Message($"[RimVali Core]: Doing faction restrictions for faction {faction}/{factionResDefCount} ");
+                FactionResearchRestrictionDef factionResearchRestrictionDef = factionDefs[faction];
                 foreach (FactionResearchRestriction factionResearchRestriction in factionResearchRestrictionDef.factionResearchRestrictions)
                 {
-                    FacRes item15 = new FacRes(factionResearchRestriction.researchProj, factionResearchRestriction.isHackable);
-                    bool flag17 = !factionResearchRestrictions.ContainsKey(factionResearchRestriction.factionDef);
-                    if (flag17)
+                    FacRes res = new FacRes(factionResearchRestriction.researchProj, factionResearchRestriction.isHackable);
+                    if (!factionResearchRestrictions.ContainsKey(factionResearchRestriction.factionDef))
                     {
                         factionResearchRestrictions.Add(factionResearchRestriction.factionDef, new List<FacRes>());
                     }
-                    factionResearchRestrictions[factionResearchRestriction.factionDef].Add(item15);
+                    factionResearchRestrictions[factionResearchRestriction.factionDef].Add(res);
                 }
                 foreach (FactionResearchRestriction factionResearchRestriction2 in factionResearchRestrictionDef.factionResearchRestrictionBlackList)
                 {
-                    FacRes item16 = new FacRes(factionResearchRestriction2.researchProj, factionResearchRestriction2.isHackable);
-                    bool flag18 = !factionResearchBlacklist.ContainsKey(factionResearchRestriction2.factionDef);
-                    if (flag18)
+                    FacRes res = new FacRes(factionResearchRestriction2.researchProj, factionResearchRestriction2.isHackable);
+
+                    if (!factionResearchBlacklist.ContainsKey(factionResearchRestriction2.factionDef))
                     {
                         factionResearchBlacklist.Add(factionResearchRestriction2.factionDef, new List<FacRes>());
                     }
 
-                    factionResearchBlacklist[factionResearchRestriction2.factionDef].Add(item16);
+                    factionResearchBlacklist[factionResearchRestriction2.factionDef].Add(res);
                 }
             }
-            Log.Message($"Loaded {DefDatabase<RimValiRaceDef>.AllDefs.Count()} races");
         }
-
-        // Token: 0x04000116 RID: 278
-        public static Dictionary<ThingDef, List<ThingDef>> equipmentRestrictions = new Dictionary<ThingDef, List<ThingDef>>();
-
-        // Token: 0x04000117 RID: 279
-        public static Dictionary<ThingDef, List<ThingDef>> consumableRestrictions = new Dictionary<ThingDef, List<ThingDef>>();
-
-        // Token: 0x04000118 RID: 280
-        public static Dictionary<ThingDef, List<ThingDef>> consumableRestrictionsWhiteList = new Dictionary<ThingDef, List<ThingDef>>();
-
-        // Token: 0x04000119 RID: 281
-        public static Dictionary<BuildableDef, List<ThingDef>> buildingRestrictions = new Dictionary<BuildableDef, List<ThingDef>>();
-
-        // Token: 0x0400011A RID: 282
-        public static Dictionary<ResearchProjectDef, List<ThingDef>> researchRestrictions = new Dictionary<ResearchProjectDef, List<ThingDef>>();
-
-        // Token: 0x0400011B RID: 283
-        public static Dictionary<TraitDef, List<ThingDef>> traitRestrictions = new Dictionary<TraitDef, List<ThingDef>>();
-
-        // Token: 0x0400011C RID: 284
-        public static Dictionary<BodyTypeDef, List<ThingDef>> bodyTypeRestrictions = new Dictionary<BodyTypeDef, List<ThingDef>>();
-
-        // Token: 0x0400011D RID: 285
-        public static Dictionary<ThingDef, List<ThingDef>> bedRestrictions = new Dictionary<ThingDef, List<ThingDef>>();
-
-        // Token: 0x0400011E RID: 286
-        public static Dictionary<ThoughtDef, List<ThingDef>> thoughtRestrictions = new Dictionary<ThoughtDef, List<ThingDef>>();
-
-        // Token: 0x0400011F RID: 287
-        public static Dictionary<ThingDef, List<ThingDef>> buildingWhitelists = new Dictionary<ThingDef, List<ThingDef>>();
-
-        // Token: 0x04000120 RID: 288
-        public static Dictionary<ThingDef, List<ThingDef>> equipabblbleWhiteLists = new Dictionary<ThingDef, List<ThingDef>>();
-
-        // Token: 0x04000121 RID: 289
-        public static Dictionary<ResearchProjectDef, bool> hackedProjects = new Dictionary<ResearchProjectDef, bool>();
-
-        // Token: 0x04000122 RID: 290
-        public static Dictionary<ThingDef, List<BodyTypeDef>> bodyDefs = new Dictionary<ThingDef, List<BodyTypeDef>>();
-
-        // Token: 0x04000123 RID: 291
-        public static Dictionary<FactionDef, List<FacRes>> factionResearchRestrictions = new Dictionary<FactionDef, List<FacRes>>();
-
-        // Token: 0x04000124 RID: 292
-        public static Dictionary<FactionDef, List<FacRes>> factionResearchBlacklist = new Dictionary<FactionDef, List<FacRes>>();
     }
 
     #endregion Restrictions and patching

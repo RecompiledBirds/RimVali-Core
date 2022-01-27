@@ -25,7 +25,6 @@ namespace RimValiCore
 
         #endregion Pawn
 
-        //private static readonly bool enableDebug = LoadedModManager.GetMod<RimValiMod>().GetSettings<RimValiModSettings>().enableDebugMode;
 
         #region asset and shader loading
 
@@ -88,6 +87,22 @@ namespace RimValiCore
                 return beds.Any(bed => bed.OwnersForReading != null && bed.OwnersForReading.Any(p => p != pawn));
             }
             return false;
+        }
+
+        public static bool SharesBedroomWithPawn(this Pawn pawn, Pawn other)
+        {
+            Room room = pawn.GetRoom();
+            if (room != null && room.ContainedBeds.Count() > 0)
+            {
+                IEnumerable<Building_Bed> beds = room.ContainedBeds;
+                return beds.Any(bed => bed.OwnersForReading != null && bed.OwnersForReading.Any(p => p==other));
+            }
+            return false;
+        }
+
+        public static bool SharesBedroomWithPawns(this Pawn pawn, List<Pawn> pawns)
+        {
+            return pawns.All(p=>pawn.SharesBedroomWithPawn(p));
         }
 
         #endregion room stuff

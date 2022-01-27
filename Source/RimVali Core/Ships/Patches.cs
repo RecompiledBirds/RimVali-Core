@@ -7,21 +7,19 @@ using Verse.Sound;
 
 namespace RimValiCore.Ships
 {
-    [StaticConstructorOnStartup]
     public static class ShipPatches
     {
         public static readonly Texture2D LoadCommandTex = ContentFinder<Texture2D>.Get("UI/Commands/LoadTransporter", true);
 
-        static ShipPatches()
+        public static void DoPatches()
         {
-            Log.Message("[RimVali: Core/Ships & Drones]: Ready for launch!");
+            Harmony harmony = new Harmony("RimValiCore.Ships");
+            harmony.Patch(AccessTools.Method(typeof(CompTransporter), "CompGetGizmosExtra"), postfix: new HarmonyMethod(AccessTools.Method(typeof(GizmosPatch),"Patch")));
         }
     }
 
-    [HarmonyPatch(typeof(CompTransporter), "CompGetGizmosExtra")]
     public static class GizmosPatch
     {
-        [HarmonyPostfix]
         public static void Patch(ref IEnumerable<Gizmo> __result, CompTransporter __instance)
         {
             ShipLaunchable shipLaunchable = __instance.parent.TryGetComp<ShipLaunchable>();

@@ -6,10 +6,8 @@ using System.Reflection;
 using System.Text;
 using Verse;
 
-// Why is this AvaliMod
-namespace AvaliMod
+namespace RimValiCore
 {
-    [StaticConstructorOnStartup]
     public static class FloorConstructor
     {
         private static List<DesignationCategoryDef> toUpdateDesignationCatDefs = new List<DesignationCategoryDef>();
@@ -237,9 +235,8 @@ namespace AvaliMod
             }
         }
 
-        static FloorConstructor()
+        public static void Initalize()
         {
-            Log.Message("[RimVali Core] Starting up floor constructor...");
 
             List<TerrainDef> workOn = new List<TerrainDef>();
             workOn.AddRange(DefDatabase<TerrainDef>.AllDefs);

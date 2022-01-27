@@ -71,7 +71,7 @@ namespace RimValiCore.HealableMaterial
                             {
                                 ticks.Add(thing, 0);
                             }
-                            HealStuff targ = HealableMatFinder.FindThing(thing);
+                            HealStuff targ = HealableMats.FindThing(thing);
                             if (targ != null && thing.HitPoints < thing.MaxHitPoints && targ.ticks == ticks[thing])
                             {
                                 int wantedHP = thing.HitPoints + targ.amount;

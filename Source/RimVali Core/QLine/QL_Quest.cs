@@ -24,10 +24,10 @@ namespace RimValiCore.QLine
         }
         public override void PostLoad()
         {
-            if (questAction!=null && !questAction.IsAssignableFrom(typeof(QuestWorker)))
+            Log.Message($"Loading quest: {this.defName}");
+            if (questAction == null)
             {
-                Log.Error($"{questAction.FullName} is not a QuestWorker, and cannot be assigned to {defName}!");
-                questAction = null;
+                Log.Error("questAction cannot be null!");
             }
         }
 
@@ -35,9 +35,8 @@ namespace RimValiCore.QLine
         public QL_Quest negativeQuestResult;
     }
 
-    public class QuestWorker
+    public abstract class QuestWorker
     {
-        public virtual bool CanBeGiven => true;
 
         public virtual void NegativeEndAction()
         {
@@ -53,6 +52,9 @@ namespace RimValiCore.QLine
         {
 
         }
+
+        public abstract bool IsAvalible();
+        public abstract int QuestWeight();
     }
 
 
