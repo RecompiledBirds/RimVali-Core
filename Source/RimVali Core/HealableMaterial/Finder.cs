@@ -30,7 +30,7 @@ namespace RimValiCore.HealableMaterial
             return healStuff;
         }
 
-        public static void Intialize()
+        internal static void Intialize()
         {
             foreach (ThingDef def in DefDatabase<ThingDef>.AllDefs.Where(x => x.HasComp(typeof(HealableComp))))
             {

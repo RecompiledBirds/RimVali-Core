@@ -78,7 +78,8 @@ namespace RimValiCore.RVR
 
                 race.meatDef = meatToUse;
             }
-
+            butcherAndHarvestThoughts.Resolve();
+            cannibalismThoughts.Resolove();
             comps.Add(new colorCompProps());
             base.ResolveReferences();
         }

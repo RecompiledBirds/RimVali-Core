@@ -235,7 +235,7 @@ namespace RimValiCore
             }
         }
 
-        public static void Initalize()
+        internal static void Initalize()
         {
 
             List<TerrainDef> workOn = new List<TerrainDef>();

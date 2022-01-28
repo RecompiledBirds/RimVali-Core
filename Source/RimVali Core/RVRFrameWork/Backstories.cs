@@ -143,6 +143,7 @@ namespace RimValiCore.RVR
         {
             Dictionary<SkillDef, int> skills = new Dictionary<SkillDef, int>();
             base.ResolveReferences();
+            butcherAndHarvestThoughtOverrides.Resolve();
             foreach (skillGains skillGains in skillGains)
             {
                 if (!skills.ContainsKey(skillGains.skill))

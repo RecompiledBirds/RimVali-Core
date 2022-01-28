@@ -4,7 +4,7 @@ using Verse;
 namespace RimValiCore
 {
     [StaticConstructorOnStartup]
-    public static class AvaliBaseContent
+      public static class AvaliBaseContent
     {
         public static readonly string BadTexPath;
         public static readonly string PlaceholderImagePath;

@@ -27,7 +27,7 @@ namespace RimValiCore.RVR
 
     public static class RVR
     {
-        public static void DoPatches()
+        internal static void DoPatches()
         {
             Log.Message("[RimVali Core]: Starting RVR patches.");
             Harmony harmony = new Harmony("RimVali.Core");
@@ -205,7 +205,7 @@ namespace RimValiCore.RVR
         // Token: 0x04000124 RID: 292
         public static Dictionary<FactionDef, List<FacRes>> factionResearchBlacklist = new Dictionary<FactionDef, List<FacRes>>();
 
-        public static void InitRestrictions()
+        internal static void InitRestrictions()
         {
             List<RimValiRaceDef> raceDefs = DefDatabase<RimValiRaceDef>.AllDefsListForReading;
             int raceCount = raceDefs.Count;

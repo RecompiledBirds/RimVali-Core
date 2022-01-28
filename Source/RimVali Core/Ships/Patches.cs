@@ -11,7 +11,7 @@ namespace RimValiCore.Ships
     {
         public static readonly Texture2D LoadCommandTex = ContentFinder<Texture2D>.Get("UI/Commands/LoadTransporter", true);
 
-        public static void DoPatches()
+        internal static void DoPatches()
         {
             Harmony harmony = new Harmony("RimValiCore.Ships");
             harmony.Patch(AccessTools.Method(typeof(CompTransporter), "CompGetGizmosExtra"), postfix: new HarmonyMethod(AccessTools.Method(typeof(GizmosPatch),"Patch")));

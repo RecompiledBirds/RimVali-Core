@@ -47,7 +47,7 @@ namespace RimValiCore
 
     public class AvaliShaderDatabase
     {
-        public static void LoadShaders()
+        internal static void LoadShaders()
         {
             string path = Path.Combine(RimValiUtility.dir, "RimValiAssetBundles", "shader");
             AssetBundle bundle = RimValiUtility.shaderLoader(path);

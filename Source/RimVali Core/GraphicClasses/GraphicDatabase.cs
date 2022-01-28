@@ -6,6 +6,7 @@ using Verse;
 
 namespace RimValiCore
 {
+    [StaticConstructorOnStartup]
     public static class AvaliGraphicDatabase
     {
         private static readonly Dictionary<AvaliGraphicRequest, AvaliGraphic> allGraphics = new Dictionary<AvaliGraphicRequest, AvaliGraphic>();

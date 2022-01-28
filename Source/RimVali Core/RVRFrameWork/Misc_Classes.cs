@@ -27,18 +27,39 @@ namespace RimValiCore.RVR
     public class cannibalsimThought
     {
         public ThingDef race;
-        public ThoughtDef ateCooked = ThoughtDefOf.AteHumanlikeMeatAsIngredient;
-        public ThoughtDef ateRaw = ThoughtDefOf.AteHumanlikeMeatDirect;
-        public ThoughtDef ateCorpse = ThoughtDefOf.AteCorpse;
+        public ThoughtDef ateCooked = null;
+        public ThoughtDef ateRaw = null;
+        public ThoughtDef ateCorpse = null;
 
-        public ThoughtDef ateCookedCannibal = ThoughtDefOf.AteHumanlikeMeatAsIngredientCannibal;
-        public ThoughtDef ateRawCannibal = ThoughtDefOf.AteHumanlikeMeatDirectCannibal;
+        public ThoughtDef ateCookedCannibal = null;
+        public ThoughtDef ateRawCannibal = null;
+
+        public void Resolve()
+        {
+            ateCooked = ThoughtDefOf.AteHumanlikeMeatAsIngredient;
+
+            ateRaw = ThoughtDefOf.AteHumanlikeMeatDirect;
+
+            ateCorpse = ThoughtDefOf.AteCorpse;
+
+            ateCookedCannibal = ThoughtDefOf.AteHumanlikeMeatAsIngredientCannibal;
+
+            ateRawCannibal = ThoughtDefOf.AteHumanlikeMeatDirectCannibal;
+        }
     }
 
     public class cannibalismThoughts
     {
         public List<cannibalsimThought> thoughts = new List<cannibalsimThought>();
         public bool careAbountUndefinedRaces = true;
+
+        public void Resolove()
+        {
+            foreach(cannibalsimThought thought in thoughts)
+            {
+                thought.Resolve();
+            }
+        }
     }
 
     public class butcherAndHarvestThoughts
@@ -49,7 +70,15 @@ namespace RimValiCore.RVR
         //If a race isnt defined in the above, it gets the default thought.
         public bool careAboutUndefinedRaces = true;
 
-        public ThoughtDef myOrganHarvested = ThoughtDefOf.MyOrganHarvested;
+        public ThoughtDef myOrganHarvested = null;
+
+        public void Resolve()
+        {
+            if(myOrganHarvested == null)
+            {
+                myOrganHarvested = ThoughtDefOf.MyOrganHarvested;
+            }
+        }
     }
 
     public class raceColors
