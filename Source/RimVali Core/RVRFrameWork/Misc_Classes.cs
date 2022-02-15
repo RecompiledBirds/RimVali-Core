@@ -248,6 +248,13 @@ namespace RimValiCore.RVR
         public List<string> renderableKeys = new List<string>();
         public List<int> index = new List<int>();
 
+        public ColorSet TryGetColorset(string name)
+        {
+            if(colors.ContainsKey(name))
+                return colors[name];
+            return null;
+        }
+
         public override void PostExposeData()
         {
             Scribe_Collections.Look(ref colors, "colors", LookMode.Value, LookMode.Deep, ref colorKey, ref colorValue);

@@ -113,12 +113,7 @@ namespace RimValiCore.RVR
         public string TexPath(Pawn pawn, int index)
         {
 
-            string path = textures[index].tex;
-
-            if (textures[index].femaleTex != null && pawn.gender == Gender.Female)
-            {
-                path = textures[index].femaleTex;
-            }
+            string path = textures[index].femaleTex != null && pawn.gender == Gender.Female ? textures[index].femaleTex : textures[index].tex;
 
             //HediffStory gets highest priority here, by being lowest on this set
             Backstory adulthood = null;
@@ -132,11 +127,7 @@ namespace RimValiCore.RVR
                 //Log.Message(backstoryTex.backstoryTitle);
                 if ((adulthood != null && StoryIsName(adulthood, backstoryTex.backstoryTitle)) || StoryIsName(childhood, backstoryTex.backstoryTitle))
                 {
-                    if (backstoryTex.femaleTex != null && pawn.gender == Gender.Female)
-                    {
-                        path = backstoryTex.femaleTex;
-                    }
-                    path = backstoryTex.tex;
+                    path = backstoryTex.femaleTex != null && pawn.gender == Gender.Female ? backstoryTex.femaleTex : backstoryTex.tex;
                 }
             }
             foreach (HediffTex hediffTex in hediffTextures)
@@ -144,16 +135,9 @@ namespace RimValiCore.RVR
                 foreach (BodyPartRecord bodyPartRecord in pawn.def.race.body.AllParts)
                 {
                     BodyPartDef def = bodyPartRecord.def;
-                    if (def.defName.ToLower() == bodyPart.ToLower() || def.label.ToLower() == bodyPart.ToLower())
+                    if (def.defName.ToLower() == bodyPart.ToLower() || def.label.ToLower() == bodyPart.ToLower() && pawn.health.hediffSet.HasHediff(hediffTex.hediff, bodyPartRecord, false))
                     {
-                        if (pawn.health.hediffSet.HasHediff(hediffTex.hediff, bodyPartRecord, false))
-                        {
-                            if (hediffTex.femaleTex != null && pawn.gender == Gender.Female)
-                            {
-                                path = hediffTex.femaleTex;
-                            }
-                            path = hediffTex.tex;
-                        }
+                        path = hediffTex.femaleTex != null && pawn.gender == Gender.Female ? hediffTex.femaleTex : hediffTex.tex;
                     }
                 }
             }
@@ -168,19 +152,23 @@ namespace RimValiCore.RVR
                         if ((def.defName.ToLower() == bodyPart.ToLower() || def.label.ToLower() == bodyPart.ToLower())
                             && (pawn.health.hediffSet.HasHediff(hediffStoryTex.hediffDef, bodyPartRecord, false)))
                         {
-                            if (hediffStoryTex.femaleTex != null && pawn.gender == Gender.Female)
-                            {
-                                path = hediffStoryTex.femaleTex;
-                            }
-                            else
-                            {
-                                path = hediffStoryTex.tex;
-                            }
+                            path = hediffStoryTex.femaleTex != null && pawn.gender == Gender.Female ?hediffStoryTex.femaleTex : hediffStoryTex.tex;
                         }
                     }
                 }
             }
+            if (pawn.Dead)
+            {
+                if (pawn.GetRotStage().HasFlag(RotStage.Dessicated) && dessicatedTex != null)
+                {
+                    path = dessicatedTex;
+                }
+                if (pawn.GetRotStage().HasFlag(RotStage.Rotting) && rottingTex != null)
+                {
+                    path = rottingTex;
+                }
 
+            }
             return path;
         }
 

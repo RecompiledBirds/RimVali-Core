@@ -39,11 +39,6 @@ namespace RimValiCore.RVR
                     HarmonyMethod transpiler = new HarmonyMethod(typeof(RenderTextureTranspiler), nameof(RenderTextureTranspiler.Transpile));
                     harmony.Patch(original: AccessTools.Constructor(typeof(PawnTextureAtlas)), transpiler: transpiler);
                 }
-                else
-                {
-                    Log.Message("[RimVali Core] Found VEF framework was loaded, applying render patch");
-                    harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnAt"), prefix: new HarmonyMethod(typeof(RenderAtPatch_VEF), "RenderAtPatch"));
-                }
                 harmony.Patch(AccessTools.Method(typeof(EquipmentUtility), "CanEquip", new[] { typeof(Thing), typeof(Pawn), typeof(string).MakeByRefType(), typeof(bool) }), postfix: new HarmonyMethod(typeof(ApparelPatch), "Equipable"));
                 Log.Message($"[RimVali Core] Patches completed. {harmony.GetPatchedMethods().EnumerableCount()} methods patched.");
             }
@@ -78,28 +73,7 @@ namespace RimValiCore.RVR
         public static Hashtable expRes = new Hashtable();
         public static bool CheckRestrictions<T, V>(Dictionary<T, List<V>> pairs, T item, V race, bool keyNotInReturn = true, bool raceNotFound = false) where V : Def where T : Def
         {
-            if (!RimValiCoreMod.Settings.expMode)
-            {
-                return pairs.ContainsKey(item) ? pairs[item] is List<V> ? !pairs[item].NullOrEmpty() && pairs[item].Contains(race) : false : keyNotInReturn;
-            }
-            else
-            {
-                if (expRes.ContainsKey(race))
-                {
-                    if (expRes[race] is HashSet<Def> l && l.Contains(item))
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        return keyNotInReturn;
-                    }
-                }
-                else
-                {
-                    return raceNotFound;
-                }
-            }
+            return pairs.ContainsKey(item) ? pairs[item] is List<V> ? !pairs[item].NullOrEmpty() && pairs[item].Contains(race) : false : keyNotInReturn;
         }
 
         // Token: 0x060000EA RID: 234 RVA: 0x00006D2C File Offset: 0x00004F2C
@@ -1518,51 +1492,10 @@ namespace RimValiCore.RVR
     #region Rendering patch
 
 
-    /// <summary>
-    /// For some reason, VEF causes pawns to be invisible.
-    /// We only load this patch if VEF is loaded.
-    /// </summary>
-    [HarmonyAfter("OskarPotocki.VFECore")]
-    public static class RenderAtPatch_VEF
-    {
-        /// <summary>
-        /// A postfix that calls our renderer.
-        /// </summary>
-        /// <param name="drawLoc"></param>
-        /// <param name="rotOverride"></param>
-        /// <param name="neverAimWeapon"></param>
-        public static void RenderAtPatch(Vector3 drawLoc, Rot4 rotOverride, bool neverAimWeapon, PawnRenderer __instance)
-        {
-            //Annoyingly, a bit of code has to be re-written, unless we want to pull values using system.Reflection. may add later
-            Pawn p = __instance.graphics.pawn;
-            Rot4 rotation = rotOverride != null ? rotOverride : p.Rotation;
-            RotDrawMode mode = RotDrawMode.Fresh;
-            PawnRenderFlags flags = PawnRenderFlags.None;
-            if (p.IsInvisible())
-            {
-                flags |= PawnRenderFlags.Invisible;
-            }
-            if (!p.health.hediffSet.HasHead)
-            {
-                flags |= PawnRenderFlags.HeadStump;
-            }
-            if (p.Dead && p.Corpse != null)
-            {
-                mode = p.Corpse.CurRotDrawMode;
-            }
 
-            bool isStanding = p.GetPosture() == PawnPosture.Standing;
-            if (isStanding)
-            {
-                RendererPatch.RenderPawnInternal(drawLoc, __instance.BodyAngle(), true, rotation, mode, flags, __instance);
-            }
-        }
-    }
+  
 
-    
-   
-
-    [HarmonyPatch(typeof(PawnRenderer), "RenderPawnInternal", new[] { typeof(Vector3), typeof(float), typeof(bool), typeof(Rot4), typeof(RotDrawMode), typeof(PawnRenderFlags) })]
+   [HarmonyPatch(typeof(PawnRenderer), "RenderPawnInternal", new[] { typeof(Vector3), typeof(float), typeof(bool), typeof(Rot4), typeof(RotDrawMode), typeof(PawnRenderFlags) })]
     internal static class RendererPatch
     {
  
@@ -1576,132 +1509,107 @@ namespace RimValiCore.RVR
         public static Dictionary<Pawn, RSet> renders = new Dictionary<Pawn, RSet>();
         public static Dictionary<Pawn, List<RenderableDef>> pawnRenderables = new Dictionary<Pawn, List<RenderableDef>>();
 
-        public static void RenderBodyParts(bool portrait, float angle, Vector3 vector, PawnRenderer pawnRenderer, Rot4 rotation, RotDrawMode mode, Pawn pawn, PawnRenderFlags flags)
+        private static Vector3 GetPosition(RenderableDef renderable, Rot4 rotation)
         {
-            if (portrait)
+            if (renderable.west == null)
             {
-                rotation = Rot4.South;
+                renderable.west = new BodyPartGraphicPos();
+                renderable.west.position.x = -renderable.east.position.x;
+                renderable.west.position.y = -renderable.east.position.y;
+                renderable.west.size = renderable.east.size;
+                renderable.west.layer = renderable.east.layer;
             }
 
-            Quaternion quaternion = Quaternion.AngleAxis(angle, Vector3.up);
+            Vector3 offset = rotation == Rot4.East ? new Vector3(renderable.east.position.x, renderable.east.layer, renderable.east.position.y) :
+                rotation == Rot4.North ? new Vector3(renderable.north.position.x, renderable.north.layer, renderable.north.position.y) :
+                rotation == Rot4.South ? new Vector3(renderable.south.position.x, renderable.south.layer, renderable.south.position.y) :
+                new Vector3(renderable.west.position.x, renderable.west.layer, renderable.west.position.y);
 
-            if (pawn.def is RimValiRaceDef rimValiRaceDef)
+            return offset;
+        }
+
+        public static Vector2 GetSize(RenderableDef renderable, Rot4 rotation)
+        {
+            Vector2 size = rotation == Rot4.East ? renderable.east.size : rotation == Rot4.North ? renderable.north.size : rotation == Rot4.South ? renderable.south.size : renderable.west.size;
+            return size;
+        }
+
+        public static void CalculateDeadColors(ref Color colorOne, ref Color colorTwo, ref Color colorThree, PawnRenderer renderer, RotDrawMode mode)
+        {
+            Pawn pawn = renderer.graphics.pawn;
+            if (pawn.Dead)
             {
-                HashSet<RenderableDef> renderables = rimValiRaceDef.GetRenderableDefsThatShow(pawn, mode, portrait);
-                renderables.AddRange((pawnRenderables.ContainsKey(pawn) ? pawnRenderables[pawn] : new List<RenderableDef>()));
-                foreach (RenderableDef renderable in renderables)
+                if (mode == RotDrawMode.Dessicated)
                 {
-                    ColorComp colorComp = pawn.TryGetComp<ColorComp>();
-                    Vector3 offset = new Vector3();
-                    Vector2 size = new Vector2();
-
-                    #region Direction / size / layering stuff
-
-                    if (renderable.west == null)
+                    if (renderer.graphics.dessicatedGraphic.Color != null)
                     {
-                        renderable.west = new BodyPartGraphicPos();
-                        renderable.west.position.x = -renderable.east.position.x;
-                        renderable.west.position.y = -renderable.east.position.y;
-                        renderable.west.size = renderable.east.size;
-                        renderable.west.layer = renderable.east.layer;
+                        //                This will be changed eventually
+                        colorOne *= (renderer.graphics.rottingGraphic.Color);
+                        colorTwo *= (renderer.graphics.rottingGraphic.Color);
+                        colorThree *= (renderer.graphics.rottingGraphic.Color);
                     }
-                    if (rotation == Rot4.East)
+                    else if (mode == RotDrawMode.Rotting && renderer.graphics.rottingGraphic.color != null)
                     {
-                        offset = new Vector3(renderable.east.position.x, renderable.east.layer, renderable.east.position.y);
-                        size = renderable.east.size;
-                    }
-                    else if (rotation == Rot4.North)
-                    {
-                        offset = new Vector3(renderable.north.position.x, renderable.north.layer, renderable.north.position.y);
-                        size = renderable.north.size;
-                    }
-                    else if (rotation == Rot4.South)
-                    {
-                        offset = new Vector3(renderable.south.position.x, renderable.south.layer, renderable.south.position.y);
-                        size = renderable.south.size;
-                    }
-                    else if (rotation == Rot4.West)
-                    {
-                        offset = new Vector3(renderable.west.position.x, renderable.west.layer, renderable.west.position.y);
-                        size = renderable.west.size;
-                    }
-
-                    #endregion Direction / size / layering stuff
-
-                    string path = renderable.TexPath(pawn);
-                    AvaliGraphic graphic = Renders.GetTex(renderable, path);
-                    if (renderable.useColorSet != null)
-                    {
-                        raceColors graphics = rimValiRaceDef.graphics;
-                        List<Colors> colors = graphics.colorSets;
-                        TriColor_ColorGenerators generators = colors.First(x => x.name == graphics.skinColorSet).colorGenerator;
-
-                        Color color1 = Color.red;
-                        Color color2 = Color.green;
-                        Color color3 = Color.blue;
-
-                        string colorSetToUse = renderable.useColorSet;
-                        if (colorComp.colors.ContainsKey(colorSetToUse))
-                        {
-                            color1 = colorComp.colors[colorSetToUse].colorOne;
-                            color2 = colorComp.colors[colorSetToUse].colorTwo;
-                            color3 = colorComp.colors[colorSetToUse].colorThree;
-                        }
-                        else
-                        {
-                            Log.ErrorOnce("Pawn graphics does not contain color set: " + renderable.useColorSet + " for " + renderable.defName + ", going to fallback RGB colors. (These should look similar to your mask colors)", 1);
-                        }
-
-                        #region Rotting/Dessicated Graphic changes
-
-                        if (pawn.Dead)
-                        {
-                            if (mode == RotDrawMode.Dessicated)
-                            {
-                                if (pawnRenderer.graphics.dessicatedGraphic.Color != null)
-                                {
-                                    //                This will be changed eventually
-                                    color1 *= (pawnRenderer.graphics.rottingGraphic.Color);
-                                    color2 *= (pawnRenderer.graphics.rottingGraphic.Color);
-                                    color3 *= (pawnRenderer.graphics.rottingGraphic.Color);
-                                }
-                                if (renderable.dessicatedTex != null)
-                                {
-                                    path = renderable.dessicatedTex;
-                                }
-                            }
-                            else if (mode == RotDrawMode.Rotting)
-                            {
-                                if (pawnRenderer.graphics.rottingGraphic.color != null)
-                                {
-                                    color1 *= new Color(0.34f, 0.32f, 0.3f);
-                                    color2 *= new Color(0.34f, 0.32f, 0.3f);
-                                    color3 *= new Color(0.34f, 0.32f, 0.3f);
-                                }
-                                if (renderable.rottingTex != null)
-                                {
-                                    path = renderable.rottingTex;
-                                }
-                            }
-                        }
-
-                        #endregion Rotting/Dessicated Graphic changes
-
-                        graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(renderable.TexPath(pawn), AvaliShaderDatabase.Tricolor, size, color1, color2, color3);
-                        GenDraw.DrawMeshNowOrLater(graphic.MeshAt(rotation), vector + offset.RotatedBy(Mathf.Acos(Quaternion.Dot(Quaternion.identity, quaternion)) * 114.59156f),
-                        quaternion, graphic.MatAt(rotation), flags.FlagSet(PawnRenderFlags.DrawNow));
-                    }
-                    else
-                    {
-                        graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(renderable.TexPath(pawn), AvaliShaderDatabase.Tricolor, size, pawn.story.SkinColor);
-                        GenDraw.DrawMeshNowOrLater(graphic.MeshAt(rotation), vector + offset.RotatedBy(Mathf.Acos(Quaternion.Dot(Quaternion.identity, quaternion)) * 114.59156f),
-                         quaternion, graphic.MatAt(rotation),flags.FlagSet(PawnRenderFlags.DrawNow));
+                        colorOne *= new Color(0.34f, 0.32f, 0.3f);
+                        colorTwo *= new Color(0.34f, 0.32f, 0.3f);
+                        colorThree *= new Color(0.34f, 0.32f, 0.3f);
                     }
                 }
             }
-            else
+        }
+
+        public static void GetColors(ref Color colorOne, ref Color colorTwo, ref Color colorThree, ColorComp colorComp, RenderableDef def)
+        {
+            ColorSet set = colorComp.TryGetColorset(def.useColorSet);
+            if (set != null)
             {
+                colorOne = set.colorOne;
+                colorTwo = set.colorTwo;
+                colorThree = set.colorThree;
+            }
+        }
+
+        public static void RenderBodyParts(bool portrait, float angle, Vector3 vector, PawnRenderer pawnRenderer, Rot4 rotation, RotDrawMode mode, Pawn pawn, PawnRenderFlags flags)
+        {
+           
+
+            if (!(pawn.def is RimValiRaceDef))
                 return;
+
+            Quaternion quaternion = Quaternion.AngleAxis(angle, Vector3.up);
+
+            RimValiRaceDef rimValiRaceDef = (RimValiRaceDef)pawn.def;
+            HashSet<RenderableDef> renderables = rimValiRaceDef.GetRenderableDefsThatShow(pawn, mode, portrait);
+            renderables.AddRange((pawnRenderables.ContainsKey(pawn) ? pawnRenderables[pawn] : new List<RenderableDef>()));
+            
+            ColorComp colorComp = pawn.TryGetComp<ColorComp>();
+
+            foreach (RenderableDef renderable in renderables)
+            { 
+                Vector3 offset = GetPosition(renderable, rotation);
+                Vector2 size = GetSize(renderable, rotation);
+
+                string path = renderable.TexPath(pawn);
+                AvaliGraphic graphic = null;
+                if (renderable.useColorSet != null)
+                {
+
+                    Color color1 = Color.red;
+                    Color color2 = Color.green;
+                    Color color3 = Color.blue;
+
+                    GetColors(ref color1, ref color2, ref color3, colorComp, renderable);
+
+                    CalculateDeadColors(ref color1, ref color2, ref color3, pawnRenderer, mode);
+
+                    graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(renderable.TexPath(pawn), AvaliShaderDatabase.Tricolor, size, color1, color2, color3);
+                }
+                else
+                {
+                    graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(renderable.TexPath(pawn), AvaliShaderDatabase.Tricolor, size, pawn.story.SkinColor);
+                }
+                GenDraw.DrawMeshNowOrLater(graphic.MeshAt(rotation), vector + offset.RotatedBy(Mathf.Acos(Quaternion.Dot(Quaternion.identity, quaternion)) * 114.59156f),
+                   quaternion, graphic.MatAt(rotation), flags.FlagSet(PawnRenderFlags.DrawNow));
             }
         }
 
@@ -1712,18 +1620,9 @@ namespace RimValiCore.RVR
             {
                 return;
             }
-
-            void Render()
-            {
-                Pawn pawn = __instance.graphics.pawn;
-                bool portrait = flags.HasFlag(PawnRenderFlags.Portrait);
-                bool isStanding = pawn.GetPosture() == PawnPosture.Standing;
-
-                Rot4 rot = isStanding ? pawn.Rotation : __instance.LayingFacing();
-
-                RenderBodyParts(portrait, angle, rootLoc, __instance, rot, bodyDrawType, pawn,flags);
-            }
-            Render();
+            bool portrait = flags.HasFlag(PawnRenderFlags.Portrait);
+            Rot4 rot4 = portrait ? Rot4.South : bodyFacing;
+            RenderBodyParts(portrait, angle, rootLoc, __instance, rot4, bodyDrawType, __instance.graphics.pawn, flags);
         }
     }
 

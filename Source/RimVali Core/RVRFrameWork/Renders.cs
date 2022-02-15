@@ -22,20 +22,6 @@ namespace RimValiCore.RVR
         public static Dictionary<RenderableDef, List<RenderTex>> graphics = new Dictionary<RenderableDef, List<RenderTex>>();
         public static IEnumerable<RenderableDef> renderableDefs = DefDatabase<RenderableDef>.AllDefs;
 
-        public static AvaliGraphic GetTex(RenderableDef def, string path)
-        {
-            if (!graphics.ContainsKey(def))
-            {
-                Log.Warning($"{def.defName} not loaded! Returning null...");
-                return null;
-            }
-            if (!graphics[def].Any(x => x.path == path))
-            {
-                Log.Warning($"{path} is not in any loaded paths for {def.defName}! Returning null...");
-                return null;
-            }
-            return graphics[def].Find(x => x.path == path).tex;
-        }
 
         static Renders()
         {
