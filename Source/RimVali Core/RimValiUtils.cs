@@ -286,5 +286,60 @@ namespace RimValiCore
         }
 
         #endregion finding pawns of races and factions
+
+        #region rect extensions
+        /// <summary>
+        ///     Creates a copy of this <see cref="Rect" /> moved by a <see cref="Vector2" />
+        /// </summary>
+        /// <param name="rect">the <see cref="Rect" /> to move</param>
+        /// <param name="vec">the distance to move <paramref name="rect" /></param>
+        /// <returns>A copy of <paramref name="rect" />, moved by the distance specified in <paramref name="vec" /></returns>
+        public static Rect MoveRect(this Rect rect, Vector2 vec)
+        {
+            Rect newRect = new Rect(rect);
+            newRect.position += vec;
+            return newRect;
+        }
+
+        /// <summary>
+        ///     Devides a <see cref="Rect"/> <paramref name="rect"/> vertically into <see cref="int"/> <paramref name="times"/> amount of pieces
+        /// </summary>
+        /// <param name="rect">the initial <see cref="Rect"/> that is to be devided</param>
+        /// <param name="times">the amount of times it should be devided</param>
+        /// <returns>An <see cref="IEnumerable{T}"/> with <paramref name="times"/> amount of pieces </returns>
+        public static IEnumerable<Rect> DivideVertical(this Rect rect, int times)
+        {
+            for (int i = 0; i < times; i++)
+            {
+                yield return rect.TopPartPixels(rect.height / times).MoveRect(new Vector2(0f, rect.height / times * i));
+            }
+        }
+
+        /// <summary>
+        ///     Devides a <see cref="Rect"/> <paramref name="rect"/> horizontally into <see cref="int"/> <paramref name="times"/> amount of pieces
+        /// </summary>
+        /// <param name="rect">the initial <see cref="Rect"/> that is to be devided</param>
+        /// <param name="times">the amount of times it should be devided</param>
+        /// <returns>An <see cref="IEnumerable{T}"/> with <paramref name="times"/> amount of pieces </returns>
+        public static IEnumerable<Rect> DivideHorizontal(this Rect rect, int times)
+        {
+            for (int i = 0; i < times; i++)
+            {
+                yield return rect.LeftPartPixels(rect.width / times).MoveRect(new Vector2(rect.width / times * i, 0f));
+            }
+        }
+        #endregion
+
+        #region window helper
+        /// <summary>
+        ///     Resets the Text.Font, Text.Anchor and GUI.color setting
+        /// </summary>
+        public static void ResetTextAndColor()
+        {
+            Text.Font = GameFont.Small;
+            Text.Anchor = TextAnchor.UpperLeft;
+            GUI.color = Color.white;
+        }
+        #endregion
     }
 }
