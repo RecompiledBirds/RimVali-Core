@@ -1,5 +1,4 @@
-﻿using RimValiCore;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -7,7 +6,7 @@ using System.Text.RegularExpressions;
 using UnityEngine;
 using Verse;
 
-namespace Empire_Rewritten.Windows
+namespace RimValiCore.Windows
 {
     public class ColorPickerWindow : Window
     {
@@ -51,7 +50,7 @@ namespace Empire_Rewritten.Windows
         private Color selectedColor = Color.red;
         private Texture2D texture;
 
-        public ColorPickerWindow(Color color, Color[] colorHistory, Action<Color> setColor, Action<Color[]> setColorHistory)
+        public ColorPickerWindow(Action<Color> setColor, Action<Color[]> setColorHistory, Color color, Color[] colorHistory)
         {
             this.colorHistory = colorHistory;
             this.setColor = setColor;
@@ -63,7 +62,7 @@ namespace Empire_Rewritten.Windows
             preventCameraMotion = true;
             onlyOneOfTypeAllowed = true;
 
-            rectMain = new Rect(rectFull).ContractedBy(25f);
+            rectMain = rectFull.ContractedBy(25f);
             rectSaturationValueSquare = new Rect(rectMain.position, new Vector2(ColorComponentHeight, ColorComponentHeight));
             rectHueBar = rectSaturationValueSquare.MoveRect(new Vector2(rectSaturationValueSquare.width + 10f, 0f)).LeftPartPixels(HueBarWidth);
             rectColorInput = rectHueBar.MoveRect(new Vector2(rectHueBar.width + 10f, 0f));
