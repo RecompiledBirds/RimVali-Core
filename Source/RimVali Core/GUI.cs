@@ -111,7 +111,7 @@ namespace RimValiCore
                     Rect tempRect = RectColorFields[pos];
                     Rect colorBox = tempRect.RightPartPixels(100f);
                     Widgets.Label(tempRect.RightPartPixels(200f), name);
-                    Widgets.DrawBoxSolid(colorBox, kvp.Value.Colors[i]); //Colors need to be connected to Avali somehow
+                    Widgets.DrawBoxSolid(colorBox, kvp.Value.Colors[i]);
                     Widgets.DrawHighlightIfMouseover(colorBox);
                     if (Widgets.ButtonInvisible(colorBox))
                     {
@@ -122,6 +122,8 @@ namespace RimValiCore
                             Color[] colors = kvp.Value.Colors;
                             colors[k] = color;
                             kvp.Value.Colors = colors;
+
+                            SelectedPawn.Drawer.renderer.graphics.ResolveAllGraphics();
                         }
                         Find.WindowStack.Add(new ColorPickerWindow(setColor, (_0) => { }, kvp.Value.Colors[k], new Color[10]));
                     }
