@@ -339,7 +339,7 @@ namespace RimValiCore
         {
             Rect newRect = new Rect(rect);
 
-            newRect.x += amount;
+            newRect.y += amount;
             newRect.height -= amount * 2;
 
             return newRect;
