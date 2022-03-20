@@ -344,6 +344,22 @@ namespace RimValiCore
 
             return newRect;
         }
+
+        /// <summary>
+        ///     Contracts a <see cref="Rect"/> horizontally
+        /// </summary>
+        /// <param name="rect">the <paramref name="rect"/> to be contracted</param>
+        /// <param name="amount">the <see cref="int"/> <paramref name="amount"/> by which the rect is to be contracted by</param>
+        /// <returns>A new <see cref="Rect"/> that is contracted by the <see cref="int"/> <paramref name="amount"/></returns>
+        public static Rect ContractHorizontally(this Rect rect, int amount)
+        {
+            Rect newRect = new Rect(rect);
+
+            newRect.x += amount;
+            newRect.width -= amount * 2;
+
+            return newRect;
+        }
         #endregion
 
         #region window helper
