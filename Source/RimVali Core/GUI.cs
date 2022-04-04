@@ -175,16 +175,41 @@ namespace RimValiCore
                     }
                     else
                     {
-                        if (HasOpenColorField)
-                        {
-                            SoundDefOf.TabClose.PlayOneShotOnCamera();
-                        }
+                        if (HasOpenColorField) SoundDefOf.TabClose.PlayOneShotOnCamera();
 
                         OpenColorField = pos;
                         SoundDefOf.TabOpen.PlayOneShotOnCamera();
                     }
 
                     CalcInnerRect();
+                }
+
+                if (pos == OpenColorField)
+                {
+                    for (int i = 0; i < 3; i++)
+                    {
+                        float indent = 15f;
+
+                        string colorName = $"##Color_{i}";
+                        Rect rectColorField = rectTemp.MoveRect(new Vector2(indent, RectColorFieldHeight * (i + 1)));
+                        Rect rectColorLabel = rectColorField.RightPartPixels(rectColorField.width - 5f);
+                        Rect rectColorColor = rectColorLabel.RightPartPixels(rectColorLabel.width - 100f - 5f);
+
+                        rectColorField.width -= indent;
+
+                        Widgets.DrawLightHighlight(rectColorField);
+                        Widgets.DrawBoxSolidWithOutline(rectColorColor, kvp.Value.Colors[i], new Color(255f, 255f, 255f, 0.5f), 3);
+                        Widgets.DrawHighlightIfMouseover(rectColorColor);
+                        Widgets.DrawBox(rectColorField);
+                        Widgets.Label(rectColorLabel, colorName);
+                        
+                        if (Widgets.ButtonInvisible(rectColorColor))
+                        {
+                            int k = i; //save the current i to k so that the value of i isn't overridden during the for loop
+                            Find.WindowStack.Add(new ColorPickerWindow(color => SetColor(color, kvp, k), (_0) => { }, kvp.Value.Colors[k], new Color[10]));
+                        }
+                        TooltipHandler.TipRegion(rectColorColor, $"##Change {colorName}");
+                    }
                 }
 
                 RimValiUtility.ResetTextAndColor();
@@ -239,40 +264,6 @@ namespace RimValiCore
                 }
 
                 SelectedPawn.Name = new NameTriple(first, nick, last);
-            }
-        }
-
-        private void DrawColorSelection()
-        {
-            int pos = 0;
-            foreach (KeyValuePair<string, ColorSet> kvp in colorSets)
-            {
-                for (int i = 0; i < 3; i++)
-                {
-                    string name = $"<b>##{kvp.Key} color Nr.{i}:</b>";
-
-                    Rect tempRect = RectColorFields[pos];
-                    Rect colorBox = tempRect.RightPartPixels(100f);
-
-                    Text.Anchor = TextAnchor.MiddleLeft;
-                    Text.Font = GameFont.Medium;
-
-                    Widgets.Label(tempRect.RightPartPixels(300f), name);
-
-                    RimValiUtility.ResetTextAndColor();
-
-                    Widgets.DrawBoxSolidWithOutline(colorBox, kvp.Value.Colors[i], new Color(255f, 255f, 255f, 0.5f), 3);
-
-                    Widgets.DrawHighlightIfMouseover(colorBox);
-                    if (Widgets.ButtonInvisible(colorBox))
-                    {
-                        int k = i; //save the current i to k so that the value of i isn't overridden during the for loop
-                        Find.WindowStack.Add(new ColorPickerWindow(color => SetColor(color, kvp, k), (_0) => { }, kvp.Value.Colors[k], new Color[10]));
-                    }
-                    TooltipHandler.TipRegion(colorBox, $"##Change {name}");
-
-                    pos++;
-                }
             }
         }
 
