@@ -20,14 +20,12 @@ namespace RimValiCore
         [HarmonyPostfix]
         public static void Patch()
         {
-            bool button = Widgets.ButtonText(new Rect(new Vector2(870, 0), new Vector2(100, 30)), "##Edit pawn");
+            bool button = Widgets.ButtonText(new Rect(new Vector2(870, 0), new Vector2(100, 30)), "RVC_EditPawn".Translate());
             if (button)
             {
                 Find.WindowStack.Add(new EditorWindow());
             }
         }
-
-       
     }
 
     public class EditorWindow : Window
@@ -46,6 +44,7 @@ namespace RimValiCore
         private readonly Rect[] RectNamingRects;
         private readonly Rect RectColoringPart;
         private readonly Rect RectPawnBig;
+        private readonly Rect RectInfoBox;
 
         private Dictionary<string, ColorSet> colorSets = new Dictionary<string, ColorSet>();
         private Rect[] RectColorFields;
@@ -88,8 +87,13 @@ namespace RimValiCore
             CalcInnerRect();
 
             RectPawnBig = RectColoringPart.LeftPartPixels(RectEditSections[0].height);
+            RectInfoBox = RectPawnBig.MoveRect(new Vector2(RectPawnBig.width + 5f, 0f)).ContractedBy(5f);
+            RectInfoBox.width = RectColoringPart.width - RectPawnBig.width - RectColorSelectOuter.width - 20f;
         }
 
+        /// <summary>
+        /// Recalculates the height and width of the inner scroll view for the color picking part
+        /// </summary>
         private void CalcInnerRect()
         {
             List<Rect> rectList = new List<Rect>();
@@ -146,13 +150,32 @@ namespace RimValiCore
         {
             DrawPawnSelectionArea();
             DrawPawn();
-            //DrawColorSelection();
+            DrawColorSelection();
+            DrawNameEdit();
+            DrawInfoBox();
+        }
 
+        /// <summary>
+        /// Creates a small box with information for the user
+        /// </summary>
+        private void DrawInfoBox()
+        {
+            Widgets.DrawHighlight(RectInfoBox);
+            Widgets.DrawBox(RectInfoBox, 2);
+            Widgets.Label(RectInfoBox.ContractedBy(2f + 5f), $"{"RVC_Tutorial".Translate($"<color=green>{SelectedPawn.def.defName}</color>")}" +
+                $"\n\n<color=orange>{"RVC_WarningColorEdit".Translate()}</color>");
+        }
+
+        /// <summary>
+        /// Draws the color selection ScrollView
+        /// </summary>
+        private void DrawColorSelection()
+        {
             Widgets.BeginScrollView(RectColorSelectOuter, ref ColorSelectorScroll, RectColorSelectInner);
             int pos = 0;
             foreach (KeyValuePair<string, ColorSet> kvp in colorSets)
             {
-                string name = $"##{kvp.Key}";
+                string name = $"{SelectedPawn.def.defName}_ColorSet_{kvp.Key}".Translate();
                 Rect rectTemp = RectColorFields[pos];
                 Rect rectName = rectTemp;
                 Rect rectExpandCollapseIcon = rectTemp.LeftPartPixels(rectTemp.height);
@@ -164,7 +187,7 @@ namespace RimValiCore
                 Widgets.DrawBox(rectName, 2);
                 Widgets.Label(rectName.RightPartPixels(rectName.width - rectTemp.height - 5f), name);
                 Widgets.DrawTextureFitted(rectExpandCollapseIcon.ContractedBy(11f), pos == OpenColorField ? TexButton.Collapse : TexButton.Reveal, 1f);
-                
+
                 if (Widgets.ButtonInvisible(rectTemp))
                 {
                     if (pos == OpenColorField)
@@ -189,25 +212,26 @@ namespace RimValiCore
                     {
                         float indent = 15f;
 
-                        string colorName = $"##Color_{i}";
+                        string colorName = $"{SelectedPawn.def.defName}_{kvp.Key}_{(Count)i}".Translate();
                         Rect rectColorField = rectTemp.MoveRect(new Vector2(indent, RectColorFieldHeight * (i + 1)));
-                        Rect rectColorLabel = rectColorField.RightPartPixels(rectColorField.width - 5f);
-                        Rect rectColorColor = rectColorLabel.RightPartPixels(rectColorLabel.width - 100f - 5f);
+                        rectColorField.width -= indent + 1f;
 
-                        rectColorField.width -= indent;
+                        Rect rectColorLabel = rectColorField.RightPartPixels(rectColorField.width - 5f);
+                        Rect rectColorColor = rectColorField.RightPartPixels(rectColorLabel.width - 100f - 5f);
+
 
                         Widgets.DrawLightHighlight(rectColorField);
                         Widgets.DrawBoxSolidWithOutline(rectColorColor, kvp.Value.Colors[i], new Color(255f, 255f, 255f, 0.5f), 3);
                         Widgets.DrawHighlightIfMouseover(rectColorColor);
                         Widgets.DrawBox(rectColorField);
                         Widgets.Label(rectColorLabel, colorName);
-                        
+
                         if (Widgets.ButtonInvisible(rectColorColor))
                         {
                             int k = i; //save the current i to k so that the value of i isn't overridden during the for loop
                             Find.WindowStack.Add(new ColorPickerWindow(color => SetColor(color, kvp, k), (_0) => { }, kvp.Value.Colors[k], new Color[10]));
                         }
-                        TooltipHandler.TipRegion(rectColorColor, $"##Change {colorName}");
+                        TooltipHandler.TipRegion(rectColorColor, $"RVC_EditColor".Translate());
                     }
                 }
 
@@ -218,10 +242,11 @@ namespace RimValiCore
 
             RimValiUtility.ResetTextAndColor();
             Widgets.EndScrollView();
-
-            DrawNameEdit();
         }
 
+        /// <summary>
+        /// Draws the name editor fields
+        /// </summary>
         private void DrawNameEdit()
         {
             if (SelectedPawn.Name is NameTriple name)
@@ -264,6 +289,12 @@ namespace RimValiCore
             }
         }
 
+        /// <summary>
+        /// Sets a new <see cref="Color"/> <paramref name="color"/> into the given <see cref="ColorSet"/> provided in the <see cref="KeyValuePair"/> <paramref name="kvp"/> into the <paramref name="index"/>
+        /// </summary>
+        /// <param name="color">The new <see cref="Color"/></param>
+        /// <param name="kvp">A <see cref="KeyValuePair"/> with <see cref="string"/> and <see cref="ColorSet"/></param>
+        /// <param name="index"></param>
         private void SetColor(Color color, KeyValuePair<string, ColorSet> kvp, int index)
         {
             Color[] colors = kvp.Value.Colors;
@@ -273,6 +304,9 @@ namespace RimValiCore
             SelectedPawn.Drawer.renderer.graphics.ResolveAllGraphics();
         }
 
+        /// <summary>
+        /// Draws an image of the selected Pawn
+        /// </summary>
         private void DrawPawn()
         {
             Widgets.DrawBox(RectColoringPart);
@@ -280,6 +314,9 @@ namespace RimValiCore
             GUI.DrawTexture(RectPawnBig, image, ScaleMode.StretchToFill);
         }
 
+        /// <summary>
+        /// Draws a list of pawns that can be edited, highlighting the currently selected pawn yellow
+        /// </summary>
         private void DrawPawnSelectionArea()
         {
             Widgets.BeginScrollView(RectPawnSelectOuter, ref PawnSelectorScroll, RectPawnSelectInner);
@@ -333,6 +370,16 @@ namespace RimValiCore
 
             GUI.EndGroup();
             Widgets.EndScrollView();
+        }
+
+        /// <summary>
+        /// Used to differentiate the language keys
+        /// </summary>
+        private enum Count
+        {
+            First,
+            Second,
+            Third
         }
     }
 }
