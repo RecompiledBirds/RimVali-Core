@@ -9,6 +9,7 @@ using UnityEngine;
 using Verse;
 using HarmonyLib;
 using RimValiCore.RVR;
+using Verse.Sound;
 
 namespace RimValiCore
 {
@@ -32,13 +33,15 @@ namespace RimValiCore
 
     public class EditorWindow : Window
     {
+        private const float RectColorFieldHeight = 40f;
+
         private readonly List<Pawn> pawns = Find.GameInitData.startingAndOptionalPawns;
-        private Pawn selectedPawn;
 
         private readonly Rect RectWindowMain = new Rect(0f, 0f, 1000f, 400f);
         private readonly Rect RectWindowSub;
         private readonly Rect RectWindowEdit;
         private readonly Rect RectPawnSelectOuter;
+        private readonly Rect RectColorSelectOuter;
 
         private readonly Rect[] RectEditSections;
         private readonly Rect[] RectNamingRects;
@@ -47,8 +50,12 @@ namespace RimValiCore
 
         private Dictionary<string, ColorSet> colorSets = new Dictionary<string, ColorSet>();
         private Rect[] RectColorFields;
+        private Rect RectColorSelectInner;
         private Rect RectPawnSelectInner;
         private Vector2 PawnSelectorScroll;
+        private Vector2 ColorSelectorScroll;
+
+        private Pawn selectedPawn;
 
         public override Vector2 InitialSize => RectWindowMain.size;
 
@@ -57,6 +64,8 @@ namespace RimValiCore
         public EditorWindow()
         {
             doCloseX = true;
+            closeOnClickedOutside = true;
+
             SelectedPawn = Find.GameInitData.startingAndOptionalPawns[0];
 
             RectWindowSub = RectWindowMain.ContractedBy(25f);
@@ -74,23 +83,46 @@ namespace RimValiCore
             RectEditSections = RectWindowEdit.DivideVertical(2).ToArray();
             RectColoringPart = RectEditSections[0];
             RectNamingRects = RectEditSections[1].TopPartPixels(39f).ContractVertically(5).DivideHorizontal(3).ToArray();
-            ResetColorFields();
+            RectColorSelectOuter = RectColoringPart.RightPartPixels(300f).ContractVertically(5);
+            RectColorSelectOuter.width -= 5;
+
+            CalcInnerRect();
 
             RectPawnBig = RectColoringPart.LeftPartPixels(RectEditSections[0].height);
         }
 
-        private void ResetColorFields()
+        private void CalcInnerRect()
         {
-            RectColorFields = RectColoringPart.DivideVertical(colorSets.Count * 3).ToArray();
+            List<Rect> rectList = new List<Rect>();
 
-            for (int i = 0; i < RectColorFields.Length; i++)
+            RectColorSelectInner = new Rect(RectColorSelectOuter)
             {
-                Rect rect = RectColorFields[i];
-                rect.height -= 5f;
+                height = (colorSets.Count) * RectColorFieldHeight - 5f
+            };
+
+            if (HasOpenColorField) RectColorSelectInner.height += RectColorFieldHeight * 3f;
+
+            if (RectColorSelectInner.height > RectColorSelectOuter.height) RectColorSelectInner.width -= 17f;
+
+            RectColorSelectInner.height += 5f;
+
+            for (int i = 0; i < colorSets.Count; i++)
+            {
+                Vector2 mod = new Vector2(0f, RectColorFieldHeight * i + ((HasOpenColorField && (i > OpenColorField)) ? RectColorFieldHeight * 3f : 0f));
+                Rect tempRect = RectColorSelectInner.TopPartPixels(RectColorFieldHeight).MoveRect(mod);
+                tempRect.height -= 5f;
+
+                rectList.Add(tempRect);
             }
+
+            RectColorFields = rectList.ToArray();
         }
 
-        public Pawn SelectedPawn
+        private bool HasOpenColorField => OpenColorField > -1;
+
+        private int OpenColorField { get; set; }
+
+        private Pawn SelectedPawn
         {
             get => selectedPawn;
             set
@@ -106,7 +138,8 @@ namespace RimValiCore
                     colorSets = new Dictionary<string, ColorSet>();
                 }
 
-                ResetColorFields();
+                OpenColorField = -1;
+                CalcInnerRect();
             }
         }
 
@@ -114,7 +147,54 @@ namespace RimValiCore
         {
             DrawPawnSelectionArea();
             DrawPawn();
-            DrawColorSelection();
+            //DrawColorSelection();
+
+            Widgets.BeginScrollView(RectColorSelectOuter, ref ColorSelectorScroll, RectColorSelectInner);
+            int pos = 0;
+            foreach (KeyValuePair<string, ColorSet> kvp in colorSets)
+            {
+                string name = $"##{kvp.Key}";
+                Rect rectTemp = RectColorFields[pos];
+                Rect rectName = rectTemp;
+                Rect rectExpandCollapseIcon = rectTemp.LeftPartPixels(rectTemp.height);
+
+                Text.Anchor = TextAnchor.MiddleLeft;
+
+                Widgets.DrawLightHighlight(rectName);
+                Widgets.DrawHighlightIfMouseover(rectTemp);
+                Widgets.DrawBox(rectName, 2);
+                Widgets.Label(rectName.RightPartPixels(rectName.width - rectTemp.height - 5f), name);
+                Widgets.DrawTextureFitted(rectExpandCollapseIcon.ContractedBy(11f), pos == OpenColorField ? TexButton.Collapse : TexButton.Reveal, 1f);
+                
+                if (Widgets.ButtonInvisible(rectTemp))
+                {
+                    if (pos == OpenColorField)
+                    {
+                        OpenColorField = -1;
+                        SoundDefOf.TabClose.PlayOneShotOnCamera();
+                    }
+                    else
+                    {
+                        if (HasOpenColorField)
+                        {
+                            SoundDefOf.TabClose.PlayOneShotOnCamera();
+                        }
+
+                        OpenColorField = pos;
+                        SoundDefOf.TabOpen.PlayOneShotOnCamera();
+                    }
+
+                    CalcInnerRect();
+                }
+
+                RimValiUtility.ResetTextAndColor();
+
+                pos++;
+            }
+
+            RimValiUtility.ResetTextAndColor();
+            Widgets.EndScrollView();
+
             DrawNameEdit();
 
             //RVGUI.Draw();
@@ -136,6 +216,7 @@ namespace RimValiCore
             }
             else
             {
+                //Fixes names that aren't NameTriple based by converting them into one
                 string[] fullName = SelectedPawn.Name.ToString().Split(' ');
 
                 string first = fullName[0];
