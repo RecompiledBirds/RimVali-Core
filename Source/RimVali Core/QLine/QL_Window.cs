@@ -11,7 +11,20 @@ namespace RimValiCore.QLine
 {
     public class OpenGUIWindow : MainButtonWorker
     {
+        private static bool hasChecked = false;
+        private static bool hasQuests = false;
         static bool isOpen = false;
+
+        public override bool Visible
+        {
+            get
+            {
+                if (!hasChecked)
+                    hasQuests = DefDatabase<QL_Quest>.DefCount > 0;
+                return hasQuests;
+            }
+        }
+
         public override void Activate()
         {
             if (!isOpen)
