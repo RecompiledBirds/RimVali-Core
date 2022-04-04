@@ -190,6 +190,20 @@ namespace RimValiCore.RVR
         public Color colorThree = Color.white;
         public bool dyeable = true;
 
+        public Color[] Colors
+        {
+            set
+            {
+                colorOne = value[0];
+                colorTwo = value[1];
+                colorThree = value[2];
+            }
+            get
+            {
+                return new Color[] { colorOne, colorTwo, colorThree };
+            }
+        }
+
         public ColorSet()
         {
         }

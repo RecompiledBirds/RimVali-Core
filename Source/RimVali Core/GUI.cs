@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using RimValiCore.Windows;
 using System.Text;
 using System.Threading.Tasks;
 using RimWorld;
 using UnityEngine;
 using Verse;
 using HarmonyLib;
+using RimValiCore.RVR;
+
 namespace RimValiCore
 {
     
@@ -16,7 +19,7 @@ namespace RimValiCore
         [HarmonyPostfix]
         public static void Patch()
         {
-            bool button = Widgets.ButtonText(new Rect(new Vector2(870, 0), new Vector2(100, 30)),"Edit pawn");
+            bool button = Widgets.ButtonText(new Rect(new Vector2(870, 0), new Vector2(100, 30)), "##Edit pawn");
             if (button)
             {
                 RVGUI.FindFirstPawn();
@@ -29,16 +32,231 @@ namespace RimValiCore
 
     public class EditorWindow : Window
     {
-        public override Vector2 InitialSize
+        private readonly List<Pawn> pawns = Find.GameInitData.startingAndOptionalPawns;
+        private Pawn selectedPawn;
+
+        private readonly Rect RectWindowMain = new Rect(0f, 0f, 1000f, 400f);
+        private readonly Rect RectWindowSub;
+        private readonly Rect RectWindowEdit;
+        private readonly Rect RectPawnSelectOuter;
+
+        private readonly Rect[] RectEditSections;
+        private readonly Rect[] RectColorFields;
+        private readonly Rect[] RectNamingRects;
+        private readonly Rect RectColoringPart;
+        private readonly Rect RectPawnBig;
+
+        private Dictionary<string, ColorSet> colorSets = new Dictionary<string, ColorSet>();
+        private Rect RectPawnSelectInner;
+        private Vector2 PawnSelectorScroll;
+
+        public override Vector2 InitialSize => RectWindowMain.size;
+
+        protected override float Margin => 0f;
+
+        public EditorWindow()
         {
-            get
+            doCloseX = true;
+            SelectedPawn = Find.GameInitData.startingAndOptionalPawns[0];
+
+            RectWindowSub = RectWindowMain.ContractedBy(25f);
+            RectPawnSelectOuter = RectWindowSub.LeftPartPixels(172f);
+            RectPawnSelectInner = RectPawnSelectOuter.LeftPartPixels(172f - 17f);
+
+            RectPawnSelectInner.height = 55f * pawns.Count;
+            if (RectPawnSelectInner.height < RectPawnSelectOuter.height)
             {
-                return new Vector2(1000, 1000);
+                RectPawnSelectInner.width += 17f;
+            }
+
+            RectWindowEdit = RectWindowSub.RightPartPixels(RectWindowSub.width - RectPawnSelectOuter.width - 5f);
+
+            RectEditSections = RectWindowEdit.DivideVertical(2).ToArray();
+            RectColoringPart = RectEditSections[0];
+            RectNamingRects = RectEditSections[1].TopPartPixels(39f).ContractVertically(5).DivideHorizontal(3).ToArray();
+            RectColorFields = RectColoringPart.DivideVertical(colorSets.Count * 3).ToArray();
+
+            for (int i = 0; i < RectColorFields.Length; i++)
+            {
+                Rect rect = RectColorFields[i];
+                rect.height -= 5f;
+            }
+
+            RectPawnBig = RectColoringPart.LeftPartPixels(RectEditSections[0].height);
+        }
+
+        public Pawn SelectedPawn
+        {
+            get => selectedPawn;
+            set
+            {
+                selectedPawn = value;
+
+                if (SelectedPawn.def is RimValiRaceDef && SelectedPawn.GetComp<ColorComp>() is ColorComp comp)
+                {
+                    colorSets = comp.colors;
+                }
+                else
+                {
+                    colorSets = new Dictionary<string, ColorSet>();
+                }
             }
         }
-        public override void DoWindowContents(Rect inRect)
+
+        public override void DoWindowContents(Rect _)
         {
-            RVGUI.Draw();
+            DrawPawnSelectionArea();
+            DrawPawn();
+            DrawColorSelection();
+            DrawNameEdit();
+
+            //RVGUI.Draw();
+        }
+
+        private void DrawNameEdit()
+        {
+            if (SelectedPawn.Name is NameTriple name)
+            {
+                string first = Widgets.TextField(RectNamingRects[0], name.First, 25, CharacterCardUtility.ValidNameRegex);
+
+                if (name.First.Equals(name.Nick) || name.Last.Equals(name.Nick)) GUI.color = new Color(255f, 255f, 255f, 0.4f);
+                string nick = Widgets.TextField(RectNamingRects[1].ContractHorizontally(5), name.Nick, 25, CharacterCardUtility.ValidNameRegex);
+                GUI.color = Color.white;
+
+                string last = Widgets.TextField(RectNamingRects[2], name.Last, 25, CharacterCardUtility.ValidNameRegex);
+
+                SelectedPawn.Name = new NameTriple(first, nick, last);
+            }
+            else
+            {
+                string[] fullName = SelectedPawn.Name.ToString().Split(' ');
+
+                string first = fullName[0];
+                string nick = "";
+                string last = "";
+
+                if (fullName.Length > 1)
+                {
+                    last = fullName[fullName.Length - 1];
+
+                    for (int i = 1; i < fullName.Length - 1; i++)
+                    {
+                        nick += $"{fullName[i]} ";
+                    }
+
+                    if (nick.EndsWith(" "))
+                    {
+                        nick.Substring(0, nick.Length - 1);
+                    }
+                }
+
+                SelectedPawn.Name = new NameTriple(first, nick, last);
+            }
+        }
+
+        private void DrawColorSelection()
+        {
+            int pos = 0;
+            foreach (KeyValuePair<string, ColorSet> kvp in colorSets)
+            {
+                for (int i = 0; i < 3; i++)
+                {
+                    string name = $"<b>##{kvp.Key} color Nr.{i}:</b>";
+
+                    Rect tempRect = RectColorFields[pos];
+                    Rect colorBox = tempRect.RightPartPixels(100f);
+
+                    Text.Anchor = TextAnchor.MiddleLeft;
+                    Text.Font = GameFont.Medium;
+
+                    Widgets.Label(tempRect.RightPartPixels(300f), name);
+
+                    RimValiUtility.ResetTextAndColor();
+
+                    Widgets.DrawBoxSolidWithOutline(colorBox, kvp.Value.Colors[i], new Color(255f, 255f, 255f, 0.5f), 3);
+
+                    Widgets.DrawHighlightIfMouseover(colorBox);
+                    if (Widgets.ButtonInvisible(colorBox))
+                    {
+                        int k = i; //save the current i to k so that the value of i isn't overridden during the for loop
+                        Find.WindowStack.Add(new ColorPickerWindow(color => SetColor(color, kvp, k), (_0) => { }, kvp.Value.Colors[k], new Color[10]));
+                    }
+                    TooltipHandler.TipRegion(colorBox, $"##Change {name}");
+
+                    pos++;
+                }
+            }
+        }
+
+        private void SetColor(Color color, KeyValuePair<string, ColorSet> kvp, int index)
+        {
+            Color[] colors = kvp.Value.Colors;
+            colors[index] = color;
+            kvp.Value.Colors = colors;
+
+            SelectedPawn.Drawer.renderer.graphics.ResolveAllGraphics();
+        }
+
+        private void DrawPawn()
+        {
+            Widgets.DrawBox(RectColoringPart);
+            RenderTexture image = PortraitsCache.Get(SelectedPawn, new Vector2(1024f, 1024f), Rot4.South, new Vector3(0f, 0f, 0.14f), cameraZoom: 2f, supersample: false);
+            GUI.DrawTexture(RectPawnBig, image, ScaleMode.StretchToFill);
+        }
+
+        private void DrawPawnSelectionArea()
+        {
+            Widgets.BeginScrollView(RectPawnSelectOuter, ref PawnSelectorScroll, RectPawnSelectInner);
+            GUI.BeginGroup(RectPawnSelectInner);
+
+            for (int i = 0; i < pawns.Count; i++)
+            {
+                Pawn pawn = pawns[i];
+                Rect rectPawnBox = new Rect(5f, 55f * i, RectPawnSelectInner.width - 10f, 50f);
+                Rect rectPawnContent = rectPawnBox.ContractedBy(5f);
+                rectPawnContent.height += 5f;
+
+                Rect rectPawnPortraitArea = rectPawnContent.RightPartPixels(rectPawnContent.height);
+
+                RenderTexture image = PortraitsCache.Get(pawn, new Vector2(256f, 256f), Rot4.South, new Vector3(0f, 0f, 0.25f), stylingStation: true, cameraZoom: 2.5f, supersample: false);
+
+                Widgets.DrawBox(rectPawnBox);
+                Widgets.DrawHighlight(rectPawnBox);
+                Widgets.DrawHighlightIfMouseover(rectPawnBox);
+
+                Text.Font = GameFont.Tiny;
+
+                if (pawn.Name is NameTriple name && name.Nick is string nick)
+                {
+                    Widgets.Label(rectPawnContent, nick);
+                }
+                else
+                {
+                    Widgets.Label(rectPawnContent, pawn.Name.ToString());
+                }
+
+                Text.Anchor = TextAnchor.LowerLeft;
+
+                Widgets.Label(rectPawnContent.MoveRect(new Vector2(0f, -5f)), pawn.story.TitleCap);
+
+                GUI.color = new Color(1f, 1f, 1f, 0.2f);
+                Widgets.DrawTextureFitted(rectPawnPortraitArea, image, 1f);
+
+                RimValiUtility.ResetTextAndColor();
+
+                if (SelectedPawn == pawn)
+                {
+                    Widgets.DrawBoxSolid(rectPawnBox, new Color(181f, 141f, 0f, 0.2f));
+                }
+
+                if (Widgets.ButtonInvisible(rectPawnBox))
+                {
+                    SelectedPawn = pawn;
+                }
+            }
+
+            GUI.EndGroup();
+            Widgets.EndScrollView();
         }
     }
 
