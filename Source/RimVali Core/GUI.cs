@@ -41,12 +41,12 @@ namespace RimValiCore
         private readonly Rect RectPawnSelectOuter;
 
         private readonly Rect[] RectEditSections;
-        private readonly Rect[] RectColorFields;
         private readonly Rect[] RectNamingRects;
         private readonly Rect RectColoringPart;
         private readonly Rect RectPawnBig;
 
         private Dictionary<string, ColorSet> colorSets = new Dictionary<string, ColorSet>();
+        private Rect[] RectColorFields;
         private Rect RectPawnSelectInner;
         private Vector2 PawnSelectorScroll;
 
@@ -74,6 +74,13 @@ namespace RimValiCore
             RectEditSections = RectWindowEdit.DivideVertical(2).ToArray();
             RectColoringPart = RectEditSections[0];
             RectNamingRects = RectEditSections[1].TopPartPixels(39f).ContractVertically(5).DivideHorizontal(3).ToArray();
+            ResetColorFields();
+
+            RectPawnBig = RectColoringPart.LeftPartPixels(RectEditSections[0].height);
+        }
+
+        private void ResetColorFields()
+        {
             RectColorFields = RectColoringPart.DivideVertical(colorSets.Count * 3).ToArray();
 
             for (int i = 0; i < RectColorFields.Length; i++)
@@ -81,8 +88,6 @@ namespace RimValiCore
                 Rect rect = RectColorFields[i];
                 rect.height -= 5f;
             }
-
-            RectPawnBig = RectColoringPart.LeftPartPixels(RectEditSections[0].height);
         }
 
         public Pawn SelectedPawn
@@ -100,6 +105,8 @@ namespace RimValiCore
                 {
                     colorSets = new Dictionary<string, ColorSet>();
                 }
+
+                ResetColorFields();
             }
         }
 
