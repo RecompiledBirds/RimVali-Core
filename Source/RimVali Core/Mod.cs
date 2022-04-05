@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using Verse;
 
@@ -10,6 +11,10 @@ namespace RimValiCore
         public bool smartPawnScaling;
         public int textureSizeScaling;
         public int smallestTexSize;
+        public List<Color> savedColors = new List<Color>()
+        {
+            Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black
+        };
 
         public RVCModSettings()
         {
@@ -25,6 +30,7 @@ namespace RimValiCore
             Scribe_Values.Look(ref smartPawnScaling, "SmartScale", true, false);
             Scribe_Values.Look(ref textureSizeScaling, "texSS", 10, false);
             Scribe_Values.Look(ref smallestTexSize, "STS", 200, false);
+            Scribe_Collections.Look(ref savedColors, "savedColors");
             base.ExposeData();
         }
     }

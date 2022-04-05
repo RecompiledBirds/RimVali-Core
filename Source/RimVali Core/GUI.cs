@@ -229,7 +229,7 @@ namespace RimValiCore
                         if (Widgets.ButtonInvisible(rectColorColor))
                         {
                             int k = i; //save the current i to k so that the value of i isn't overridden during the for loop
-                            Find.WindowStack.Add(new ColorPickerWindow(color => SetColor(color, kvp, k), (_0) => { }, kvp.Value.Colors[k], new Color[10]));
+                            Find.WindowStack.Add(new ColorPickerWindow(color => SetColor(color, kvp, k), (newSavedColors) => { RimValiCoreMod.Settings.savedColors = newSavedColors.ToList(); RimValiCoreMod.Settings.Write(); }, kvp.Value.Colors[k], RimValiCoreMod.Settings.savedColors.ToArray()));
                         }
                         TooltipHandler.TipRegion(rectColorColor, $"RVC_EditColor".Translate());
                     }
