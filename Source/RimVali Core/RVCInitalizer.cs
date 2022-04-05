@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RimValiCore.CompatiblityPatches;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -19,7 +20,8 @@ namespace RimValiCore
         HealableMats,
         Floors,
         QLine,
-        Loaded
+        Compatiblity,
+        Loaded,
     }
     [StaticConstructorOnStartup]
     public static class RVCInitalizer
@@ -136,6 +138,10 @@ namespace RimValiCore
             stage = RimValiCore_Stage.Floors;
             FloorConstructor.Initalize();
             Log.Message("[RimVali Core]: Constructed floors.");
+            stage = RimValiCore_Stage.Compatiblity;
+            Log.Message("[RimVali Core]: Doing compatiblity patches!");
+            RVCCompatiblityPatches.DoPatches();
+            Log.Message("[RimVali Core]: Finished compatiblity patches.");
             Log.Message("[RimVali Core]: Asking QLine to tell a story.");
             stage = RimValiCore_Stage.QLine;
             //todo

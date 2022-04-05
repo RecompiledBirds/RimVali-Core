@@ -38,6 +38,12 @@
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="2DBeds\BedComp.cs" />
+    <Compile Include="2DBeds\HarmonyPatches.cs" />
+    <Compile Include="2DBeds\RenderData.cs" />
+    <Compile Include="2DBeds\RenderPatch.cs" />
+    <Compile Include="ColorPicker.cs" />
+    <Compile Include="CompatiblityPatches\Patcher.cs" />
     <Compile Include="FloorConstructor.cs" />
     <Compile Include="GraphicClasses\BaseContent.cs" />
     <Compile Include="GraphicClasses\MaterialAllocator.cs" />
@@ -74,6 +80,7 @@
     <Compile Include="RimValiUtils.cs" />
     <Compile Include="RVRFrameWork\Backstories.cs" />
     <Compile Include="RVRFrameWork\DefOf.cs" />
+    <Compile Include="CompatiblityPatches\HideHairWithHatsPatch.cs" />
     <Compile Include="RVRFrameWork\Misc_Classes.cs" />
     <Compile Include="RVRFrameWork\DyeComp.cs" />
     <Compile Include="RVRFrameWork\FactionRelatedDefs.cs" />
@@ -108,12 +115,43 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Krafs.Rimworld.Ref">
-      <Version>1.3.3117</Version>
-    </PackageReference>
     <PackageReference Include="Lib.Harmony">
       <IncludeAssets>compile</IncludeAssets>
       <Version>2.1.1</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\..\..\..\RimWorldWin64_Data\Managed\Assembly-CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="UnityEngine">
+      <HintPath>..\..\..\..\RimWorldWin64_Data\Managed\UnityEngine.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.AssetBundleModule">
+      <HintPath>..\..\..\..\..\..\..\..\..\Users\nesia\Desktop\Game Builds\BuiltGame_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\..\..\..\RimWorldWin64_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>..\..\..\..\..\..\..\..\..\Users\nesia\Desktop\Game Builds\BuiltGame_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>..\..\..\..\..\..\..\..\..\Users\nesia\Desktop\Game Builds\BuiltGame_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>..\..\..\..\..\..\..\..\..\Users\nesia\Desktop\Game Builds\BuiltGame_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
   </ItemGroup>
 </Project>

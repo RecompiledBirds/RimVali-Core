@@ -34,11 +34,6 @@ namespace RimValiCore.RVR
             try
             {
                 harmony.PatchAll();
-                if (!ModLister.HasActiveModWithName("Vanilla Expanded Framework"))
-                {
-                    HarmonyMethod transpiler = new HarmonyMethod(typeof(RenderTextureTranspiler), nameof(RenderTextureTranspiler.Transpile));
-                    harmony.Patch(original: AccessTools.Constructor(typeof(PawnTextureAtlas)), transpiler: transpiler);
-                }
                 harmony.Patch(AccessTools.Method(typeof(EquipmentUtility), "CanEquip", new[] { typeof(Thing), typeof(Pawn), typeof(string).MakeByRefType(), typeof(bool) }), postfix: new HarmonyMethod(typeof(ApparelPatch), "Equipable"));
                 Log.Message($"[RimVali Core] Patches completed. {harmony.GetPatchedMethods().EnumerableCount()} methods patched.");
             }
@@ -333,8 +328,7 @@ namespace RimValiCore.RVR
                         recipeDef.recipeUsers.Add(raceDef);
                         recipeDef.recipeUsers.RemoveDuplicates();
                     }
-                    bool flag16 = raceDef.recipes == null;
-                    if (flag16)
+                    if (raceDef.recipes == null)
                     {
                         raceDef.recipes = new List<RecipeDef>();
                     }
@@ -890,8 +884,9 @@ namespace RimValiCore.RVR
             try
             {
                 Traverse apparelInfo = Traverse.Create(typeof(PawnApparelGenerator)).Field(name: "allApparelPairs");
-                List<ThingStuffPair> thingStuffPairs = apparelInfo.GetValue<List<ThingStuffPair>>().ListFullCopy();
-                apparelInfo.SetValue(apparelInfo.GetValue<List<ThingStuffPair>>().Where(x=>ApparelPatch.CanWear(x.thing,pawn.def)).ToList());
+                List<ThingStuffPair> thingStuffPairs = apparelInfo.GetValue<List<ThingStuffPair>>().Where(x => ApparelPatch.CanWear(x.thing, pawn.def)).ToList();
+                Log.Message($"Things availble: {thingStuffPairs.Count}");
+                apparelInfo.SetValue(thingStuffPairs);
             }
             catch (Exception e) { Log.Error($"Oops! RV:C had an issue generating apparel: {e.Message}"); }
         }
@@ -937,44 +932,39 @@ namespace RimValiCore.RVR
             }
             foreach (Pawn pawn in victim.Map.mapPawns.AllPawnsSpawned)
             {
-                if (pawn.needs.mood != null)
+                if (pawn.needs.mood != null && pawn != victim && pawn.def is RimValiRaceDef rDef)
                 {
-                    if (pawn != victim)
+
+                    foreach (raceOrganHarvestThought thoughts in rDef.butcherAndHarvestThoughts.harvestedThoughts)
                     {
-                        if (pawn.def is RimValiRaceDef rDef)
+                        if (victim.def == thoughts.race)
                         {
-                            foreach (raceOrganHarvestThought thoughts in rDef.butcherAndHarvestThoughts.harvestedThoughts)
+                            if (victim.IsColonist && (thoughts.colonistThought != null))
                             {
-                                if (victim.def == thoughts.race)
-                                {
-                                    if (victim.IsColonist && (thoughts.colonistThought != null))
-                                    {
-                                        pawn.needs.mood.thoughts.memories.TryGainMemory(thoughts.colonistThought);
-                                    }
-                                    else if (!victim.IsColonist && thoughts.guestThought != null)
-                                    {
-                                        pawn.needs.mood.thoughts.memories.TryGainMemory(thoughts.guestThought);
-                                    }
-                                    else if (thoughts.colonistThought != null)
-                                    {
-                                        pawn.needs.mood.thoughts.memories.TryGainMemory(thoughts.colonistThought);
-                                    }
-                                    else
-                                    {
-                                        Log.Error("Undefined thought in " + rDef.defName + " butcherAndHarvestThoughts/harvestedThoughts!");
-                                    }
-                                }
-                                else if (rDef.butcherAndHarvestThoughts.careAboutUndefinedRaces)
-                                {
-                                    if (victim.IsColonist)
-                                    {
-                                        pawn.needs.mood.thoughts.memories.TryGainMemory(ThoughtDefOf.KnowColonistOrganHarvested);
-                                    }
-                                    else
-                                    {
-                                        pawn.needs.mood.thoughts.memories.TryGainMemory(ThoughtDefOf.KnowGuestOrganHarvested);
-                                    }
-                                }
+                                pawn.needs.mood.thoughts.memories.TryGainMemory(thoughts.colonistThought);
+                            }
+                            else if (!victim.IsColonist && thoughts.guestThought != null)
+                            {
+                                pawn.needs.mood.thoughts.memories.TryGainMemory(thoughts.guestThought);
+                            }
+                            else if (thoughts.colonistThought != null)
+                            {
+                                pawn.needs.mood.thoughts.memories.TryGainMemory(thoughts.colonistThought);
+                            }
+                            else
+                            {
+                                Log.Error("Undefined thought in " + rDef.defName + " butcherAndHarvestThoughts/harvestedThoughts!");
+                            }
+                        }
+                        else if (rDef.butcherAndHarvestThoughts.careAboutUndefinedRaces)
+                        {
+                            if (victim.IsColonist)
+                            {
+                                pawn.needs.mood.thoughts.memories.TryGainMemory(ThoughtDefOf.KnowColonistOrganHarvested);
+                            }
+                            else
+                            {
+                                pawn.needs.mood.thoughts.memories.TryGainMemory(ThoughtDefOf.KnowGuestOrganHarvested);
                             }
                         }
                     }
@@ -1279,13 +1269,13 @@ namespace RimValiCore.RVR
             {
                 pawn = cachedDefs[__instance];
             }
-            if (pawn != null && !Restrictions.CheckRestrictions(Restrictions.consumableRestrictions, t, pawn) && !Restrictions.CheckRestrictions(Restrictions.consumableRestrictionsWhiteList, t, pawn))
+            bool canEat = pawn != null && (Restrictions.CheckRestrictions(Restrictions.consumableRestrictions, t, pawn) || Restrictions.CheckRestrictions(Restrictions.consumableRestrictionsWhiteList, t, pawn,false));
+            if (!canEat)
             {
-                JobFailReason.Is(pawn.label + " " + "CannotEatRVR".Translate(pawn.label.Named("RACE")));
-                __result = false;
+                JobFailReason.Is($"{pawn.label} {"CannotEatRVR".Translate(pawn.label.Named("RACE"))}");
             }
             //No "Consume grass" for you.
-            __result = __result && true;
+            __result = __result && canEat;
         }
     }
 
@@ -1295,54 +1285,15 @@ namespace RimValiCore.RVR
 
     public static class ApparelPatch
     {
-       public static bool CanWear(ThingDef def, ThingDef race)
+        public static bool CanWear(ThingDef def, ThingDef race)
         {
-            if(race is RimValiRaceDef rDef)
-            {
-                if (Restrictions.equipmentRestrictions.ContainsKey(def))
-                {
-                    if (Restrictions.equipmentRestrictions[def].Contains(race))
-                    {
-                        Log.Message($"Returning false for: {def.defName}");
-                        return true;
-                    }
-                }
-                if (Restrictions.equipabblbleWhiteLists.ContainsKey(def))
-                {
-                  
-                    if (Restrictions.equipabblbleWhiteLists[def].Contains(race))
-                    {
-                        return true;
-                    }
-                }
-                if (!Restrictions.equipmentRestrictions.ContainsKey(def) && !rDef.restrictions.canOnlyUseApprovedApparel)
-                {
-                    return true;
-                }
-            }
-            else
-            {
-                if (Restrictions.equipmentRestrictions.ContainsKey(def))
-                {
-                    if (Restrictions.equipmentRestrictions[def].Contains(race))
-                    {
-                        return true;
-                    }
-                }
-                if (Restrictions.equipabblbleWhiteLists.ContainsKey(def))
-                {
-                    if (Restrictions.equipabblbleWhiteLists[def].Contains(race))
-                    {
-                        return true;
-                    }
-                }
-                if (!Restrictions.equipmentRestrictions.ContainsKey(def))
-                {
-                    return true;
-                }
-            }
-           
-            return false;
+            bool whiteListed = (Restrictions.equipabblbleWhiteLists.ContainsKey(def) && Restrictions.equipabblbleWhiteLists[def].Contains(race));
+            bool blackListed = Restrictions.equipmentRestrictions.ContainsKey(def) && Restrictions.equipmentRestrictions[def].Contains(race);
+            bool isRestrictedToOnlyApprovedClothes = race is RimValiRaceDef rimValiRace && rimValiRace.restrictions.canOnlyUseApprovedApparel;
+            bool itemIsRestricted = !isRestrictedToOnlyApprovedClothes && !Restrictions.equipmentRestrictions.ContainsKey(def);
+            
+            bool result = blackListed || whiteListed || itemIsRestricted;
+            return result;
         }
 
         public static void Equipable(ref bool __result, Thing thing, Pawn pawn, ref string cantReason)
@@ -1390,95 +1341,95 @@ namespace RimValiCore.RVR
         public static bool ResolveGraphics(PawnGraphicSet __instance)
         {
             Pawn pawn = __instance.pawn;
-            if (pawn.def is RimValiRaceDef rimvaliRaceDef)
+            if (!(pawn.def is RimValiRaceDef))
+                return true;
+
+            RimValiRaceDef rimValiRaceDef = (RimValiRaceDef)pawn.def;
+            try
             {
-                try
+                raceColors graphics = rimValiRaceDef.graphics;
+                ColorComp colorComp = pawn.TryGetComp<ColorComp>();
+
+                if (colorComp.colors == null || colorComp.colors.Count() == 0)
                 {
-                    raceColors graphics = rimvaliRaceDef.graphics;
-                    ColorComp colorComp = pawn.TryGetComp<ColorComp>();
+                    rimValiRaceDef.GenGraphics(pawn);
+                }
+                if (!ColorInfo.sets.ContainsKey(pawn.GetHashCode().ToString()))
+                {
+                    ColorInfo.sets.Add(pawn.GetHashCode().ToString(), __instance);
+                }
+                List<Colors> colors = graphics.colorSets;
+                if (graphics.skinColorSet != null)
+                {
+                    TriColor_ColorGenerators generators = colors.First(x => x.name == graphics.skinColorSet).colorGenerator;
+                    Color color1 = generators.firstColor.NewRandomizedColor();
+                    Color color2 = generators.secondColor.NewRandomizedColor();
+                    Color color3 = generators.thirdColor.NewRandomizedColor();
+                    AvaliGraphic nakedGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.bodyTex, ContentFinder<Texture2D>.Get(graphics.bodyTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
+                                                                 AvaliShaderDatabase.Tricolor, graphics.bodySize, color1, color2, color3);
+                    __instance.nakedGraphic = nakedGraphic;
 
-                    if (colorComp.colors == null || colorComp.colors.Count() == 0)
-                    {
-                        rimvaliRaceDef.GenGraphics(pawn);
-                    }
-                    if (!ColorInfo.sets.ContainsKey(pawn.GetHashCode().ToString()))
-                    {
-                        ColorInfo.sets.Add(pawn.GetHashCode().ToString(), __instance);
-                    }
-                    List<Colors> colors = graphics.colorSets;
-                    if (graphics.skinColorSet != null)
-                    {
-                        TriColor_ColorGenerators generators = colors.First(x => x.name == graphics.skinColorSet).colorGenerator;
-                        Color color1 = generators.firstColor.NewRandomizedColor();
-                        Color color2 = generators.secondColor.NewRandomizedColor();
-                        Color color3 = generators.thirdColor.NewRandomizedColor();
-                        AvaliGraphic nakedGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.bodyTex, ContentFinder<Texture2D>.Get(graphics.bodyTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
-                                                                     AvaliShaderDatabase.Tricolor, graphics.bodySize, color1, color2, color3);
-                        __instance.nakedGraphic = nakedGraphic;
-
-                        //Find the pawns head graphic and set it..
-                        AvaliGraphic headGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
-                                                                     AvaliShaderDatabase.Tricolor, graphics.headSize, color1, color2, color3);
-                        __instance.headGraphic = headGraphic;
-                        __instance.desiccatedHeadGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
+                    //Find the pawns head graphic and set it..
+                    AvaliGraphic headGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
                                                                  AvaliShaderDatabase.Tricolor, graphics.headSize, color1, color2, color3);
-                        __instance.dessicatedGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
-                                                                     AvaliShaderDatabase.Tricolor, graphics.headSize, color1, color2, color3);
-                        __instance.rottingGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
-                                                                     AvaliShaderDatabase.Tricolor, graphics.headSize, PawnGraphicSet.RottingColorDefault, PawnGraphicSet.RottingColorDefault, PawnGraphicSet.RottingColorDefault);
-                        //First, let's get the pawns hair texture.
-                        AvaliGraphic hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(__instance.pawn.story.hairDef.texPath, ContentFinder<Texture2D>.Get(__instance.pawn.story.hairDef.texPath + "_south") == null ? AvaliShaderDatabase.Tricolor :
-                                                                    AvaliShaderDatabase.Tricolor, graphics.headSize, pawn.story.SkinColor);
-                        //Should the race have hair?
-                        if (!rimvaliRaceDef.hasHair)
-                        {
-                            //This leads to a blank texture. So the pawn doesnt have hair, visually. I might (and probably should) change this later.
-                            hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
-                        }
-                        __instance.hairGraphic = hairGraphic;
-
-                        __instance.headStumpGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
-                        __instance.desiccatedHeadStumpGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
-                        __instance.skullGraphic = headGraphic;
-
-                        __instance.MatsBodyBaseAt(pawn.Rotation);
-                    }
-                    else
+                    __instance.headGraphic = headGraphic;
+                    __instance.desiccatedHeadGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
+                                                             AvaliShaderDatabase.Tricolor, graphics.headSize, color1, color2, color3);
+                    __instance.dessicatedGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
+                                                                 AvaliShaderDatabase.Tricolor, graphics.headSize, color1, color2, color3);
+                    __instance.rottingGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
+                                                                 AvaliShaderDatabase.Tricolor, graphics.headSize, PawnGraphicSet.RottingColorDefault, PawnGraphicSet.RottingColorDefault, PawnGraphicSet.RottingColorDefault);
+                    //First, let's get the pawns hair texture.
+                    AvaliGraphic hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(__instance.pawn.story.hairDef.texPath, ContentFinder<Texture2D>.Get(__instance.pawn.story.hairDef.texPath + "_south") == null ? AvaliShaderDatabase.Tricolor :
+                                                                AvaliShaderDatabase.Tricolor, graphics.headSize, pawn.story.SkinColor);
+                    //Should the race have hair?
+                    if (!rimValiRaceDef.hasHair)
                     {
-                        //This is the "body" texture of the pawn.
-
-                        AvaliGraphic nakedGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.bodyTex, ContentFinder<Texture2D>.Get(graphics.bodyTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
-                                                                     AvaliShaderDatabase.Tricolor, graphics.bodySize, pawn.story.SkinColor, Color.green, Color.red);
-                        __instance.nakedGraphic = nakedGraphic;
-
-                        //Find the pawns head graphic and set it..
-                        AvaliGraphic headGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
-                                                                     AvaliShaderDatabase.Tricolor, graphics.headSize, pawn.story.SkinColor, Color.green, Color.red);
-                        __instance.headGraphic = headGraphic;
-
-                        //First, let's get the pawns hair texture.
-                        AvaliGraphic hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(__instance.pawn.story.hairDef.texPath, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
-                                                                     AvaliShaderDatabase.Tricolor, graphics.headSize, pawn.story.SkinColor);
-
-                        //Should the race have hair?
-                        if (!rimvaliRaceDef.hasHair)
-                        {
-                            //This leads to a blank texture. So the pawn doesnt have hair, visually. I might (and probably should) change this later.
-                            hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
-                        }
-                        __instance.hairGraphic = hairGraphic;
+                        //This leads to a blank texture. So the pawn doesnt have hair, visually. I might (and probably should) change this later.
+                        hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
                     }
-                }
-                catch (Exception e)
-                {
-                    Log.Error(e.Message);
-                }
+                    __instance.hairGraphic = hairGraphic;
 
-                __instance?.ResolveApparelGraphics();
-                PortraitsCache.SetDirty(pawn);
-                return false;
+                    __instance.headStumpGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
+                    __instance.desiccatedHeadStumpGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
+                    __instance.skullGraphic = headGraphic;
+
+                    __instance.MatsBodyBaseAt(pawn.Rotation);
+                }
+                else
+                {
+                    //This is the "body" texture of the pawn.
+
+                    AvaliGraphic nakedGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.bodyTex, ContentFinder<Texture2D>.Get(graphics.bodyTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
+                                                                 AvaliShaderDatabase.Tricolor, graphics.bodySize, pawn.story.SkinColor, Color.green, Color.red);
+                    __instance.nakedGraphic = nakedGraphic;
+
+                    //Find the pawns head graphic and set it..
+                    AvaliGraphic headGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(graphics.headTex, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
+                                                                 AvaliShaderDatabase.Tricolor, graphics.headSize, pawn.story.SkinColor, Color.green, Color.red);
+                    __instance.headGraphic = headGraphic;
+
+                    //First, let's get the pawns hair texture.
+                    AvaliGraphic hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(__instance.pawn.story.hairDef.texPath, ContentFinder<Texture2D>.Get(graphics.headTex + "_south") == null ? AvaliShaderDatabase.Tricolor :
+                                                                 AvaliShaderDatabase.Tricolor, graphics.headSize, pawn.story.SkinColor);
+
+                    //Should the race have hair?
+                    if (!rimValiRaceDef.hasHair)
+                    {
+                        //This leads to a blank texture. So the pawn doesnt have hair, visually. I might (and probably should) change this later.
+                        hairGraphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>("avali/Heads/AvaliHead");
+                    }
+                    __instance.hairGraphic = hairGraphic;
+                }
             }
-            return true;
+            catch (Exception e)
+            {
+                Log.Error(e.Message);
+            }
+
+            __instance?.ResolveApparelGraphics();
+            PortraitsCache.SetDirty(pawn);
+            return false;
         }
     }
 
@@ -1548,12 +1499,12 @@ namespace RimValiCore.RVR
                         colorTwo *= (renderer.graphics.rottingGraphic.Color);
                         colorThree *= (renderer.graphics.rottingGraphic.Color);
                     }
-                    else if (mode == RotDrawMode.Rotting && renderer.graphics.rottingGraphic.color != null)
-                    {
-                        colorOne *= new Color(0.34f, 0.32f, 0.3f);
-                        colorTwo *= new Color(0.34f, 0.32f, 0.3f);
-                        colorThree *= new Color(0.34f, 0.32f, 0.3f);
-                    }
+                }
+                else if (mode == RotDrawMode.Rotting && renderer.graphics.rottingGraphic.color != null)
+                {
+                    colorOne *= new Color(0.34f, 0.32f, 0.3f);
+                    colorTwo *= new Color(0.34f, 0.32f, 0.3f);
+                    colorThree *= new Color(0.34f, 0.32f, 0.3f);
                 }
             }
         }
@@ -1589,7 +1540,6 @@ namespace RimValiCore.RVR
                 Vector3 offset = GetPosition(renderable, rotation);
                 Vector2 size = GetSize(renderable, rotation);
 
-                string path = renderable.TexPath(pawn);
                 AvaliGraphic graphic = null;
                 if (renderable.useColorSet != null)
                 {
@@ -1617,9 +1567,8 @@ namespace RimValiCore.RVR
         public static void RenderPawnInternal(Vector3 rootLoc, float angle, bool renderBody, Rot4 bodyFacing, RotDrawMode bodyDrawType, PawnRenderFlags flags, PawnRenderer __instance)
         {
             if (!(__instance.graphics.pawn.def is RimValiRaceDef))
-            {
                 return;
-            }
+
             bool portrait = flags.HasFlag(PawnRenderFlags.Portrait);
             Rot4 rot4 = portrait ? Rot4.South : bodyFacing;
             RenderBodyParts(portrait, angle, rootLoc, __instance, rot4, bodyDrawType, __instance.graphics.pawn, flags);
