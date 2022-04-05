@@ -148,6 +148,8 @@ namespace RimValiCore.Windows
             }
 
             colorHistory[0] = color;
+
+            setColorHistory(colorHistory);
         }
 
         public override void DoWindowContents(Rect inRect)
@@ -171,7 +173,7 @@ namespace RimValiCore.Windows
             Widgets.DrawBoxSolid(rectColorInputBoxes[4].ContractedBy(10f), SelectedColor);
 
             //Save color button
-            if (Widgets.ButtonText(rectColorInputBoxes[5].ContractedBy(5f), "##SaveColor"))
+            if (Widgets.ButtonText(rectColorInputBoxes[5].ContractedBy(5f), "CPW_SaveColor".Translate()))
             {
                 InsertColorInHistory(SelectedColor);
             }
@@ -185,8 +187,7 @@ namespace RimValiCore.Windows
                 {
                     Rect historyRect = rectHistoryArray[y, x];
 
-                    Widgets.DrawBoxSolid(historyRect, Color.white);
-                    Widgets.DrawBoxSolid(historyRect.ContractedBy(1f), colorHistory[x + y * HistoryColumns]);
+                    Widgets.DrawBoxSolidWithOutline(historyRect, colorHistory[x + y * HistoryColumns], new Color(255f, 255f, 255f, 0.5f), 2);
                     if (Widgets.ButtonInvisible(historyRect))
                     {
                         SelectedColor = colorHistory[x + y * HistoryColumns];
@@ -300,8 +301,8 @@ namespace RimValiCore.Windows
         {
             Text.Anchor = TextAnchor.MiddleCenter;
             Text.Font = GameFont.Medium;
-            Widgets.Label(rectColorInputBoxes[0], "##HexCode");
-            Widgets.Label(rectColorInputBoxes[2], "##RGB");
+            Widgets.Label(rectColorInputBoxes[0], "CPW_HEX".Translate());
+            Widgets.Label(rectColorInputBoxes[2], "CPW_RGB".Translate());
             RimValiUtility.ResetTextAndColor();
         }
 
@@ -379,11 +380,10 @@ namespace RimValiCore.Windows
             if (Widgets.CloseButtonFor(inRect)) Close();
         }
 
-        public override void Close(bool doCloseSound = true)
+        public override void PostClose()
         {
-            setColorHistory(colorHistory);
             LastSelectedColor = SelectedColor;
-            base.Close(doCloseSound);
+            base.PostClose();
         }
     }
 }

@@ -9,6 +9,7 @@ using UnityEngine;
 using Verse;
 using HarmonyLib;
 using RimValiCore.RVR;
+using Verse.Sound;
 
 namespace RimValiCore
 {
@@ -19,36 +20,40 @@ namespace RimValiCore
         [HarmonyPostfix]
         public static void Patch()
         {
-            bool button = Widgets.ButtonText(new Rect(new Vector2(870, 0), new Vector2(100, 30)), "##Edit pawn");
+            bool button = Widgets.ButtonText(new Rect(new Vector2(870, 0), new Vector2(100, 30)), "RVC_EditPawn".Translate());
             if (button)
             {
-                RVGUI.FindFirstPawn();
                 Find.WindowStack.Add(new EditorWindow());
             }
         }
-
-       
     }
 
     public class EditorWindow : Window
     {
+        private const float RectColorFieldHeight = 40f;
+
         private readonly List<Pawn> pawns = Find.GameInitData.startingAndOptionalPawns;
-        private Pawn selectedPawn;
 
         private readonly Rect RectWindowMain = new Rect(0f, 0f, 1000f, 400f);
         private readonly Rect RectWindowSub;
         private readonly Rect RectWindowEdit;
         private readonly Rect RectPawnSelectOuter;
+        private readonly Rect RectColorSelectOuter;
 
         private readonly Rect[] RectEditSections;
-        private readonly Rect[] RectColorFields;
         private readonly Rect[] RectNamingRects;
         private readonly Rect RectColoringPart;
         private readonly Rect RectPawnBig;
+        private readonly Rect RectInfoBox;
 
         private Dictionary<string, ColorSet> colorSets = new Dictionary<string, ColorSet>();
+        private Rect[] RectColorFields;
+        private Rect RectColorSelectInner;
         private Rect RectPawnSelectInner;
         private Vector2 PawnSelectorScroll;
+        private Vector2 ColorSelectorScroll;
+
+        private Pawn selectedPawn;
 
         public override Vector2 InitialSize => RectWindowMain.size;
 
@@ -57,6 +62,8 @@ namespace RimValiCore
         public EditorWindow()
         {
             doCloseX = true;
+            closeOnClickedOutside = true;
+
             SelectedPawn = Find.GameInitData.startingAndOptionalPawns[0];
 
             RectWindowSub = RectWindowMain.ContractedBy(25f);
@@ -74,18 +81,51 @@ namespace RimValiCore
             RectEditSections = RectWindowEdit.DivideVertical(2).ToArray();
             RectColoringPart = RectEditSections[0];
             RectNamingRects = RectEditSections[1].TopPartPixels(39f).ContractVertically(5).DivideHorizontal(3).ToArray();
-            RectColorFields = RectColoringPart.DivideVertical(colorSets.Count * 3).ToArray();
+            RectColorSelectOuter = RectColoringPart.RightPartPixels(300f).ContractVertically(5);
+            RectColorSelectOuter.width -= 5;
 
-            for (int i = 0; i < RectColorFields.Length; i++)
-            {
-                Rect rect = RectColorFields[i];
-                rect.height -= 5f;
-            }
+            CalcInnerRect();
 
             RectPawnBig = RectColoringPart.LeftPartPixels(RectEditSections[0].height);
+            RectInfoBox = RectPawnBig.MoveRect(new Vector2(RectPawnBig.width + 5f, 0f)).ContractedBy(5f);
+            RectInfoBox.width = RectColoringPart.width - RectPawnBig.width - RectColorSelectOuter.width - 20f;
         }
 
-        public Pawn SelectedPawn
+        /// <summary>
+        /// Recalculates the height and width of the inner scroll view for the color picking part
+        /// </summary>
+        private void CalcInnerRect()
+        {
+            List<Rect> rectList = new List<Rect>();
+
+            RectColorSelectInner = new Rect(RectColorSelectOuter)
+            {
+                height = (colorSets.Count) * RectColorFieldHeight - 5f
+            };
+
+            if (HasOpenColorField) RectColorSelectInner.height += RectColorFieldHeight * 3f;
+
+            if (RectColorSelectInner.height > RectColorSelectOuter.height) RectColorSelectInner.width -= 17f;
+
+            RectColorSelectInner.height += 5f;
+
+            for (int i = 0; i < colorSets.Count; i++)
+            {
+                Vector2 mod = new Vector2(0f, RectColorFieldHeight * i + ((HasOpenColorField && (i > OpenColorField)) ? RectColorFieldHeight * 3f : 0f));
+                Rect tempRect = RectColorSelectInner.TopPartPixels(RectColorFieldHeight).MoveRect(mod);
+                tempRect.height -= 5f;
+
+                rectList.Add(tempRect);
+            }
+
+            RectColorFields = rectList.ToArray();
+        }
+
+        private bool HasOpenColorField => OpenColorField > -1;
+
+        private int OpenColorField { get; set; }
+
+        private Pawn SelectedPawn
         {
             get => selectedPawn;
             set
@@ -100,6 +140,9 @@ namespace RimValiCore
                 {
                     colorSets = new Dictionary<string, ColorSet>();
                 }
+
+                OpenColorField = -1;
+                CalcInnerRect();
             }
         }
 
@@ -109,10 +152,101 @@ namespace RimValiCore
             DrawPawn();
             DrawColorSelection();
             DrawNameEdit();
-
-            //RVGUI.Draw();
+            DrawInfoBox();
         }
 
+        /// <summary>
+        /// Creates a small box with information for the user
+        /// </summary>
+        private void DrawInfoBox()
+        {
+            Widgets.DrawHighlight(RectInfoBox);
+            Widgets.DrawBox(RectInfoBox, 2);
+            Widgets.Label(RectInfoBox.ContractedBy(2f + 5f), $"{"RVC_Tutorial".Translate($"<color=green>{SelectedPawn.def.defName}</color>")}" +
+                $"\n\n<color=orange>{"RVC_WarningColorEdit".Translate()}</color>");
+        }
+
+        /// <summary>
+        /// Draws the color selection ScrollView
+        /// </summary>
+        private void DrawColorSelection()
+        {
+            Widgets.BeginScrollView(RectColorSelectOuter, ref ColorSelectorScroll, RectColorSelectInner);
+            int pos = 0;
+            foreach (KeyValuePair<string, ColorSet> kvp in colorSets)
+            {
+                string name = $"{SelectedPawn.def.defName}_ColorSet_{kvp.Key}".Translate();
+                Rect rectTemp = RectColorFields[pos];
+                Rect rectName = rectTemp;
+                Rect rectExpandCollapseIcon = rectTemp.LeftPartPixels(rectTemp.height);
+
+                Text.Anchor = TextAnchor.MiddleLeft;
+
+                Widgets.DrawLightHighlight(rectName);
+                Widgets.DrawHighlightIfMouseover(rectTemp);
+                Widgets.DrawBox(rectName, 2);
+                Widgets.Label(rectName.RightPartPixels(rectName.width - rectTemp.height - 5f), name);
+                Widgets.DrawTextureFitted(rectExpandCollapseIcon.ContractedBy(11f), pos == OpenColorField ? TexButton.Collapse : TexButton.Reveal, 1f);
+
+                if (Widgets.ButtonInvisible(rectTemp))
+                {
+                    if (pos == OpenColorField)
+                    {
+                        OpenColorField = -1;
+                        SoundDefOf.TabClose.PlayOneShotOnCamera();
+                    }
+                    else
+                    {
+                        if (HasOpenColorField) SoundDefOf.TabClose.PlayOneShotOnCamera();
+
+                        OpenColorField = pos;
+                        SoundDefOf.TabOpen.PlayOneShotOnCamera();
+                    }
+
+                    CalcInnerRect();
+                }
+
+                if (pos == OpenColorField)
+                {
+                    for (int i = 0; i < 3; i++)
+                    {
+                        float indent = 15f;
+
+                        string colorName = $"{SelectedPawn.def.defName}_{kvp.Key}_{(Count)i}".Translate();
+                        Rect rectColorField = rectTemp.MoveRect(new Vector2(indent, RectColorFieldHeight * (i + 1)));
+                        rectColorField.width -= indent + 1f;
+
+                        Rect rectColorLabel = rectColorField.RightPartPixels(rectColorField.width - 5f);
+                        Rect rectColorColor = rectColorField.RightPartPixels(rectColorLabel.width - 100f - 5f);
+
+
+                        Widgets.DrawLightHighlight(rectColorField);
+                        Widgets.DrawBoxSolidWithOutline(rectColorColor, kvp.Value.Colors[i], new Color(255f, 255f, 255f, 0.5f), 3);
+                        Widgets.DrawHighlightIfMouseover(rectColorColor);
+                        Widgets.DrawBox(rectColorField);
+                        Widgets.Label(rectColorLabel, colorName);
+
+                        if (Widgets.ButtonInvisible(rectColorColor))
+                        {
+                            int k = i; //save the current i to k so that the value of i isn't overridden during the for loop
+                            Find.WindowStack.Add(new ColorPickerWindow(color => SetColor(color, kvp, k), (newSavedColors) => { RimValiCoreMod.Settings.savedColors = newSavedColors.ToList(); RimValiCoreMod.Settings.Write(); }, kvp.Value.Colors[k], RimValiCoreMod.Settings.savedColors.ToArray()));
+                        }
+                        TooltipHandler.TipRegion(rectColorColor, $"RVC_EditColor".Translate());
+                    }
+                }
+
+                RimValiUtility.ResetTextAndColor();
+
+                pos++;
+            }
+
+            RimValiUtility.ResetTextAndColor();
+            Widgets.EndScrollView();
+        }
+
+        /// <summary>
+        /// Draws the name editor fields
+        /// </summary>
         private void DrawNameEdit()
         {
             if (SelectedPawn.Name is NameTriple name)
@@ -129,6 +263,7 @@ namespace RimValiCore
             }
             else
             {
+                //Fixes names that aren't NameTriple based by converting them into one
                 string[] fullName = SelectedPawn.Name.ToString().Split(' ');
 
                 string first = fullName[0];
@@ -154,40 +289,12 @@ namespace RimValiCore
             }
         }
 
-        private void DrawColorSelection()
-        {
-            int pos = 0;
-            foreach (KeyValuePair<string, ColorSet> kvp in colorSets)
-            {
-                for (int i = 0; i < 3; i++)
-                {
-                    string name = $"<b>##{kvp.Key} color Nr.{i}:</b>";
-
-                    Rect tempRect = RectColorFields[pos];
-                    Rect colorBox = tempRect.RightPartPixels(100f);
-
-                    Text.Anchor = TextAnchor.MiddleLeft;
-                    Text.Font = GameFont.Medium;
-
-                    Widgets.Label(tempRect.RightPartPixels(300f), name);
-
-                    RimValiUtility.ResetTextAndColor();
-
-                    Widgets.DrawBoxSolidWithOutline(colorBox, kvp.Value.Colors[i], new Color(255f, 255f, 255f, 0.5f), 3);
-
-                    Widgets.DrawHighlightIfMouseover(colorBox);
-                    if (Widgets.ButtonInvisible(colorBox))
-                    {
-                        int k = i; //save the current i to k so that the value of i isn't overridden during the for loop
-                        Find.WindowStack.Add(new ColorPickerWindow(color => SetColor(color, kvp, k), (_0) => { }, kvp.Value.Colors[k], new Color[10]));
-                    }
-                    TooltipHandler.TipRegion(colorBox, $"##Change {name}");
-
-                    pos++;
-                }
-            }
-        }
-
+        /// <summary>
+        /// Sets a new <see cref="Color"/> <paramref name="color"/> into the given <see cref="ColorSet"/> provided in the <see cref="KeyValuePair"/> <paramref name="kvp"/> into the <paramref name="index"/>
+        /// </summary>
+        /// <param name="color">The new <see cref="Color"/></param>
+        /// <param name="kvp">A <see cref="KeyValuePair"/> with <see cref="string"/> and <see cref="ColorSet"/></param>
+        /// <param name="index"></param>
         private void SetColor(Color color, KeyValuePair<string, ColorSet> kvp, int index)
         {
             Color[] colors = kvp.Value.Colors;
@@ -197,6 +304,9 @@ namespace RimValiCore
             SelectedPawn.Drawer.renderer.graphics.ResolveAllGraphics();
         }
 
+        /// <summary>
+        /// Draws an image of the selected Pawn
+        /// </summary>
         private void DrawPawn()
         {
             Widgets.DrawBox(RectColoringPart);
@@ -204,6 +314,9 @@ namespace RimValiCore
             GUI.DrawTexture(RectPawnBig, image, ScaleMode.StretchToFill);
         }
 
+        /// <summary>
+        /// Draws a list of pawns that can be edited, highlighting the currently selected pawn yellow
+        /// </summary>
         private void DrawPawnSelectionArea()
         {
             Widgets.BeginScrollView(RectPawnSelectOuter, ref PawnSelectorScroll, RectPawnSelectInner);
@@ -258,187 +371,15 @@ namespace RimValiCore
             GUI.EndGroup();
             Widgets.EndScrollView();
         }
-    }
 
-    public static class RVGUI
-    {
-        static string EditableNicknameMiddleName = "";
-        static string EditableLastName = "";
-        static string EditableFirstName = "";
-        static bool portraitEnabled = true;
-        public static readonly Vector2 PawnPortraitSize = new Vector2(250f, 250f);
-        private static Pawn pawn;
-        private static Vector2 scrollPos;
-
-        public static void FindFirstPawn()
+        /// <summary>
+        /// Used to differentiate the language keys
+        /// </summary>
+        private enum Count
         {
-            SetPawn(Find.GameInitData.startingAndOptionalPawns[0]);
-        }
-
-        public static void SetPawn(Pawn p)
-        {
-            pawn = p;
-        }
-        public static void Draw()
-        {
-            //COMPILED BY NESGUI
-            //Prepare varibles
-
-            GameFont prevFont = Text.Font;
-            TextAnchor textAnchor = Text.Anchor;
-
-            //Rect pass
-            //-400
-            Rect PawnBeingEdited = new Rect(new Vector2(100f, 100f), new Vector2(250f, 250f));
-            Rect PawnSelector = new Rect(new Vector2(0f, 100f), new Vector2(95, 350f));
-            Rect ColourSelect = new Rect(new Vector2(350f, 100f), new Vector2(250f, 350f));
-            Rect PawnViewSettings = new Rect(new Vector2(100f, 350f), new Vector2(250f, 25f));
-            Rect PawnFirstName = new Rect(new Vector2(600f, 100f), new Vector2(150f, 50f));
-            Rect PawnMiddleName = new Rect(new Vector2(600f, 150f), new Vector2(150f, 50f));
-            Rect PawnLastName = new Rect(new Vector2(600f, 200f), new Vector2(150f, 50f));
-            Rect SaveButton = new Rect(new Vector2(700f, 450f), new Vector2(50f, 50f));
-            Rect Editor = new Rect(new Vector2(0f, 0f), new Vector2(100f, 100f));
-            Rect ModName = new Rect(new Vector2(100f, 0f), new Vector2(250f, 50f));
-            Rect CreditsRect = new Rect(new Vector2(0f, 450f), new Vector2(600f, 50f));
-
-
-
-            Listing_Standard ls = new Listing_Standard();
-            Rect PawnsListRect = new Rect(new Vector2(0,100), new Vector2(95,520+(Find.GameInitData.startingAndOptionalPawns.Count*2f)));
-            Widgets.BeginScrollView(PawnSelector, ref scrollPos, PawnsListRect);
-            int pos = 120;
-            foreach(Pawn p in Find.GameInitData.startingAndOptionalPawns)
-            {
-                Rect pawnRect = new Rect(new Vector2(0, pos), new Vector2(95, 95));
-                Rect label = new Rect(new Vector2(10, pawnRect.yMax - 5), new Vector2(95, 30));
-                RenderTexture image = PortraitsCache.Get(p, PawnPortraitSize, Rot4.South, new Vector2(0, 0), 1f, true, true, true, true, null, null, true);
-                Widgets.DrawTextureFitted(pawnRect,image,1);
-                Widgets.Label(label, p.Name.ToStringShort);
-                bool button =Widgets.ButtonInvisible(new Rect(new Vector2(0, pos),new Vector2(95, 95 + 30)));
-                if (button)
-                {
-                    pawn = p;
-                } 
-                pos += 120;
-            }
-            Widgets.EndScrollView();
-            //Button pass
-
-            prevFont = Text.Font;
-            textAnchor = Text.Anchor;
-            Text.Font = GameFont.Tiny;
-            Text.Anchor = TextAnchor.MiddleCenter;
-
-            bool SaveChanges = Widgets.ButtonText(SaveButton, "Save Changes");
-
-            Text.Font = prevFont;
-            Text.Anchor = textAnchor;
-
-            //Checkbox pass
-
-            prevFont = Text.Font;
-            textAnchor = Text.Anchor;
-            Text.Font = GameFont.Tiny;
-            Text.Anchor = TextAnchor.UpperLeft;
-
-            Widgets.CheckboxLabeled(PawnViewSettings, "View Pawn w/ Clothes", ref portraitEnabled);
-
-            if (portraitEnabled)
-            {
-                RenderTexture image = PortraitsCache.Get(pawn, PawnPortraitSize, Rot4.South,default(Vector2), 1f, true, true, true, true, null, null, true);
-                GUI.DrawTexture(PawnBeingEdited, image);
-            }
-
-            Text.Font = prevFont;
-            Text.Anchor = textAnchor;
-
-            //Label pass
-
-            prevFont = Text.Font;
-            textAnchor = Text.Anchor;
-            Text.Font = GameFont.Tiny;
-            Text.Anchor = TextAnchor.UpperCenter;
-
-            Widgets.Label(PawnSelector, "Pawn Select");
-
-            Text.Font = prevFont;
-            Text.Anchor = textAnchor;
-            prevFont = Text.Font;
-            textAnchor = Text.Anchor;
-            Text.Font = GameFont.Medium;
-            Text.Anchor = TextAnchor.MiddleCenter;
-
-            Widgets.Label(ModName, "Generic Mod Name");
-
-            Text.Font = prevFont;
-            Text.Anchor = textAnchor;
-            prevFont = Text.Font;
-            textAnchor = Text.Anchor;
-            Text.Font = GameFont.Tiny;
-            Text.Anchor = TextAnchor.UpperLeft;
-
-            Widgets.Label(CreditsRect, "Baseline UI Designed by Willows Wulf");
-
-            Text.Font = prevFont;
-            Text.Anchor = textAnchor;
-            prevFont = Text.Font;
-            textAnchor = Text.Anchor;
-            Text.Font = GameFont.Tiny;
-            Text.Anchor = TextAnchor.MiddleLeft;
-
-            Widgets.Label(CreditsRect, "UI made using NesGui");
-
-            Text.Font = prevFont;
-            Text.Anchor = textAnchor;
-            prevFont = Text.Font;
-            textAnchor = Text.Anchor;
-            Text.Font = GameFont.Tiny;
-            Text.Anchor = TextAnchor.LowerLeft;
-
-            Widgets.Label(CreditsRect, "NesGUI made by Nesi & Danimineiro");
-
-            Text.Font = prevFont;
-            Text.Anchor = textAnchor;
-
-            //Textfield pass
-            NameTriple pawnName = (NameTriple)pawn.Name;
-            string first = pawnName.First;
-            string nick = pawnName.Nick;
-            string last = pawnName.Last;
-            prevFont = Text.Font;
-            textAnchor = Text.Anchor;
-            Text.Font = GameFont.Tiny;
-            Text.Anchor = TextAnchor.MiddleLeft;
-
-            //ohboy how do we pawn name thing a
-            first=Widgets.TextField(PawnFirstName,first);
-           
-            Text.Font = prevFont;
-            Text.Anchor = textAnchor;
-            prevFont = Text.Font;
-            textAnchor = Text.Anchor;
-            Text.Font = GameFont.Tiny;
-            Text.Anchor = TextAnchor.MiddleLeft;
-            
-            nick = Widgets.TextField(PawnMiddleName, nick);
-
-            Text.Font = prevFont;
-            Text.Anchor = textAnchor;
-            prevFont = Text.Font;
-            textAnchor = Text.Anchor;
-            Text.Font = GameFont.Tiny;
-            Text.Anchor = TextAnchor.MiddleLeft;
-
-            
-            last = Widgets.TextField(PawnLastName, last);
-            pawnName= new NameTriple(first,nick,last);
-
-            pawn.Name = pawnName;
-            Text.Font = prevFont;
-            Text.Anchor = textAnchor;
-
-            //END NESGUI CODE
-
+            First,
+            Second,
+            Third
         }
     }
 }
