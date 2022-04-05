@@ -148,6 +148,8 @@ namespace RimValiCore.Windows
             }
 
             colorHistory[0] = color;
+
+            setColorHistory(colorHistory);
         }
 
         public override void DoWindowContents(Rect inRect)
@@ -378,11 +380,10 @@ namespace RimValiCore.Windows
             if (Widgets.CloseButtonFor(inRect)) Close();
         }
 
-        public override void Close(bool doCloseSound = true)
+        public override void PostClose()
         {
-            setColorHistory(colorHistory);
             LastSelectedColor = SelectedColor;
-            base.Close(doCloseSound);
+            base.PostClose();
         }
     }
 }
