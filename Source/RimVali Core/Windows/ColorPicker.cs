@@ -185,8 +185,7 @@ namespace RimValiCore.Windows
                 {
                     Rect historyRect = rectHistoryArray[y, x];
 
-                    Widgets.DrawBoxSolid(historyRect, Color.white);
-                    Widgets.DrawBoxSolid(historyRect.ContractedBy(1f), colorHistory[x + y * HistoryColumns]);
+                    Widgets.DrawBoxSolidWithOutline(historyRect, colorHistory[x + y * HistoryColumns], new Color(255f, 255f, 255f, 0.5f), 2);
                     if (Widgets.ButtonInvisible(historyRect))
                     {
                         SelectedColor = colorHistory[x + y * HistoryColumns];
