@@ -11,10 +11,7 @@ namespace RimValiCore
         public bool smartPawnScaling;
         public int textureSizeScaling;
         public int smallestTexSize;
-        public List<Color> savedColors = new List<Color>()
-        {
-            Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black
-        };
+        public List<Color> savedColors;
 
         public RVCModSettings()
         {

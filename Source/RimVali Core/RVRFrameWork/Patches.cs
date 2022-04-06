@@ -129,6 +129,11 @@ namespace RimValiCore.RVR
         }
 
 
+        private static ModContentPack GetPackByID(string id)
+        {
+            return LoadedModManager.RunningModsListForReading.Find(x=>x.Name == id||x.PackageId.ToLower()==id.ToLower()||x.PackageId==$"{id.ToLower()}_steam");
+        }
+
         // Token: 0x04000116 RID: 278
         public static Dictionary<ThingDef, List<ThingDef>> equipmentRestrictions = new Dictionary<ThingDef, List<ThingDef>>();
 
@@ -252,9 +257,10 @@ namespace RimValiCore.RVR
                         AddRestriction(ref bodyTypeRestrictions, item9, raceDef);
                     }
                 }
-                if (raceDef.restrictions.modContentRestrictionsApparelWhiteList.Count > 0)
+                foreach (string id in raceDef.restrictions.modContentRestrictionsApparelWhiteList)
                 {
-                    foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modContentRestrictionsApparelWhiteList.Contains(x.Name) || raceDef.restrictions.modContentRestrictionsApparelWhiteList.Contains(x.PackageId)))
+                    ModContentPack mod = GetPackByID(id);
+                    if (mod != null)
                     {
                         foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef && (thingDef.IsApparel)))
                         {
@@ -262,57 +268,54 @@ namespace RimValiCore.RVR
                         }
                     }
                 }
-
-                foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modContentRestrictionsApparelList.Contains(x.Name) || raceDef.restrictions.modContentRestrictionsApparelList.Contains(x.PackageId.ToLower())))
+                foreach (string id in raceDef.restrictions.modContentRestrictionsApparelList)
                 {
-                    foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef && (thingDef.IsApparel)))
+                    ModContentPack mod = GetPackByID(id);
+                    if (mod != null)
                     {
-
-                        AddRestriction(ref equipmentRestrictions, def, raceDef);
+                        foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef && (thingDef.IsApparel)))
+                            AddRestriction(ref equipmentRestrictions, def, raceDef);
                     }
                 }
 
-                if (raceDef.restrictions.modResearchRestrictionsList.Count > 0)
+                foreach (string id in raceDef.restrictions.modResearchRestrictionsList)
                 {
-                    foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modResearchRestrictionsList.Contains(x.Name) || raceDef.restrictions.modResearchRestrictionsList.Contains(x.PackageId)))
+                    ModContentPack mod = GetPackByID(id);
+                    if (mod != null)
                     {
-                        foreach (ResearchProjectDef research in mod.AllDefs.Where(x => x is ResearchProjectDef))
-                        {
-                            AddRestriction(ref researchRestrictions, research, raceDef);
-                        }
+                        foreach (ResearchProjectDef def in mod.AllDefs.Where(x => x is ResearchProjectDef))
+                            AddRestriction(ref researchRestrictions, def, raceDef);
                     }
                 }
 
-                if (raceDef.restrictions.modTraitRestrictions.Count > 0)
+
+                foreach (string id in raceDef.restrictions.modTraitRestrictions)
                 {
-                    foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modTraitRestrictions.Contains(x.Name) || raceDef.restrictions.modTraitRestrictions.Contains(x.PackageId)))
+                    ModContentPack mod = GetPackByID(id);
+                    if (mod != null)
                     {
-                        foreach (TraitDef trait in mod.AllDefs.Where(x => x is TraitDef))
-                        {
-                            AddRestriction(ref traitRestrictions, trait, raceDef);
-                        }
+                        foreach (TraitDef def in mod.AllDefs.Where(x => x is TraitDef))
+                            AddRestriction(ref traitRestrictions, def, raceDef);
                     }
                 }
 
-                if (raceDef.restrictions.modBuildingRestrictions.Count > 0)
+                foreach (string id in raceDef.restrictions.modBuildingRestrictions)
                 {
-                    foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modBuildingRestrictions.Contains(x.Name) || raceDef.restrictions.modBuildingRestrictions.Contains(x.PackageId)))
+                    ModContentPack mod = GetPackByID(id);
+                    if (mod != null)
+                    {
+                        foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef && !thingDef.IsApparel))
+                            AddRestriction(ref buildingRestrictions, def, raceDef);
+                    }
+                }
+
+                foreach (string id in raceDef.restrictions.modConsumables)
+                {
+                    ModContentPack mod = GetPackByID(id);
+                    if (mod != null)
                     {
                         foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef))
-                        {
-                            AddRestriction(ref buildingRestrictions, def, raceDef);
-                        }
-                    }
-                }
-
-                if (raceDef.restrictions.modConsumables.Count > 0)
-                {
-                    foreach (ModContentPack mod in LoadedModManager.RunningModsListForReading.Where(x => raceDef.restrictions.modBuildingRestrictions.Contains(x.Name) || raceDef.restrictions.modBuildingRestrictions.Contains(x.PackageId)))
-                    {
-                        foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef && thingDef.IsIngestible))
-                        {
                             AddRestriction(ref consumableRestrictions, def, raceDef);
-                        }
                     }
                 }
                 foreach (BodyTypeDef bodyType in raceDef.bodyTypes)
@@ -1287,9 +1290,13 @@ namespace RimValiCore.RVR
     {
         public static bool CanWear(ThingDef def, ThingDef race)
         {
+            Log.Message($"{def.defName} is keyed in BL: {Restrictions.equipmentRestrictions.ContainsKey(def)} ");
             bool whiteListed = (Restrictions.equipabblbleWhiteLists.ContainsKey(def) && Restrictions.equipabblbleWhiteLists[def].Contains(race));
+            Log.Message($"{def.defName} is Whitelisted for {race.defName}: {whiteListed}");
             bool blackListed = Restrictions.equipmentRestrictions.ContainsKey(def) && Restrictions.equipmentRestrictions[def].Contains(race);
+            Log.Message($"{def.defName} is Blacklisted for {race.defName}: {blackListed}");
             bool isRestrictedToOnlyApprovedClothes = race is RimValiRaceDef rimValiRace && rimValiRace.restrictions.canOnlyUseApprovedApparel;
+            Log.Message($"isRestrictedToOnlyApprovedClothes for {race.defName}: {isRestrictedToOnlyApprovedClothes}");
             bool itemIsRestricted = !isRestrictedToOnlyApprovedClothes && !Restrictions.equipmentRestrictions.ContainsKey(def);
             
             bool result = blackListed || whiteListed || itemIsRestricted;

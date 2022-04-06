@@ -42,7 +42,6 @@
     <Compile Include="2DBeds\HarmonyPatches.cs" />
     <Compile Include="2DBeds\RenderData.cs" />
     <Compile Include="2DBeds\RenderPatch.cs" />
-    <Compile Include="ColorPicker.cs" />
     <Compile Include="CompatiblityPatches\Patcher.cs" />
     <Compile Include="FloorConstructor.cs" />
     <Compile Include="GraphicClasses\BaseContent.cs" />
@@ -94,6 +93,7 @@
     <Compile Include="ThingComps\DrawTexComp.cs" />
     <Compile Include="ThingComps\FuelConsumer.cs" />
     <Compile Include="WallPlaceworker.cs" />
+    <Compile Include="Windows\ColorPicker.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

@@ -89,6 +89,10 @@ namespace RimValiCore
             RectPawnBig = RectColoringPart.LeftPartPixels(RectEditSections[0].height);
             RectInfoBox = RectPawnBig.MoveRect(new Vector2(RectPawnBig.width + 5f, 0f)).ContractedBy(5f);
             RectInfoBox.width = RectColoringPart.width - RectPawnBig.width - RectColorSelectOuter.width - 20f;
+
+            //Saftey check!
+            if(RimValiCoreMod.Settings.savedColors==null)
+                RimValiCoreMod.Settings.savedColors = new List<Color>() {Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black};
         }
 
         /// <summary>
@@ -205,7 +209,6 @@ namespace RimValiCore
 
                     CalcInnerRect();
                 }
-
                 if (pos == OpenColorField)
                 {
                     for (int i = 0; i < 3; i++)
@@ -234,7 +237,6 @@ namespace RimValiCore
                         TooltipHandler.TipRegion(rectColorColor, $"RVC_EditColor".Translate());
                     }
                 }
-
                 RimValiUtility.ResetTextAndColor();
 
                 pos++;
@@ -300,7 +302,6 @@ namespace RimValiCore
             Color[] colors = kvp.Value.Colors;
             colors[index] = color;
             kvp.Value.Colors = colors;
-
             SelectedPawn.Drawer.renderer.graphics.ResolveAllGraphics();
         }
 
