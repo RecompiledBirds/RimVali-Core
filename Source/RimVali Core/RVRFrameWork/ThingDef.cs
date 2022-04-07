@@ -270,7 +270,7 @@ namespace RimValiCore.RVR
                             else
                             {
                                 System.Random Rand = new System.Random();
-                                int index = Rand.Next(renderableDef.textures[colorcomp.renderableDefIndexes[renderableDef.defName]].GetMasks(pawn).Count);
+                                int index = Rand.Next(renderableDef.linkMaskIndexWith.textures[colorcomp.renderableDefIndexes[renderableDef.linkMaskIndexWith.defName]].GetMasks(pawn).Count);
                                 colorcomp.renderableDefMaskIndexes.Add(renderableDef.linkMaskIndexWith.defName, index);
                                 colorcomp.renderableDefMaskIndexes.Add(renderableDef.defName, index);
                             }
