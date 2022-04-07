@@ -394,6 +394,9 @@ namespace RimValiCore
 
         public override void Init(AvaliGraphicRequest req)
         {
+            if(req.maskPath==null)
+                req.maskPath=req.path;
+
             data = req.graphicData;
             path = req.path;
             color = req.color;

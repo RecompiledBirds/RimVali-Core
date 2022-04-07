@@ -1,4 +1,5 @@
 ﻿using RimWorld;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -120,15 +121,23 @@ namespace RimValiCore.RVR
 
         public int GetMyIndex(Pawn pawn)
         {
-            if (pawn.def is RimValiRaceDef)
+            if (pawn.def is RimValiRaceDef rDef)
             {
-                ColorComp comp = pawn.TryGetComp<ColorComp>();
-                foreach (string str in comp.renderableDefIndexes.Keys)
+                try
                 {
-                    if (str == defName || (linkIndexWithDef != null && linkIndexWithDef.defName == str))
+                    ColorComp comp = pawn.TryGetComp<ColorComp>();
+                    foreach (string str in comp.renderableDefIndexes.Keys)
                     {
-                        return comp.renderableDefIndexes[str];
+                        if (str == defName || (linkIndexWithDef != null && linkIndexWithDef.defName == str))
+                        {
+                            return comp.renderableDefIndexes[str];
+                        }
                     }
+                }catch(Exception e){
+                    Log.Error($"[RVR]: Error finding index of {defName} for {pawn.Name}! Regenerating graphics...");
+                    Log.Error($"[RVR]: Caught error: {e}");
+                    Log.Message($"[RVR]: ColorComp is on pawn: {pawn.TryGetComp<ColorComp>()!=null}");
+                    rDef.GenGraphics(pawn);
                 }
             }
             return 0;

@@ -84,6 +84,7 @@
     <Compile Include="RVRFrameWork\DyeComp.cs" />
     <Compile Include="RVRFrameWork\FactionRelatedDefs.cs" />
     <Compile Include="RVRFrameWork\Patches.cs" />
+    <Compile Include="RVRFrameWork\PrefdefinedPawnDefs.cs" />
     <Compile Include="RVRFrameWork\RenderDef.cs" />
     <Compile Include="RVRFrameWork\Renders.cs" />
     <Compile Include="RVRFrameWork\ThingDef.cs" />
