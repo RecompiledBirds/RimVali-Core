@@ -16,22 +16,22 @@ namespace RimValiCore
         private static readonly Shader shadertest;
 #pragma warning restore IDE0051 // Remove unused private members
 
-        public static AvaliGraphic Get<T>(string path) where T : AvaliGraphic, new()
+        public static AvaliGraphic Get<T>(string path, string maskPath = null) where T : AvaliGraphic, new()
         {
             //Log.Message("Was Got8");
-            return GetInner<T>(new AvaliGraphicRequest(typeof(T), path, ShaderDatabase.Cutout, Vector2.one, Color.white, Color.white, Color.white, null, 0, null));
+            return GetInner<T>(new AvaliGraphicRequest(typeof(T), path, ShaderDatabase.Cutout, Vector2.one, Color.white, Color.white, Color.white, null, 0, null,maskPath));
         }
 
-        public static AvaliGraphic Get<T>(string path, Shader shader) where T : AvaliGraphic, new()
+        public static AvaliGraphic Get<T>(string path, Shader shader, string maskPath= null) where T : AvaliGraphic, new()
         {
             //Log.Message("Was Got7" + shader.name + " Color3: ");
             return GetInner<T>(new AvaliGraphicRequest(typeof(T), path, shader, Vector2.one, Color.white, Color.white, Color.white, null, 0, null));
         }
 
-        public static AvaliGraphic Get<T>(string path, Shader shader, Vector2 drawSize, Color color) where T : AvaliGraphic, new()
+        public static AvaliGraphic Get<T>(string path, Shader shader, Vector2 drawSize, Color color, string maskPath=null) where T : AvaliGraphic, new()
         {
             //Log.Message("Was Got6" + shader.name + " Color3: ");
-            return GetInner<T>(new AvaliGraphicRequest(typeof(T), path, shader, drawSize, color, Color.white, Color.white, null, 0, null));
+            return GetInner<T>(new AvaliGraphicRequest(typeof(T), path, shader, drawSize, color, Color.white, Color.white, null, 0, null,maskPath));
         }
 
         public static AvaliGraphic Get<T>(
@@ -39,36 +39,12 @@ namespace RimValiCore
           Shader shader,
           Vector2 drawSize,
           Color color,
-          int renderQueue)
+          int renderQueue,
+          string maskPath = null)
           where T : AvaliGraphic, new()
         {
             //Log.Message("Was Got5");
-            return GetInner<T>(new AvaliGraphicRequest(typeof(T), path, shader, drawSize, color, Color.white, Color.white, null, renderQueue, null));
-        }
-
-        public static AvaliGraphic Get<T>(
-          string path,
-          Shader shader,
-          Vector2 drawSize,
-          Color color,
-          Color colorTwo,
-          Color colorThree)
-          where T : AvaliGraphic, new()
-        {
-            //Log.Message("Was Got4");
-            return GetInner<T>(new AvaliGraphicRequest(typeof(T), path, shader, drawSize, color, colorTwo, colorThree, null, 0, null));
-        }
-
-        public static AvaliGraphic Get<T>(
-          string path,
-          Shader shader,
-          Vector2 drawSize,
-          Color color,
-          Color colorTwo)
-          where T : AvaliGraphic, new()
-        {
-            //Log.Message("Was Got3: " + shader.name + " Color3: ");
-            return GetInner<T>(new AvaliGraphicRequest(typeof(T), path, shader, drawSize, color, colorTwo, Color.white, null, 0, null));
+            return GetInner<T>(new AvaliGraphicRequest(typeof(T), path, shader, drawSize, color, Color.white, Color.white, null, renderQueue, null,maskPath));
         }
 
         public static AvaliGraphic Get<T>(
@@ -78,13 +54,41 @@ namespace RimValiCore
           Color color,
           Color colorTwo,
           Color colorThree,
-          AvaliGraphicData data)
+          string maskPath = null)
+          where T : AvaliGraphic, new()
+        {
+            //Log.Message("Was Got4");
+            return GetInner<T>(new AvaliGraphicRequest(typeof(T), path, shader, drawSize, color, colorTwo, colorThree, null, 0, null,maskPath));
+        }
+
+        public static AvaliGraphic Get<T>(
+          string path,
+          Shader shader,
+          Vector2 drawSize,
+          Color color,
+          Color colorTwo,
+          string maskPath = null)
+          where T : AvaliGraphic, new()
+        {
+            //Log.Message("Was Got3: " + shader.name + " Color3: ");
+            return GetInner<T>(new AvaliGraphicRequest(typeof(T), path, shader, drawSize, color, colorTwo, Color.white, null, 0, null,maskPath));
+        }
+
+        public static AvaliGraphic Get<T>(
+          string path,
+          Shader shader,
+          Vector2 drawSize,
+          Color color,
+          Color colorTwo,
+          Color colorThree,
+          AvaliGraphicData data,
+          string maskPath = null)
           where T : AvaliGraphic, new()
         {
             //if (shader.name != "Custom/Cutout") { shadertest = shader; }
             //if (shader.name == "Custom/Cutout") { shader = shadertest; }
             //Log.Message("Was Got2: " + shader.name + " Color3: " + colorThree);
-            return GetInner<T>(new AvaliGraphicRequest(typeof(T), path, shader, drawSize, color, colorTwo, colorThree, data, 0, null));
+            return GetInner<T>(new AvaliGraphicRequest(typeof(T), path, shader, drawSize, color, colorTwo, colorThree, data, 0, null,maskPath));
         }
 
         public static AvaliGraphic Get(
@@ -94,10 +98,11 @@ namespace RimValiCore
           Vector2 drawSize,
           Color color,
           Color colorTwo,
-          Color colorThree)
+          Color colorThree,
+          string maskPath = null)
         {
             //Log.Message("Was Got1");
-            return Get(graphicClass, path, shader, drawSize, color, colorTwo, colorThree, null, null);
+            return Get(graphicClass, path, shader, drawSize, color, colorTwo, colorThree, null, null,maskPath);
         }
 
         public static AvaliGraphic Get(
@@ -109,9 +114,10 @@ namespace RimValiCore
           Color colorTwo,
           Color colorThree,
           AvaliGraphicData data,
-          List<ShaderParameter> shaderParameters)
+          List<ShaderParameter> shaderParameters,
+          string maskPath = null)
         {
-            AvaliGraphicRequest req = new AvaliGraphicRequest(graphicClass, path, shader, drawSize, color, colorTwo, colorThree, data, 0, shaderParameters);
+            AvaliGraphicRequest req = new AvaliGraphicRequest(graphicClass, path, shader, drawSize, color, colorTwo, colorThree, data, 0, shaderParameters,maskPath);
             // liQdComment 2 This is what the game requests
             if (req.graphicClass == typeof(Graphic_Multi))
             {

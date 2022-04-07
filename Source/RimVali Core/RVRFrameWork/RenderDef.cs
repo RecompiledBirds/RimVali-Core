@@ -13,6 +13,39 @@ namespace RimValiCore.RVR
         public string tex;
         public string femaleTex;
 
+        public List<string> alternateMaskPaths = new List<string>();
+        public List<string> alternateFemaleMaskPaths = new List<string>();
+
+        public bool ProvidesAlternateMask(Pawn pawn)
+        {
+            return pawn.gender == Gender.Female ? HasFemaleAlternateMasks : HasAlternateMasks;
+        }
+
+        public bool HasAlternateMasks
+        {
+            get
+            {
+                return alternateMaskPaths.Count > 0;
+            }
+        }
+
+        public bool HasFemaleAlternateMasks
+        {
+            get
+            {
+                return alternateFemaleMaskPaths.Count > 0;
+            }
+        }
+
+        public List<string> GetMasks(Pawn pawn)
+        {
+            if (pawn.gender == Gender.Female && HasFemaleAlternateMasks)
+                return alternateFemaleMaskPaths;
+            else if (HasAlternateMasks)
+                return alternateMaskPaths;
+            return new List<string>();
+        }
+
         public virtual bool CanApply(Pawn p)
         {
             return true;
@@ -60,7 +93,7 @@ namespace RimValiCore.RVR
     public class RenderableDef : Def
     {
         public Graphic graphic;
-
+        public RenderableDef linkMaskIndexWith;
         #region backstory checks
 
         public bool StoryIsName(Backstory story, string title)
@@ -101,6 +134,22 @@ namespace RimValiCore.RVR
             return 0;
         }
 
+        public int GetMyMaskIndex(Pawn pawn)
+        {
+            if (pawn.def is RimValiRaceDef)
+            {
+                ColorComp comp = pawn.TryGetComp<ColorComp>();
+                foreach (string str in comp.renderableDefMaskIndexes.Keys)
+                {
+                    if (str == defName || (linkMaskIndexWith != null && linkMaskIndexWith.defName == str))
+                    {
+                        return comp.renderableDefMaskIndexes[str];
+                    }
+                }
+            }
+            return 0;
+        }
+
         #endregion get index
 
         #region get texture
@@ -109,12 +158,25 @@ namespace RimValiCore.RVR
         {
             return TexPath(pawn, GetMyIndex(pawn));
         }
-
-        public string TexPath(Pawn pawn, int index)
+       
+        public string MaskPath(Pawn pawn, int index)
         {
+            string path = null;
+            BaseTex tex = textures[index];
+            if (tex.HasAlternateMasks)
+            {
 
-            string path = textures[index].femaleTex != null && pawn.gender == Gender.Female ? textures[index].femaleTex : textures[index].tex;
+            }
+            if (tex.HasFemaleAlternateMasks)
+            {
 
+            }
+            return path;
+        }
+
+        public BaseTex GetCurrentTexture(Pawn pawn, int index)
+        {
+            BaseTex tex = textures[index];
             //HediffStory gets highest priority here, by being lowest on this set
             Backstory adulthood = null;
             if (pawn.story.adulthood != null)
@@ -127,7 +189,7 @@ namespace RimValiCore.RVR
                 //Log.Message(backstoryTex.backstoryTitle);
                 if ((adulthood != null && StoryIsName(adulthood, backstoryTex.backstoryTitle)) || StoryIsName(childhood, backstoryTex.backstoryTitle))
                 {
-                    path = backstoryTex.femaleTex != null && pawn.gender == Gender.Female ? backstoryTex.femaleTex : backstoryTex.tex;
+                    tex = backstoryTex != null && pawn.gender == Gender.Female ? backstoryTex : backstoryTex;
                 }
             }
             foreach (HediffTex hediffTex in hediffTextures)
@@ -137,7 +199,7 @@ namespace RimValiCore.RVR
                     BodyPartDef def = bodyPartRecord.def;
                     if (def.defName.ToLower() == bodyPart.ToLower() || def.label.ToLower() == bodyPart.ToLower() && pawn.health.hediffSet.HasHediff(hediffTex.hediff, bodyPartRecord, false))
                     {
-                        path = hediffTex.femaleTex != null && pawn.gender == Gender.Female ? hediffTex.femaleTex : hediffTex.tex;
+                        tex = hediffTex != null && pawn.gender == Gender.Female ? hediffTex : hediffTex;
                     }
                 }
             }
@@ -152,11 +214,19 @@ namespace RimValiCore.RVR
                         if ((def.defName.ToLower() == bodyPart.ToLower() || def.label.ToLower() == bodyPart.ToLower())
                             && (pawn.health.hediffSet.HasHediff(hediffStoryTex.hediffDef, bodyPartRecord, false)))
                         {
-                            path = hediffStoryTex.femaleTex != null && pawn.gender == Gender.Female ?hediffStoryTex.femaleTex : hediffStoryTex.tex;
+                            tex = hediffStoryTex != null && pawn.gender == Gender.Female ? hediffStoryTex : hediffStoryTex;
                         }
                     }
                 }
             }
+            return tex;
+        }
+
+        public string TexPath(Pawn pawn, int index)
+        {
+            BaseTex tex = GetCurrentTexture(pawn, index);
+            string path = pawn.gender == Gender.Female && tex.femaleTex!=null? tex.femaleTex : tex.tex;
+
             if (pawn.Dead)
             {
                 if (pawn.GetRotStage().HasFlag(RotStage.Dessicated) && dessicatedTex != null)

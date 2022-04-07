@@ -467,10 +467,10 @@ namespace RimValiCore
                 if (req.shader == AvaliShaderDatabase.Tricolor)
                 {
                     //Log.Message("Generating MaskTex");
-                    texture2DArray2[0] = ContentFinder<Texture2D>.Get(req.path + "_northm", false);
-                    texture2DArray2[1] = ContentFinder<Texture2D>.Get(req.path + "_eastm", false);
-                    texture2DArray2[2] = ContentFinder<Texture2D>.Get(req.path + "_southm", false);
-                    texture2DArray2[3] = ContentFinder<Texture2D>.Get(req.path + "_westm", false);
+                    texture2DArray2[0] = ContentFinder<Texture2D>.Get(req.maskPath + "_northm", false);
+                    texture2DArray2[1] = ContentFinder<Texture2D>.Get(req.maskPath + "_eastm", false);
+                    texture2DArray2[2] = ContentFinder<Texture2D>.Get(req.maskPath + "_southm", false);
+                    texture2DArray2[3] = ContentFinder<Texture2D>.Get(req.maskPath + "_westm", false);
                     if (texture2DArray2[0] == null)
                     {
                         if (texture2DArray2[2] != null)

@@ -888,7 +888,6 @@ namespace RimValiCore.RVR
             {
                 Traverse apparelInfo = Traverse.Create(typeof(PawnApparelGenerator)).Field(name: "allApparelPairs");
                 List<ThingStuffPair> thingStuffPairs = apparelInfo.GetValue<List<ThingStuffPair>>().Where(x => ApparelPatch.CanWear(x.thing, pawn.def)).ToList();
-                Log.Message($"Things availble: {thingStuffPairs.Count}");
                 apparelInfo.SetValue(thingStuffPairs);
             }
             catch (Exception e) { Log.Error($"Oops! RV:C had an issue generating apparel: {e.Message}"); }
@@ -1290,13 +1289,9 @@ namespace RimValiCore.RVR
     {
         public static bool CanWear(ThingDef def, ThingDef race)
         {
-            Log.Message($"{def.defName} is keyed in BL: {Restrictions.equipmentRestrictions.ContainsKey(def)} ");
             bool whiteListed = (Restrictions.equipabblbleWhiteLists.ContainsKey(def) && Restrictions.equipabblbleWhiteLists[def].Contains(race));
-            Log.Message($"{def.defName} is Whitelisted for {race.defName}: {whiteListed}");
             bool blackListed = Restrictions.equipmentRestrictions.ContainsKey(def) && Restrictions.equipmentRestrictions[def].Contains(race);
-            Log.Message($"{def.defName} is Blacklisted for {race.defName}: {blackListed}");
             bool isRestrictedToOnlyApprovedClothes = race is RimValiRaceDef rimValiRace && rimValiRace.restrictions.canOnlyUseApprovedApparel;
-            Log.Message($"isRestrictedToOnlyApprovedClothes for {race.defName}: {isRestrictedToOnlyApprovedClothes}");
             bool itemIsRestricted = !isRestrictedToOnlyApprovedClothes && !Restrictions.equipmentRestrictions.ContainsKey(def);
             
             bool result = blackListed || whiteListed || itemIsRestricted;
@@ -1558,15 +1553,38 @@ namespace RimValiCore.RVR
                     GetColors(ref color1, ref color2, ref color3, colorComp, renderable);
 
                     CalculateDeadColors(ref color1, ref color2, ref color3, pawnRenderer, mode);
-
-                    graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(renderable.TexPath(pawn), AvaliShaderDatabase.Tricolor, size, color1, color2, color3);
+                    BaseTex tex = renderable.GetCurrentTexture(pawn, renderable.GetMyIndex(pawn));
+                    string mPath = null;
+                    Log.Message("test");
+                    Log.Message($"Tex is null: {tex==null}");
+                    if (tex.ProvidesAlternateMask(pawn))
+                    {
+                        Log.Message("test2");
+                        mPath = $"{tex.GetMasks(pawn)[renderable.GetMyMaskIndex(pawn)]}";
+                    }
+                    Log.Message("test3");
+                    graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(renderable.TexPath(pawn), AvaliShaderDatabase.Tricolor, size, color1, color2, color3,mPath);
+                    Log.Message("test4");
                 }
                 else
                 {
-                    graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(renderable.TexPath(pawn), AvaliShaderDatabase.Tricolor, size, pawn.story.SkinColor);
+                    BaseTex tex = renderable.GetCurrentTexture(pawn, renderable.GetMyIndex(pawn));
+                    string mPath = null;
+                    if (tex.ProvidesAlternateMask(pawn))
+                    {
+                       
+                        mPath = $"{tex.GetMasks(pawn)[renderable.GetMyMaskIndex(pawn)]}";
+                        graphic.maskPath = $"{mPath}";
+                    }
+                   
+                    graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(renderable.TexPath(pawn), AvaliShaderDatabase.Tricolor, size, pawn.story.SkinColor,maskPath:mPath);
+                    
+                  
                 }
+                
                 GenDraw.DrawMeshNowOrLater(graphic.MeshAt(rotation), vector + offset.RotatedBy(Mathf.Acos(Quaternion.Dot(Quaternion.identity, quaternion)) * 114.59156f),
                    quaternion, graphic.MatAt(rotation), flags.FlagSet(PawnRenderFlags.DrawNow));
+               
             }
         }
 

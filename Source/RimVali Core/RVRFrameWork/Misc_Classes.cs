@@ -258,6 +258,7 @@ namespace RimValiCore.RVR
         public List<string> colorKey = new List<string>();
         public List<ColorSet> colorValue = new List<ColorSet>();
 
+        public Dictionary<string,int> renderableDefMaskIndexes = new Dictionary<string,int>();
         public Dictionary<string, int> renderableDefIndexes = new Dictionary<string, int>();
         public List<string> renderableKeys = new List<string>();
         public List<int> index = new List<int>();
@@ -273,6 +274,7 @@ namespace RimValiCore.RVR
         {
             Scribe_Collections.Look(ref colors, "colors", LookMode.Value, LookMode.Deep, ref colorKey, ref colorValue);
             Scribe_Collections.Look(ref renderableDefIndexes, "renderables", LookMode.Value, LookMode.Value, ref renderableKeys, ref index);
+            Scribe_Collections.Look(ref renderableDefIndexes, "renderableDefMasks", LookMode.Value, LookMode.Value, ref renderableKeys, ref index);
         }
     }
 

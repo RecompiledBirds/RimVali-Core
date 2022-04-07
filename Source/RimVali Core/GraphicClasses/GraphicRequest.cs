@@ -17,7 +17,7 @@ namespace RimValiCore
         public AvaliGraphicData graphicData;
         public int renderQueue;
         public List<ShaderParameter> shaderParameters;
-
+        public string maskPath;
         public AvaliGraphicRequest(
           Type graphicClass,
           string path,
@@ -28,7 +28,8 @@ namespace RimValiCore
           Color colorThree,
           AvaliGraphicData graphicData,
           int renderQueue,
-          List<ShaderParameter> shaderParameters)
+          List<ShaderParameter> shaderParameters,
+          string maskPath=null)
         {
             this.graphicClass = graphicClass;
             this.path = path;
@@ -40,6 +41,7 @@ namespace RimValiCore
             this.graphicData = graphicData;
             this.renderQueue = renderQueue;
             this.shaderParameters = shaderParameters.NullOrEmpty() ? null : shaderParameters;
+            this.maskPath = maskPath != null ? maskPath : path;
         }
 
         public override int GetHashCode()

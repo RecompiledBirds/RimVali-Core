@@ -260,6 +260,27 @@ namespace RimValiCore.RVR
                             int index = Rand.Next(renderableDef.textures.Count);
                             colorcomp.renderableDefIndexes.Add(renderableDef.defName, index);
                         }
+
+                        if (renderableDef.linkMaskIndexWith != null)
+                        {
+                            if (colorcomp.renderableDefMaskIndexes.ContainsKey(renderableDef.linkIndexWithDef.defName))
+                            {
+                                colorcomp.renderableDefMaskIndexes.Add(renderableDef.defName, colorcomp.renderableDefMaskIndexes[renderableDef.linkMaskIndexWith.defName]);
+                            }
+                            else
+                            {
+                                System.Random Rand = new System.Random();
+                                int index = Rand.Next(renderableDef.textures[colorcomp.renderableDefIndexes[renderableDef.defName]].alternateMaskPaths.Count);
+                                colorcomp.renderableDefMaskIndexes.Add(renderableDef.linkMaskIndexWith.defName, index);
+                                colorcomp.renderableDefMaskIndexes.Add(renderableDef.defName, index);
+                            }
+                        }
+                        else
+                        {
+                            System.Random Rand = new System.Random();
+                            int index = Rand.Next(renderableDef.GetCurrentTexture(pawn,renderableDef.GetMyIndex(pawn)).GetMasks(pawn).Count);
+                            colorcomp.renderableDefMaskIndexes.Add(renderableDef.defName, index);
+                        }
                     }
                 }
                 if (!DefDatabase<RVRBackstory>.AllDefs.Where(x => (pawn.story.adulthood != null && x.defName == pawn.story.adulthood.identifier) || x.defName == pawn.story.childhood.identifier).EnumerableNullOrEmpty())

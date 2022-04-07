@@ -14,6 +14,7 @@ namespace RimValiCore.RVR
     public class RenderTex
     {
         public string path;
+        public string maskPath;
         public AvaliGraphic tex;
     }
 
