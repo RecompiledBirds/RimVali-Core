@@ -59,6 +59,7 @@
     <Compile Include="HealableMaterial\Finder.cs" />
     <Compile Include="HealableMaterial\GameComp.cs" />
     <Compile Include="HealableMaterial\HealableComp.cs" />
+    <Compile Include="QLine\QuestStage.cs" />
     <Compile Include="RVCInitalizer.cs" />
     <Compile Include="Mod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -69,7 +70,6 @@
     </Compile>
     <Compile Include="GraphicClasses\ShaderDatabase.cs" />
     <Compile Include="GraphicClasses\ShaderIDs.cs" />
-    <Compile Include="QLine\PrototypeWorker.cs" />
     <Compile Include="QLine\QLine.cs" />
     <Compile Include="QLine\QL_Quest.cs" />
     <Compile Include="QLine\QL_Window.cs" />
@@ -84,6 +84,7 @@
     <Compile Include="RVRFrameWork\DyeComp.cs" />
     <Compile Include="RVRFrameWork\FactionRelatedDefs.cs" />
     <Compile Include="RVRFrameWork\Patches.cs" />
+    <Compile Include="RVRFrameWork\PawnBlender.cs" />
     <Compile Include="RVRFrameWork\PrefdefinedPawnDefs.cs" />
     <Compile Include="RVRFrameWork\RenderDef.cs" />
     <Compile Include="RVRFrameWork\Renders.cs" />

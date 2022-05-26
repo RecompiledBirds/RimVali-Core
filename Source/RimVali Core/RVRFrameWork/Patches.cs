@@ -1555,16 +1555,11 @@ namespace RimValiCore.RVR
                     CalculateDeadColors(ref color1, ref color2, ref color3, pawnRenderer, mode);
                     BaseTex tex = renderable.GetCurrentTexture(pawn, renderable.GetMyIndex(pawn));
                     string mPath = null;
-                    Log.Message("test");
-                    Log.Message($"Tex is null: {tex==null}");
                     if (tex.ProvidesAlternateMask(pawn))
                     {
-                        Log.Message("test2");
                         mPath = $"{tex.GetMasks(pawn)[renderable.GetMyMaskIndex(pawn)]}";
                     }
-                    Log.Message("test3");
                     graphic = AvaliGraphicDatabase.Get<AvaliGraphic_Multi>(renderable.TexPath(pawn), AvaliShaderDatabase.Tricolor, size, color1, color2, color3,mPath);
-                    Log.Message("test4");
                 }
                 else
                 {
@@ -1581,7 +1576,7 @@ namespace RimValiCore.RVR
                     
                   
                 }
-                
+                                
                 GenDraw.DrawMeshNowOrLater(graphic.MeshAt(rotation), vector + offset.RotatedBy(Mathf.Acos(Quaternion.Dot(Quaternion.identity, quaternion)) * 114.59156f),
                    quaternion, graphic.MatAt(rotation), flags.FlagSet(PawnRenderFlags.DrawNow));
                

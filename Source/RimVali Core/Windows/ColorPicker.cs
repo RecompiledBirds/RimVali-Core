@@ -331,7 +331,12 @@ namespace RimValiCore.Windows
             }
 
             string hexBefore = hexCode;
-            hexCode = Widgets.TextField(rectColorInputBoxes[1].ContractedBy(5f), hexCode);
+            hexCode = Widgets.
+                
+                
+                
+                
+            TextField(rectColorInputBoxes[1].ContractedBy(5f), hexCode);
             hexChanged = !hexBefore.Equals(hexCode) || hexChanged;
             GUI.color = Color.white;
 

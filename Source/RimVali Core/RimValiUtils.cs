@@ -23,6 +23,14 @@ namespace RimValiCore
             return pawn != null ? pawn.def.defName == race.defName : false;
         }
 
+        public static bool IsOfRace(this Pawn pawn, List<ThingDef> races)
+        {
+            return pawn != null ? races.Contains(pawn.def) : false;
+        }
+        public static bool IsOfRace(this Pawn pawn, List<RimValiCore.RVR.RimValiRaceDef> races)
+        {
+            return pawn != null ? races.Contains(pawn.def) : false;
+        }
         #endregion Pawn
 
 
@@ -191,6 +199,18 @@ namespace RimValiCore
             return PawnsOfRaceInFaction(faction, race).Count();
         }
 
+        public static int PawnOfRaceCount(this Faction faction, List<ThingDef> races)
+        {
+            return PawnsOfRaceInFaction(faction, races).Count();
+        }
+        public static int PawnOfRaceCount(this Faction faction, List<RimValiCore.RVR.RimValiRaceDef> races)
+        {
+            return PawnsOfRaceInFaction(faction, races).Count();
+        }
+        public static IEnumerable<Pawn> AllPawnsOfRaceOnMap(List<RimValiCore.RVR.RimValiRaceDef> races, Map map)
+        {
+            return map.mapPawns.AllPawns.Where(x => races.Contains(x.def));
+        }
         public static IEnumerable<Pawn> AllPawnsOfRaceOnMap(List<ThingDef> races, Map map)
         {
             return map.mapPawns.AllPawns.Where(x => races.Contains(x.def));
@@ -236,6 +256,14 @@ namespace RimValiCore
             return FetchPawnsSpawnedOnAllMaps().Where(x => IsOfRace(x, race) && x.Faction == faction);
         }
 
+        public static IEnumerable<Pawn> PawnsOfRaceInFaction(this Faction faction, List<ThingDef> races)
+        {
+            return FetchPawnsSpawnedOnAllMaps().Where(x => IsOfRace(x, races) && x.Faction == faction);
+        }
+        public static IEnumerable<Pawn> PawnsOfRaceInFaction(this Faction faction, List<RimValiCore.RVR.RimValiRaceDef> races)
+        {
+            return FetchPawnsSpawnedOnAllMaps().Where(x => IsOfRace(x, races) && x.Faction == faction);
+        }
         //public static IEnumerable<Pawn> CheckAllPawnsInMapAndFaction(Map map, Faction faction) => PawnsFinder.AllMaps_SpawnedPawnsInFaction(faction).Where(x => x.Map == map);
         public static IEnumerable<Pawn> CheckAllPawnsInMapAndFaction(Map map, Faction faction)
         {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 using Verse;
 
 namespace RimValiCore.QLine
@@ -31,30 +32,40 @@ namespace RimValiCore.QLine
             }
         }
 
-        public QL_Quest positiveQuestResult;
-        public QL_Quest negativeQuestResult;
     }
 
     public abstract class QuestWorker
     {
-
-        public virtual void NegativeEndAction()
+        private int curStage;
+        public int CurrentStage
         {
+            get
+            {
+                return curStage;
+            }
+        }
+        public virtual List<QuestStage> stages
+        {
+            get
+            {
+                return new List<QuestStage>();
+            }
+        }
+        
+        public void ChangeStage(int amount)
+        {
+            int value = amount+curStage;
+            Mathf.Clamp(value, 0, this.stages.Count - 1);
+            curStage = value;
 
         }
 
-        public virtual void PositiveEndAction()
+        public void IncrementStage() => ChangeStage(1);
+
+        public virtual void ExposeData()
         {
-
+            Scribe_Values.Look(ref curStage, nameof(curStage));
         }
-
-        public virtual void Action()
-        {
-
-        }
-
-        public abstract bool IsAvalible();
-        public abstract int QuestWeight();
     }
 
 

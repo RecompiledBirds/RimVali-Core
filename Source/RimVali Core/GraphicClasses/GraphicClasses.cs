@@ -56,7 +56,6 @@ namespace RimValiCore
           Color newColorTwo,
           Color newColorThree)
         {
-            Log.Message("treidmoasrasd");
             if (newColorTwo != Color.white)
             {
                 Log.ErrorOnce("Cannot use Graphic_Appearances.GetColoredVersion with a non-white colorTwo.", 9910251);
@@ -239,7 +238,6 @@ namespace RimValiCore
           Color newColorTwo,
           Color newColorThree)
         {
-            Log.Message("actuallythisone");
             return AvaliGraphicDatabase.Get<AvaliGraphic_Single>(path, newShader, drawSize, newColor, newColorTwo, Color.white, data);
         }
 

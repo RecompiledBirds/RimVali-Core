@@ -94,7 +94,8 @@ namespace RimValiCore
                             return costList;
                         })(),
                         designationCategory = def.designationCategory,
-                        designatorDropdown = def.designatorDropdown
+                        designatorDropdown = def.designatorDropdown,
+                        ignoreIllegalLabelCharacterConfigError = def.ignoreIllegalLabelCharacterConfigError
                     };
 
                     BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
@@ -166,7 +167,8 @@ namespace RimValiCore
                         {
                             new CompProperties_Forbiddable()
                          },
-                        drawerType = DrawerType.MapMeshAndRealTime
+                        drawerType = DrawerType.MapMeshAndRealTime,
+                        ignoreIllegalLabelCharacterConfigError = true
                     };
                     thingDef.thingClass = typeof(Blueprint_Build);
                     thingDef.defName = ThingDefGenerator_Buildings.BlueprintDefNamePrefix + output.defName;
@@ -220,7 +222,7 @@ namespace RimValiCore
                     frameDef.category = ThingCategory.Ethereal;
                     frameDef.entityDefToBuild = output;
                     output.frameDef = frameDef;
-
+                    frameDef.ignoreIllegalLabelCharacterConfigError = true;
                     //This makes sure everything is setup how it should be
                     output.PostLoad();
                     output.ResolveReferences();
@@ -312,7 +314,7 @@ namespace RimValiCore
                 def.PostLoad();
                 def.ResolveReferences();
             }
-            Log.Message(builder.ToString());
+         //   Log.Message(builder.ToString());
             Log.Message($"[RimVali Core/FloorConstructor] Updated {toUpdateDesignationCatDefs.Count} designation categories & {toUpdateDropdownDesDefs.Count} dropdown designations.");
             //We need to do this or RW has a fit
             WealthWatcher.ResetStaticData();

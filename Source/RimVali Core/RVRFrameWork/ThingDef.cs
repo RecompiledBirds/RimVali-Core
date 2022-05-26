@@ -1,6 +1,8 @@
 ﻿using RimWorld;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 using Verse;
 
@@ -230,121 +232,159 @@ namespace RimValiCore.RVR
             }
         }
 
+        private static bool GenerationHasFailed = false;
         public void GenGraphics(Pawn pawn)
         {
             if (pawn.def is RimValiRaceDef rimValiRaceDef)
             {
-                ColorComp colorcomp = pawn.TryGetComp<ColorComp>();
-
-                PrefdefinedPawnDefs prefdefinedPawnDef = null;
-
-                System.Random Rand = new System.Random();
-
-                foreach (PrefdefinedPawnDefs def in DefDatabase<PrefdefinedPawnDefs>.AllDefsListForReading)
+                try
                 {
-                    if(def.chanceToOccur>=Rand.Next(0,100) && (def.race==null||def.race==this))
-                        prefdefinedPawnDef=def;
-                    if (prefdefinedPawnDef != null)
-                        break;
-                }
+                    ColorComp colorcomp = pawn.TryGetComp<ColorComp>();
 
-                foreach (RenderableDef renderableDef in renderableDefs)
-                {
-                    if (!colorcomp.renderableDefIndexes.ContainsKey(renderableDef.defName))
+                    PrefdefinedPawnDefs prefdefinedPawnDef = null;
+
+                    System.Random Rand = new System.Random();
+
+                    foreach (PrefdefinedPawnDefs def in DefDatabase<PrefdefinedPawnDefs>.AllDefsListForReading)
                     {
-                        if (renderableDef.linkIndexWithDef != null)
+                        if (def.chanceToOccur >= Rand.Next(0, 100) && (def.race == null || def.race == this))
+                            prefdefinedPawnDef = def;
+                        if (prefdefinedPawnDef != null)
+                            break;
+                    }
+
+                    if (colorcomp.renderableDefIndexes == null)
+                        colorcomp.renderableDefIndexes = new Dictionary<string, int>();
+                    if (colorcomp.renderableDefMaskIndexes == null)
+                        colorcomp.renderableDefMaskIndexes = new Dictionary<string, int>();
+
+                    bool preDefinedTexture = prefdefinedPawnDef != null && prefdefinedPawnDef.usesSetTexture;
+                    bool predefinedMask = prefdefinedPawnDef != null && prefdefinedPawnDef.usesSetMask;
+                    foreach (RenderableDef renderableDef in renderableDefs)
+                    {
+
+                        if (!colorcomp.renderableDefIndexes.ContainsKey(renderableDef.defName))
                         {
-                            if (colorcomp.renderableDefIndexes.ContainsKey(renderableDef.linkIndexWithDef.defName))
+                            if (renderableDef.linkIndexWithDef != null)
                             {
-                                colorcomp.renderableDefIndexes.Add(renderableDef.defName, colorcomp.renderableDefIndexes[renderableDef.linkIndexWithDef.defName]);
+                                if (colorcomp.renderableDefIndexes.ContainsKey(renderableDef.linkIndexWithDef.defName))
+                                {
+                                    colorcomp.renderableDefIndexes.Add(renderableDef.defName, colorcomp.renderableDefIndexes[renderableDef.linkIndexWithDef.defName]);
+                                }
+                                else
+                                {
+                                    int index = Rand.Next(renderableDef.textures.Count);
+                                    if (preDefinedTexture)
+                                        index = Mathf.Clamp(prefdefinedPawnDef.textureIndex, 0, renderableDef.textures.Count - 1);
+                                    colorcomp.renderableDefIndexes.Add(renderableDef.linkIndexWithDef.defName, index);
+                                    colorcomp.renderableDefIndexes.Add(renderableDef.defName, index);
+                                }
                             }
                             else
                             {
-                                bool preDefinedTexture = prefdefinedPawnDef != null && prefdefinedPawnDef.usesSetTexture;
-                                int index = Rand.Next(renderableDef.textures.Count); ;
+                                int index = Rand.Next(renderableDef.textures.Count);
                                 if (preDefinedTexture)
-                                    index = Mathf.Clamp(prefdefinedPawnDef.textureIndex, 0, renderableDef.textures.Count-1);
-                                colorcomp.renderableDefIndexes.Add(renderableDef.linkIndexWithDef.defName, index);
+                                    index = Mathf.Clamp(prefdefinedPawnDef.textureIndex, 0, renderableDef.textures.Count - 1);
                                 colorcomp.renderableDefIndexes.Add(renderableDef.defName, index);
                             }
-                        }
-                        else
-                        {
-                            bool preDefinedTexture = prefdefinedPawnDef != null && prefdefinedPawnDef.usesSetTexture;
-                            int index = Rand.Next(renderableDef.textures.Count); ;
-                            if (preDefinedTexture)
-                                index = Mathf.Clamp(prefdefinedPawnDef.textureIndex, 0, renderableDef.textures.Count - 1);
-                            colorcomp.renderableDefIndexes.Add(renderableDef.defName, index);
-                        }
 
-                        if (renderableDef.linkMaskIndexWith != null)
-                        {
-                            if (colorcomp.renderableDefMaskIndexes.ContainsKey(renderableDef.linkIndexWithDef.defName))
+                            if (renderableDef.linkMaskIndexWith != null)
                             {
-                                colorcomp.renderableDefMaskIndexes.Add(renderableDef.defName, colorcomp.renderableDefMaskIndexes[renderableDef.linkMaskIndexWith.defName]);
+                                if (colorcomp.renderableDefMaskIndexes.ContainsKey(renderableDef.linkIndexWithDef.defName))
+                                {
+                                    colorcomp.renderableDefMaskIndexes.Add(renderableDef.defName, colorcomp.renderableDefMaskIndexes[renderableDef.linkMaskIndexWith.defName]);
+                                }
+                                else
+                                {
+                                    int count = renderableDef.linkMaskIndexWith.textures[colorcomp.renderableDefIndexes[renderableDef.linkMaskIndexWith.defName]].GetMasks(pawn).Count;
+                                    int index = Rand.Next(count);
+                                    if (!predefinedMask)
+                                        index = Mathf.Clamp(prefdefinedPawnDef.textureIndex, 0, count - 1);
+
+                                    colorcomp.renderableDefMaskIndexes.Add(renderableDef.linkMaskIndexWith.defName, index);
+                                    colorcomp.renderableDefMaskIndexes.Add(renderableDef.defName, index);
+                                }
                             }
                             else
                             {
-                                bool predefinedMask = prefdefinedPawnDef != null && prefdefinedPawnDef.usesSetMask;
-                                int count = renderableDef.linkMaskIndexWith.textures[colorcomp.renderableDefIndexes[renderableDef.linkMaskIndexWith.defName]].GetMasks(pawn).Count;
+                                int count = renderableDef.GetCurrentTexture(pawn, renderableDef.GetMyIndex(pawn)).GetMasks(pawn).Count;
                                 int index = Rand.Next(count);
-                                if (!predefinedMask)
-                                    index = Mathf.Clamp(prefdefinedPawnDef.textureIndex, 0,count-1);
-                    
-                                colorcomp.renderableDefMaskIndexes.Add(renderableDef.linkMaskIndexWith.defName, index);
+                                if (predefinedMask)
+                                    index = Mathf.Clamp(prefdefinedPawnDef.textureIndex, 0, count - 1);
                                 colorcomp.renderableDefMaskIndexes.Add(renderableDef.defName, index);
                             }
                         }
-                        else
+                    }
+                    if (!DefDatabase<RVRBackstory>.AllDefs.Where(x => (pawn.story.adulthood != null && x.defName == pawn.story.adulthood.identifier) || x.defName == pawn.story.childhood.identifier).EnumerableNullOrEmpty())
+                    {
+                        List<RVRBackstory> backstories = DefDatabase<RVRBackstory>.AllDefs.Where(x => (pawn.story.adulthood != null && x.defName == pawn.story.adulthood.identifier) || x.defName == pawn.story.childhood.identifier).ToList();
+                        RVRBackstory story = backstories[0];
+
+                        if (!story.colorGenOverrides.NullOrEmpty())
                         {
-                            bool predefinedMask = prefdefinedPawnDef != null && prefdefinedPawnDef.usesSetMask;
-                            int count = renderableDef.GetCurrentTexture(pawn, renderableDef.GetMyIndex(pawn)).GetMasks(pawn).Count;
-                            int index = Rand.Next(count);
-                            if (predefinedMask)
-                                index = Mathf.Clamp(prefdefinedPawnDef.textureIndex, 0, count - 1);
-                            colorcomp.renderableDefMaskIndexes.Add(renderableDef.defName, index);
+                            foreach (Colors color in story.colorGenOverrides)
+                            {
+                                if (!colorcomp.colors.ContainsKey(color.name))
+                                {
+                                    Color color1 = color.Generator(pawn).firstColor.NewRandomizedColor();
+                                    Color color2 = color.Generator(pawn).secondColor.NewRandomizedColor();
+                                    Color color3 = color.Generator(pawn).thirdColor.NewRandomizedColor();
+                                    colorcomp.colors.Add(color.name, new ColorSet(color1, color2, color3, color.isDyeable));
+                                }
+                            }
                         }
                     }
-                }
-                if (!DefDatabase<RVRBackstory>.AllDefs.Where(x => (pawn.story.adulthood != null && x.defName == pawn.story.adulthood.identifier) || x.defName == pawn.story.childhood.identifier).EnumerableNullOrEmpty())
-                {
-                    List<RVRBackstory> backstories = DefDatabase<RVRBackstory>.AllDefs.Where(x => (pawn.story.adulthood != null && x.defName == pawn.story.adulthood.identifier) || x.defName == pawn.story.childhood.identifier).ToList();
-                    RVRBackstory story = backstories[0];
 
-                    if (!story.colorGenOverrides.NullOrEmpty())
+                    foreach (Colors color in rimValiRaceDef.graphics.colorSets)
                     {
-                        foreach (Colors color in story.colorGenOverrides)
+
+                        if (!colorcomp.colors.ContainsKey(color.name))
                         {
-                            if (!colorcomp.colors.ContainsKey(color.name))
+                            bool generatePreDefinedColors = prefdefinedPawnDef != null && prefdefinedPawnDef.definedColorSets.Any(colorset => colorset.name == color.name);
+
+                            if (!generatePreDefinedColors)
                             {
                                 Color color1 = color.Generator(pawn).firstColor.NewRandomizedColor();
                                 Color color2 = color.Generator(pawn).secondColor.NewRandomizedColor();
                                 Color color3 = color.Generator(pawn).thirdColor.NewRandomizedColor();
                                 colorcomp.colors.Add(color.name, new ColorSet(color1, color2, color3, color.isDyeable));
                             }
+                            else
+                            {
+                                DefinedColorSet colorSet = prefdefinedPawnDef.definedColorSets.Find(colorset => colorset.name == color.name);
+
+                                colorcomp.colors.Add(color.name, new ColorSet(colorSet.colorOne, colorSet.colorTwo, colorSet.colorThree, color.isDyeable));
+                            }
                         }
                     }
                 }
-
-                foreach (Colors color in rimValiRaceDef.graphics.colorSets)
+                catch
                 {
-
-                    if (!colorcomp.colors.ContainsKey(color.name))
+                    //This code means the comp itself has failed.
+                    //Attempt 5 times to self-repair.
+                    if (!GenerationHasFailed)
                     {
-                        bool generatePreDefinedColors = prefdefinedPawnDef != null && prefdefinedPawnDef.definedColorSets.Any(colorset => colorset.name == color.name);
-
-                        if (!generatePreDefinedColors)
+                        for (int a = 0; a < 5; a++)
                         {
-                            Color color1 = color.Generator(pawn).firstColor.NewRandomizedColor();
-                            Color color2 = color.Generator(pawn).secondColor.NewRandomizedColor();
-                            Color color3 = color.Generator(pawn).thirdColor.NewRandomizedColor();
-                            colorcomp.colors.Add(color.name, new ColorSet(color1, color2, color3, color.isDyeable));
-                        }
-                        else
-                        {
-                            DefinedColorSet colorSet = prefdefinedPawnDef.definedColorSets.Find(colorset=>colorset.name== color.name);
-
-                            colorcomp.colors.Add(color.name, new ColorSet(colorSet.colorOne, colorSet.colorTwo, colorSet.colorThree, color.isDyeable));
+                            try
+                            {
+                                ColorComp colorcomp = pawn.TryGetComp<ColorComp>();
+                                FieldInfo field = pawn.GetType().GetField("comps");
+                                List<ThingComp> thingComps = (field.GetValue(pawn) as List<ThingComp>);
+                                thingComps.Remove(colorcomp);
+                                colorcomp = (ColorComp)Activator.CreateInstance(typeof(ColorComp));
+                                colorcomp.parent = pawn;
+                                thingComps.Add(colorcomp);
+                                colorcomp.Initialize(new colorCompProps());
+                                field.SetValue(pawn, thingComps);
+                                //If we get here, we've reset everything. Break.
+                                break;
+                            }
+                            catch
+                            {
+                                //Stop trying if a = 4.
+                                GenerationHasFailed = a == 4;
+                            }
                         }
                     }
                 }
