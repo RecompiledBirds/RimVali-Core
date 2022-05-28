@@ -31,7 +31,6 @@ namespace RimValiCore.RVR
         {
             Log.Message("[RimVali Core]: Starting RVR patches.");
             Harmony harmony = new Harmony("RimVali.Core");
-            Harmony.DEBUG = true;
             try
             {
                 harmony.PatchAll();

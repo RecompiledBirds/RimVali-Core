@@ -86,6 +86,7 @@
     <Compile Include="RVRFrameWork\Patches.cs" />
     <Compile Include="RVRFrameWork\PawnBlender.cs" />
     <Compile Include="RVRFrameWork\PrefdefinedPawnDefs.cs" />
+    <Compile Include="RVRFrameWork\RaceSwapDef.cs" />
     <Compile Include="RVRFrameWork\RenderDef.cs" />
     <Compile Include="RVRFrameWork\Renders.cs" />
     <Compile Include="RVRFrameWork\ThingDef.cs" />

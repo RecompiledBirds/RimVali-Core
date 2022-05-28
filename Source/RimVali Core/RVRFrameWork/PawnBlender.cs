@@ -22,11 +22,8 @@ namespace RimValiCore.RVRFrameWork
                 //Look for where the pawn is created.
                 if (codes[a].opcode == OpCodes.Call && codes[a].Calls(typeof(ThingMaker).GetMethod("MakeThing")))
                 {
-                    //Load argument 0 from stack
                     yield return new CodeInstruction(OpCodes.Ldarg_0);
-                    //Load it as a PawnGenerationRequest
                     yield return new CodeInstruction(OpCodes.Ldobj, typeof(PawnGenerationRequest));
-                    //Call our function.
                     yield return new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(PawnGeneratorTranspiler), "GetHumanoidRace",new Type[] {typeof(PawnGenerationRequest)}));
                 }
                 else
@@ -36,7 +33,10 @@ namespace RimValiCore.RVRFrameWork
             }
 
         }
-
+        public static bool ShouldSwitchPawnkindBased(PawnGenerationRequest request)
+        {
+            return (DefDatabase<RaceSwapDef>.AllDefs.Any(x=>x.targetRaces.Contains(request.KindDef.race))) && request.KindDef.RaceProps.Humanlike;
+        }
         public static bool ShouldSwitch(PawnGenerationRequest request)
         {
            return  request.Context != PawnGenerationContext.PlayerStarter && request.KindDef.RaceProps.Humanlike;
@@ -48,13 +48,20 @@ namespace RimValiCore.RVRFrameWork
             if (ShouldSwitch(request))
             {
                 IEnumerable<ThingDef> defs = DefDatabase<ThingDef>.AllDefsListForReading.Where(x => x.race != null && x.race.Humanlike);
-                def = defs.RandomElementByWeight(x=>x==ThingDefOf.Human?50 :30/defs.Count());
+
+                def = defs.RandomElementByWeight(x=>x==ThingDefOf.Human?50 :30);
             }
             else
             {
                 def = request.KindDef.race;
             }
-            
+
+            if (ShouldSwitchPawnkindBased(request))
+            {
+                RaceSwapDef randomSwapDef = DefDatabase<RaceSwapDef>.AllDefsListForReading.Where(x => x.targetRaces.Contains(request.KindDef.race)).RandomElement();
+                def = randomSwapDef.replacementRaces.RandomElement();
+            }
+
             return ThingMaker.MakeThing(def);
         }
     }
