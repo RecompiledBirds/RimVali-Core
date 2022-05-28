@@ -1006,7 +1006,7 @@ namespace RimValiCore.RVR
                 pawn = cachedDefs[__instance];
             }
             bool isWhitelisted = (pawn as RimValiRaceDef)?.restrictions.allowedDefsToUse.Contains(t) ?? false;
-            bool canEat = pawn != null && RaceRestrictor.IsAllowed(t,pawn)|| isWhitelisted);
+            bool canEat = pawn != null && RaceRestrictor.IsAllowed(t,pawn)|| isWhitelisted;
             if (!canEat)
             {
                 JobFailReason.Is($"{pawn.label} {"CannotEatRVR".Translate(pawn.label.Named("RACE"))}");

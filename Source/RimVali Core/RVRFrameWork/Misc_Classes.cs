@@ -188,7 +188,7 @@ namespace RimValiCore.RVR
         public List<string> modBuildingRestrictions = new List<string>();
     }
 
-    public class Main
+    public class MainRaceSettings
     {
         public RaceRestrictions restrictions = new RaceRestrictions();
 
