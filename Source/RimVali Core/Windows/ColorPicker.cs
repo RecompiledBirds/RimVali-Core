@@ -52,7 +52,6 @@ namespace RimValiCore.Windows
 
         public ColorPickerWindow(Action<Color> setColor, Action<Color[]> setColorHistory, Color color, Color[] colorHistory)
         {
-            
             this.colorHistory = colorHistory;
             this.setColor = setColor;
             this.setColorHistory = setColorHistory;
