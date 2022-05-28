@@ -58,7 +58,7 @@ namespace RimValiCore.RVRFrameWork
 
             if (ShouldSwitchPawnkindBased(request))
             {
-                RaceSwapDef randomSwapDef = DefDatabase<RaceSwapDef>.AllDefsListForReading.Where(x => x.targetRaces.Contains(request.KindDef.race)).RandomElement();
+                RaceSwapDef randomSwapDef = DefDatabase<RaceSwapDef>.AllDefsListForReading.Where(x => x.targetRaces.Contains(def)).RandomElement();
                 def = randomSwapDef.replacementRaces.RandomElement();
             }
 
