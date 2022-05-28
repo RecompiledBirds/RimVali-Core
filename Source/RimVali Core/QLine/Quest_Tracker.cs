@@ -57,7 +57,6 @@ namespace RimValiCore.QLine
                 quests.Add(quest);
         }
 
-        public void 
 
 
 
