@@ -33,6 +33,14 @@ namespace RimValiCore.RVRFrameWork
             }
 
         }
+
+        private static bool SkipOnce;
+        
+        public static void SkipReplacementGeneratorOnce()
+        {
+            SkipOnce = true;
+        }
+
         public static bool ShouldSwitchPawnkindBased(PawnGenerationRequest request)
         {
             return (DefDatabase<RaceSwapDef>.AllDefs.Any(x=>x.targetRaces.Contains(request.KindDef.race))) && request.KindDef.RaceProps.Humanlike;
@@ -41,27 +49,42 @@ namespace RimValiCore.RVRFrameWork
         {
            return  request.Context != PawnGenerationContext.PlayerStarter && request.KindDef.RaceProps.Humanlike;
         }
+
+        public static bool CanSwapRace(ThingDef def)
+        {
+            return !DefDatabase<ExcludedShuffleDef>.AllDefsListForReading.Any(x => x.excludedRaces.Contains(def));
+        }
+
+        public static bool CanSwapPawnkind(PawnKindDef def)
+        {
+            return !DefDatabase<ExcludedShuffleDef>.AllDefsListForReading.Any(x => x.excludedPawnKinds.Contains(def));
+        }
+
         public static Thing GetHumanoidRace(PawnGenerationRequest request)
         {
-            ThingDef def;
-            
-            if (ShouldSwitch(request))
+            ThingDef def = request.KindDef.race;
+            if (CanSwapRace(def))
             {
-                IEnumerable<ThingDef> defs = DefDatabase<ThingDef>.AllDefsListForReading.Where(x => x.race != null && x.race.Humanlike);
+                if (!SkipOnce)
+                {
+                    if (ShouldSwitch(request) && CanSwapPawnkind(request.KindDef))
+                    {
+                        IEnumerable<ThingDef> defs = DefDatabase<ThingDef>.AllDefsListForReading.Where(x => x.race != null && x.race.Humanlike);
 
-                def = defs.RandomElementByWeight(x=>x==ThingDefOf.Human?50 :30);
-            }
-            else
-            {
-                def = request.KindDef.race;
-            }
+                        def = defs.RandomElementByWeight(x => x == ThingDefOf.Human ? 50 : 30);
+                    }
 
-            if (ShouldSwitchPawnkindBased(request))
-            {
-                RaceSwapDef randomSwapDef = DefDatabase<RaceSwapDef>.AllDefsListForReading.Where(x => x.targetRaces.Contains(def)).RandomElement();
-                def = randomSwapDef.replacementRaces.RandomElement();
+                    if (ShouldSwitchPawnkindBased(request))
+                    {
+                        RaceSwapDef randomSwapDef = DefDatabase<RaceSwapDef>.AllDefsListForReading.Where(x => x.targetRaces.Contains(def)).RandomElement();
+                        def = randomSwapDef.replacementRaces.RandomElement();
+                    }
+                }
+                else
+                {
+                    SkipOnce = false;
+                }
             }
-
             return ThingMaker.MakeThing(def);
         }
     }

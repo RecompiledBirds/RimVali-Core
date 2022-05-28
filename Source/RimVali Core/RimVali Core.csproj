@@ -80,6 +80,7 @@
     <Compile Include="RVRFrameWork\Backstories.cs" />
     <Compile Include="RVRFrameWork\DefOf.cs" />
     <Compile Include="CompatiblityPatches\HideHairWithHatsPatch.cs" />
+    <Compile Include="RVRFrameWork\ExcludedShuffleDef.cs" />
     <Compile Include="RVRFrameWork\Misc_Classes.cs" />
     <Compile Include="RVRFrameWork\DyeComp.cs" />
     <Compile Include="RVRFrameWork\FactionRelatedDefs.cs" />
