@@ -12,6 +12,7 @@ namespace RimValiCore.QLine
     {
         public Type questAction;
         private QuestWorker qWorker;
+        public bool repeatable;
         public QuestWorker QuestWorker
         {
             get

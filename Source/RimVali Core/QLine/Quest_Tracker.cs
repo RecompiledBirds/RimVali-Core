@@ -25,12 +25,41 @@ namespace RimValiCore.QLine
         private HashSet<QL_Quest> quests = new HashSet<QL_Quest>();
         public HashSet<QL_Quest> Quests => quests;
             
+        public bool IsFinished(QL_Quest quest)
+        {
+            return finishedQuests.Contains(quest);
+        }
 
+        public bool IsQueued(QL_Quest quest)
+        {
+            return quests.Contains(quest);
+        }
         public HashSet<QL_Quest> FinishedQuests => finishedQuests;
         
         public List<QL_Quest> QuestsLists =>quests.ToList();
  
         public void RemoveQuest(QL_Quest quest) => quests.Remove(quest);
+
+        public void FinishQuest(QL_Quest quest)
+        {
+            if (!quest.repeatable)
+                finishedQuests.Add(quest);
+
+
+            if (quests.Contains(quest))
+                RemoveQuest(quest);
+
+        }
+
+        public void QueueQuest(QL_Quest quest)
+        {
+            if(!IsQueued(quest))
+                quests.Add(quest);
+        }
+
+        public void 
+
+
 
         int tick = 0;
         
