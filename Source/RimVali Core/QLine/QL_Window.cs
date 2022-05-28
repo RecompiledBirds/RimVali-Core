@@ -102,7 +102,6 @@ namespace RimValiCore.QLine
                 bool AcceptQuest = Widgets.ButtonText(accept, "Accept quest");
                 if (AcceptQuest)
                 {
-                    quest.QuestWorker?.Action();
                     acceptQuest?.Invoke();
                 }
                 Text.Font = prevFont;

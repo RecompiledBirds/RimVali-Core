@@ -34,22 +34,9 @@ namespace RimValiCore.QLine
 
         int tick = 0;
         
-        public QL_Quest GetRandomQuest() => GetAvalibleQuests.RandomElementByWeight(x=>x.QuestWorker.QuestWeight());
-
-        private HashSet<QL_Quest> GetAvalibleQuests => DefDatabase<QL_Quest>.AllDefs.Where(x => x.QuestWorker.IsAvalible()).ToHashSet();
-            
-        private bool HasAvalibleQuests => GetAvalibleQuests.Count> 0; 
-
         private int tickTime = 1;
         public override void WorldComponentTick()
         {
-            if(tick == tickTime && HasAvalibleQuests)
-            {
-                tick = 0;
-                QL_Quest quest = GetRandomQuest();
-                quests.Add(quest);
-            }
-            tick++;
             base.WorldComponentTick();
         }
     }

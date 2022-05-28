@@ -1,65 +1,61 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reflection.Emit;
 using HarmonyLib;
 using RimWorld;
 using Verse;
 
 namespace RimValiCore.RVRFrameWork
 {
-    [HarmonyPatch(typeof(PawnGenerator),nameof(PawnGenerator.GeneratePawn),new Type[] { typeof(PawnGenerationRequest) })]
-    public static class PawnBlender
+
+    [HarmonyPatch(typeof(PawnGenerator), "TryGenerateNewPawnInternal")]
+    public static class PawnGeneratorTranspiler
     {
-       [HarmonyPostfix]
-       public static void Postfix(PawnGenerationRequest request,ref Pawn __result)
+
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
+            List<CodeInstruction> codes = instructions.ToList();
 
-            if (__result.RaceProps.Humanlike && request.Context != PawnGenerationContext.PlayerStarter)
+            for (int a = 0; a < codes.Count; a++)
             {
-                PawnKindDef selectedDef = DefDatabase<PawnKindDef>.AllDefs.Where(x => x.race != null && x.race.race.Humanlike).RandomElement();
-                request = new PawnGenerationRequest(selectedDef);
-              
-            }
-                /*   
-                 *
-                ThingDef selectedDef = DefDatabase<ThingDef>.AllDefs.Where(x=>x.race!=null && x.race.Humanlike).RandomElement();
-
-                    __result.def =selectedDef;
-                    Faction faction;
-                    Faction faction2;
-                    if (request.Faction != null)
-                    {
-                        faction = request.Faction;
-                    }
-                    else if (Find.FactionManager.TryGetRandomNonColonyHumanlikeFaction(out faction2, false, true, TechLevel.Undefined, false))
-                    {
-                        faction = faction2;
-                    }
-                    else
-                    {
-                        faction = Faction.OfAncients;
-                    }
-                    try
-                    {
-
-                        PawnBioAndNameGenerator.GiveAppropriateBioAndNameTo(__result, request.FixedLastName, faction.def, request.ForceNoBackstory);
-                        typeof(PawnGenerator).GetMethod("GenerateTraits", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { __result, request });
-                        typeof(PawnGenerator).GetMethod("GenerateBodyType", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { __result, request });
-                        typeof(PawnGenerator).GetMethod("GenerateSkills", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, new object[] { __result });
-                        PawnApparelGenerator.GenerateStartingApparelFor(__result, request);
-                        PawnWeaponGenerator.TryGenerateWeaponFor(__result, request);
-                        PawnInventoryGenerator.GenerateInventoryFor(__result, request);
-                    }catch (Exception ex)
-                    {
-                        Log.Warning($"RimVali Pawn blender: {ex.Message}");
-                    }
-
+                //Look for where the pawn is created.
+                if (codes[a].opcode == OpCodes.Call && codes[a].Calls(typeof(ThingMaker).GetMethod("MakeThing")))
+                {
+                    //Load argument 0 from stack
+                    yield return new CodeInstruction(OpCodes.Ldarg_0);
+                    //Load it as a PawnGenerationRequest
+                    yield return new CodeInstruction(OpCodes.Ldobj, typeof(PawnGenerationRequest));
+                    //Call our function.
+                    yield return new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(PawnGeneratorTranspiler), "GetHumanoidRace",new Type[] {typeof(PawnGenerationRequest)}));
                 }
-                */
+                else
+                {
+                    yield return codes[a];
+                }
+            }
 
+        }
+
+        public static bool ShouldSwitch(PawnGenerationRequest request)
+        {
+           return  request.Context != PawnGenerationContext.PlayerStarter && request.KindDef.RaceProps.Humanlike;
+        }
+        public static Thing GetHumanoidRace(PawnGenerationRequest request)
+        {
+            ThingDef def;
+            
+            if (ShouldSwitch(request))
+            {
+                IEnumerable<ThingDef> defs = DefDatabase<ThingDef>.AllDefsListForReading.Where(x => x.race != null && x.race.Humanlike);
+                def = defs.RandomElementByWeight(x=>x==ThingDefOf.Human?50 :30/defs.Count());
+            }
+            else
+            {
+                def = request.KindDef.race;
+            }
+            
+            return ThingMaker.MakeThing(def);
         }
     }
 }
