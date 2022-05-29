@@ -137,6 +137,24 @@ namespace RimValiCore.QLine
         /// </summary>
         public void IncrementStage() => ChangeStage(1);
 
+        /// <summary>
+        ///     Marks this quest as finished and the current stage as completed
+        /// </summary>
+        public void FinishQuest()
+        {
+            Quest_Tracker tracker = Find.World.GetComponent<Quest_Tracker>();
+
+            CompleteStage(curStage);
+            try
+            {
+                tracker.FinishQuest(tracker.Quests.First(quest => quest.Worker == this));
+            }
+            catch
+            {
+                Log.Message("Quest not tracked?");
+            }
+        }
+
         public void ExposeData()
         {
             Scribe_Collections.Look(ref completedStages, nameof(completedStages), LookMode.Value);

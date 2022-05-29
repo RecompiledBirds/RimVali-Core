@@ -80,16 +80,16 @@ namespace RimValiCore.QLine
             //Quest Listing
             Widgets.BeginScrollView(rectContentPartOuter, ref listScroll, rectContentPartInner);
 
-            int count = 0;
+            int displayedButtons = 0;
             for (int i = 0; i < DefDatabase<QL_Quest>.AllDefsListForReading.Count; i++)
             {
                 QL_Quest quest = DefDatabase<QL_Quest>.AllDefsListForReading[i];
-                Vector2 baseVector = new Vector2(0f, (rectQuestBase.height + CommonMargin) * (i + count));
+                Vector2 baseVector = new Vector2(0f, (rectQuestBase.height + CommonMargin) * (i + displayedButtons));
                 Rect rectQuestItem = new Rect(rectQuestBase).MoveRect(baseVector);
                 Rect rectExpandCollapseIcon = rectQuestItem.RightPartPixels(ExpandCollapseIconSize).BottomPartPixels(ExpandCollapseIconSize).MoveRect(new Vector2(- CommonMargin, - CommonMargin));
 
                 Widgets.DrawBox(rectQuestItem);
-                rectQuestItem.DoRectHighlight((i + count) % 2 == 1);
+                rectQuestItem.DoRectHighlight((i + displayedButtons) % 2 == 1);
                 Widgets.Label(rectQuestItem.MoveRect(new Vector2(CommonMargin, 0f)), quest.LabelCap);
                 Widgets.DrawTextureFitted(rectExpandCollapseIcon, expandedQuests.Contains(quest) ? TexButton.Collapse : TexButton.Reveal, 1f);
                 Widgets.DrawHighlightIfMouseover(rectQuestItem);
@@ -117,11 +117,12 @@ namespace RimValiCore.QLine
                     {
                         QuestStage questStage = quest.QuestWorker.Stages[j];
                         if (!quest.QuestWorker.IsStageCompletedOrCurrent(questStage)) break;
-                        count++;
+                        
+                        displayedButtons++;
 
                         Rect rectQuestStage = new Rect(rectQuestStageBase).MoveRect(baseVector + new Vector2(0f, rectQuestBase.height + CommonMargin + (rectQuestBase.height + CommonMargin) * displayedStages));
                         Widgets.DrawBox(rectQuestStage);
-                        rectQuestStage.DoRectHighlight((i + count) % 2 == 1);
+                        rectQuestStage.DoRectHighlight((i + displayedButtons) % 2 == 1);
                         Widgets.Label(rectQuestStage.MoveRect(new Vector2(CommonMargin, 0f)), questStage.LabelCap);
                         Widgets.DrawHighlightIfMouseover(rectQuestStage);
 
@@ -166,6 +167,8 @@ namespace RimValiCore.QLine
         private const float DecisionButtonHeight = 25f;
         private const float DecisionButtonSpace = DecisionButtonHeight + CommonMargin;
 
+        private string debugStageSelectorBuffer;
+        private int debugStageSelector;
         private Vector2 labelScroll;
 
         private bool DoButtons => stageIndex == currentStage;
@@ -254,12 +257,34 @@ namespace RimValiCore.QLine
                 });
             }
 
+            DrawDebugButton();
+        }
+
+        /// <summary>
+        ///     Draws debug buttons
+        /// </summary>
+        private void DrawDebugButton()
+        {
             if (RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug)
             {
                 Rect rectButton = rectDecisionButtonBase.MoveRect(new Vector2(0f, (rectDecisionButtonBase.height + CommonMargin) * stage.buttons.Count));
-                rectButton.DrawButtonText("DEBUG Skip Stage", () =>
+
+                if (currentStage == quest.QuestWorker.Stages.Count - 1)
                 {
-                    quest.QuestWorker.IncrementStage();
+                    rectButton.DrawButtonText("DEBUG Finish Quest", () =>
+                    {
+                        quest.QuestWorker.FinishQuest();
+                        Close();
+                    });
+
+                    return;
+                }
+
+                Widgets.TextFieldNumeric(rectButton.RightHalf(), ref debugStageSelector, ref debugStageSelectorBuffer, currentStage + 1, quest.QuestWorker.Stages.Count - 1);
+
+                rectButton.LeftHalf().DrawButtonText("DEBUG Skip Stage", () =>
+                {
+                    quest.QuestWorker.ChangeStage(debugStageSelector - currentStage);
                     Close();
                 });
             }
@@ -306,7 +331,7 @@ namespace RimValiCore.QLine
             if (!Prefs.DevMode) return;
 
             bool previous = RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug;
-            Widgets.CheckboxLabeled(rectLabel.RightPartPixels(150f), "##Show Debug", ref RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug);
+            Widgets.CheckboxLabeled(rectLabel.RightPartPixels(150f), "Show Debug", ref RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug);
 
             if (previous != RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug)
             {
