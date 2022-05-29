@@ -20,6 +20,11 @@ namespace RimValiCore.QLine
         }
 
         public string LabelCap => label.CapitalizeFirst();
+
+        public override string ToString()
+        {
+            return $"[QuestStage] label: {label}, description: {description}, buttons:\n    {string.Join("\n    ", buttons)}";
+        }
     }
 
     public class QuestStageButtonDecision
@@ -35,5 +40,10 @@ namespace RimValiCore.QLine
 
         public string ButtonText { get => buttonText; set => buttonText = value; }
         public Action Action { get => action; set => action = value; }
+
+        public override string ToString()
+        {
+            return $"[QuestStageButtonDecision] buttonText: {buttonText}, hasAction: {action != null}";
+        }
     }
 }

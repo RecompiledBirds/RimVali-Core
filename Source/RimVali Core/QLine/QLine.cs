@@ -17,6 +17,10 @@ namespace RimValiCore.QLine
         private QuestWorker worker;
 
         public QuestWorker Worker => worker;
+        
+        /// <summary>
+        ///     The quests <see cref="Def"/>
+        /// </summary>
         public QL_Quest Quest => quest;
         public void ExposeData()
         {
