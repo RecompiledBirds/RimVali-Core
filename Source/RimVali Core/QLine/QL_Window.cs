@@ -123,7 +123,7 @@ namespace RimValiCore.QLine
 
                 if (Widgets.ButtonInvisible(rectQuestStage))
                 {
-                    Find.WindowStack.Add(new QL_DecisionWindow(quest.Quest, questStage, j, quest.Worker.CurrentStage));
+                    Find.WindowStack.Add(new QL_DecisionWindow(quest, questStage, j, quest.Worker.CurrentStage));
                     SoundDefOf.TabOpen.PlayOneShotOnCamera();
                 }
 
@@ -198,7 +198,7 @@ namespace RimValiCore.QLine
         private Rect rectBottom;
 
         //Variables
-        private readonly QL_Quest quest;
+        private readonly QLine quest;
         private readonly QuestStage stage;
         private readonly int stageIndex;
         private readonly int currentStage;
@@ -217,7 +217,7 @@ namespace RimValiCore.QLine
 
         protected override float Margin => 0f;
 
-        public QL_DecisionWindow(QL_Quest quest, QuestStage stage, int stageIndex, int currentStage)
+        public QL_DecisionWindow(QLine quest, QuestStage stage, int stageIndex, int currentStage)
         {
             this.quest = quest;
             this.stage = stage;
@@ -324,22 +324,22 @@ namespace RimValiCore.QLine
             {
                 Rect rectButton = rectDecisionButtonBase.MoveRect(new Vector2(0f, (rectDecisionButtonBase.height + CommonMargin) * stage.buttons.Count));
 
-                if (currentStage == quest.QuestWorker.Stages.Count - 1)
+                if (currentStage == quest.Worker.Stages.Count - 1)
                 {
                     rectButton.DrawButtonText("DEBUG Finish Quest", () =>
                     {
-                        quest.QuestWorker.FinishQuest();
+                        quest.Worker.FinishQuest();
                         Close();
                     });
 
                     return;
                 }
 
-                Widgets.TextFieldNumeric(rectButton.RightHalf(), ref debugStageSelector, ref debugStageSelectorBuffer, currentStage + 1, quest.QuestWorker.Stages.Count - 1);
+                Widgets.TextFieldNumeric(rectButton.RightHalf(), ref debugStageSelector, ref debugStageSelectorBuffer, currentStage + 1, quest.Worker.Stages.Count - 1);
 
                 rectButton.LeftHalf().DrawButtonText("DEBUG Skip Stage", () =>
                 {
-                    quest.QuestWorker.ChangeStage(debugStageSelector - currentStage);
+                    quest.Worker.ChangeStage(debugStageSelector - currentStage);
                     Close();
                 });
             }
@@ -348,7 +348,7 @@ namespace RimValiCore.QLine
         /// <returns>A stage's debug string</returns>
         private string GetStageDebugString()
         {
-            return $"\n\nstage: {stage}\nstageIndex: {stageIndex}\ncurrentStage: {currentStage}\namount of Stages: {quest.QuestWorker.Stages.Count}\nisCompleted: {quest.QuestWorker.IsStageCompleted(stage)}\nDoButtons: {DoButtons}";
+            return $"\n\nstage: {stage}\nstageIndex: {stageIndex}\ncurrentStage: {currentStage}\namount of Stages: {quest.Worker.Stages.Count}\nisCompleted: {quest.Worker.IsStageCompleted(stage)}\nDoButtons: {DoButtons}";
         }
 
         /// <summary>
