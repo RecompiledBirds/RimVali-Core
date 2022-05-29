@@ -44,7 +44,7 @@ namespace RimValiCore.QLine
 
         protected override float Margin => 0f;
 
-        public float RequiredHeightForInnerScrollRect => (ItemHeight + CommonMargin) * DefDatabase<QL_Quest>.AllDefsListForReading.Sum(def => 1 + (expandedQuests.Contains(def) ? def.QuestWorker.Stages().Count : 0));
+        public float RequiredHeightForInnerScrollRect => (ItemHeight + CommonMargin) * DefDatabase<QL_Quest>.AllDefsListForReading.Sum(def => 1 + (expandedQuests.Contains(def) ? def.QuestWorker.Stages.Count : 0));
 
         public QL_Window()
         {
@@ -112,9 +112,9 @@ namespace RimValiCore.QLine
                 //Quest stage Listing
                 if (expandedQuests.Contains(quest))
                 {
-                    for (int j = 0; j < quest.QuestWorker.Stages().Count; j++)
+                    for (int j = 0; j < quest.QuestWorker.Stages.Count; j++)
                     {
-                        QuestStage questStage = quest.QuestWorker.Stages()[j];
+                        QuestStage questStage = quest.QuestWorker.Stages[j];
                         count++;
 
                         Rect rectQuestStage = new Rect(rectQuestStageBase).MoveRect(baseVector + new Vector2(0f, rectQuestBase.height + CommonMargin + (rectQuestBase.height + CommonMargin) * j));
@@ -337,12 +337,18 @@ namespace RimValiCore.QLine
             }
         }
 
+        /// <returns>A stage's debug string</returns>
+        private string GetStageDebugString()
+        {
+            return $"\n\nstage: {stage}\nstageIndex: {stageIndex}\ncurrentStage: {currentStage}\nisCompleted: {quest.QuestWorker.IsStageCompleted(stage)}\nDoButtons: {DoButtons}";
+        }
+
         /// <summary>
         ///     Draws the stage description
         /// </summary>
         private void DrawDescription()
         {
-            string debugString = RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug ? $"\n\nstage: {stage}\nstageIndex: {stageIndex}\ncurrentStage: {currentStage}\nDoButtons: {DoButtons}" : string.Empty;
+            string debugString = RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug ? GetStageDebugString() : string.Empty;
             string descriptionText = $"{stage.description}{debugString}";
 
             Widgets.DrawBox(rectDescriptionBox);

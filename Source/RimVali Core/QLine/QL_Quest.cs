@@ -58,30 +58,57 @@ namespace RimValiCore.QLine
 
     public abstract class QuestWorker : IExposable
     {
+        private HashSet<int> completedStages = new HashSet<int>();
+        private List<QuestStage> stages;
 
         private int curStage;
         private QL_Quest def;
 
         public int CurrentStage => curStage;
 
-        public abstract List<QuestStage> Stages();
-
         public QuestWorker(QL_Quest def) 
         { 
             this.def = def;
         }
 
+        /// <summary>
+        ///     Creates a list of <see cref="QuestStage"/>s to be used and saved in this worker
+        /// </summary>
+        /// <returns>a list of <see cref="QuestStage"/>s</returns>
+        protected abstract List<QuestStage> CreateStages();
+
+        public List<QuestStage> Stages => stages ?? (stages = CreateStages());
+
         public void ChangeStage(int amount)
         {
+            CompleteStage(curStage);
+
             int value = amount + curStage;
-            Mathf.Clamp(value, 0, Stages().Count - 1);
+            Mathf.Clamp(value, 0, Stages.Count - 1);
             curStage = value;
         }
+
+        public bool CompleteStage(QuestStage stage)
+        {
+            return CompleteStage(IndexOfStage(stage));
+        }
+
+        public bool CompleteStage(int i)
+        {
+            return completedStages.Add(i);
+        }
+
+        public bool IsStageCompleted(QuestStage stage) => IsStageCompleted(IndexOfStage(stage));
+
+        public bool IsStageCompleted(int i) => completedStages.Contains(i);
+
+        public int IndexOfStage(QuestStage stage) => Stages.IndexOf(stage);
 
         public void IncrementStage() => ChangeStage(1);
 
         public void ExposeData()
         {
+            Scribe_Collections.Look(ref completedStages, nameof(completedStages), LookMode.Value);
             Scribe_Values.Look(ref curStage, nameof(curStage));
             Scribe_Defs.Look(ref def, nameof(def));
         }

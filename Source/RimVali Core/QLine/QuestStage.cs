@@ -43,7 +43,7 @@ namespace RimValiCore.QLine
 
         public override string ToString()
         {
-            return $"[QuestStageButtonDecision] buttonText: {buttonText}, hasAction {action != null}";
+            return $"[QuestStageButtonDecision] buttonText: {buttonText}, hasAction: {action != null}";
         }
     }
 }

@@ -12,7 +12,7 @@ namespace RimValiCore.QLine
     {
         public PrototypeWorker_0(QL_Quest def) : base(def) { }
 
-        public override List<QuestStage> Stages() => new List<QuestStage>
+        protected override List<QuestStage> CreateStages() => new List<QuestStage>
         {
             new QuestStage
             {
@@ -47,7 +47,7 @@ namespace RimValiCore.QLine
     {
         public PrototypeWorker_1(QL_Quest def) : base(def) { }
 
-        public override List<QuestStage> Stages() => new List<QuestStage>
+        protected override List<QuestStage> CreateStages() => new List<QuestStage>
         {
             new QuestStage
             {
