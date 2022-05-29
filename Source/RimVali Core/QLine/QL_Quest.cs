@@ -17,47 +17,65 @@ namespace RimValiCore.QLine
         {
             get
             {
-                if (qWorker == null && questAction!=null)
+                if (qWorker == null && questAction != null)
                 {
-                    qWorker = (QuestWorker)Activator.CreateInstance(questAction);
+                    qWorker = (QuestWorker)Activator.CreateInstance(questAction, this);
                 }
+
+                if (qWorker == null)
+                {
+                    string errorString = $"qWorker for defName: {defName} is null after request!";
+                    Log.ErrorOnce(errorString, errorString.GetHashCode());
+                }
+
                 return qWorker;
             }
         }
+
         public override void PostLoad()
         {
-            Log.Message($"Loading quest: {this.defName}");
-            if (questAction == null)
-            {
-                Log.Error("questAction cannot be null!");
-            }
+            Log.Message($"PostLoading quest with defName: {defName}");
         }
 
+        public override IEnumerable<string> ConfigErrors()
+        {
+            if (questAction != null && !questAction.IsSubclassOf(typeof(QuestWorker)))
+            {
+                yield return $"{QuestWorker} does not inherit from QuestWorker!";
+            }
+
+            if (questAction == null)
+            {
+                yield return $"Parameter \"questAction\" is null! defName: {defName}";
+            }
+
+            foreach (string str in base.ConfigErrors())
+            {
+                yield return str;
+            }
+        }
     }
 
     public abstract class QuestWorker : IExposable
     {
 
         private int curStage;
-        public int CurrentStage
-        {
-            get
-            {
-                return curStage;
-            }
-        }
+        private QL_Quest def;
 
-        /// <summary>
-        /// This is overriden to define the stages in a quest.
-        /// </summary>
+        public int CurrentStage => curStage;
+
         public abstract List<QuestStage> Stages();
+
+        public QuestWorker(QL_Quest def) 
+        { 
+            this.def = def;
+        }
 
         public void ChangeStage(int amount)
         {
-            int value = amount+curStage;
-            Mathf.Clamp(value, 0, this.Stages().Count - 1);
+            int value = amount + curStage;
+            Mathf.Clamp(value, 0, Stages().Count - 1);
             curStage = value;
-
         }
 
         public void IncrementStage() => ChangeStage(1);
@@ -65,9 +83,7 @@ namespace RimValiCore.QLine
         public void ExposeData()
         {
             Scribe_Values.Look(ref curStage, nameof(curStage));
+            Scribe_Defs.Look(ref def, nameof(def));
         }
     }
-
-
-
 }

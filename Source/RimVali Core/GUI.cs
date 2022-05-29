@@ -10,6 +10,7 @@ using Verse;
 using HarmonyLib;
 using RimValiCore.RVR;
 using Verse.Sound;
+using RimValiCore.Windows.GUIUtils;
 
 namespace RimValiCore
 {
@@ -68,13 +69,7 @@ namespace RimValiCore
 
             RectWindowSub = RectWindowMain.ContractedBy(25f);
             RectPawnSelectOuter = RectWindowSub.LeftPartPixels(172f);
-            RectPawnSelectInner = RectPawnSelectOuter.LeftPartPixels(172f - 17f);
-
-            RectPawnSelectInner.height = 55f * pawns.Count;
-            if (RectPawnSelectInner.height < RectPawnSelectOuter.height)
-            {
-                RectPawnSelectInner.width += 17f;
-            }
+            RectPawnSelectInner = RectPawnSelectOuter.GetInnerScrollRect(55f * pawns.Count);
 
             RectWindowEdit = RectWindowSub.RightPartPixels(RectWindowSub.width - RectPawnSelectOuter.width - 5f);
 
@@ -90,13 +85,12 @@ namespace RimValiCore
             RectInfoBox = RectPawnBig.MoveRect(new Vector2(RectPawnBig.width + 5f, 0f)).ContractedBy(5f);
             RectInfoBox.width = RectColoringPart.width - RectPawnBig.width - RectColorSelectOuter.width - 20f;
 
-            //Saftey check!
-            if(RimValiCoreMod.Settings.savedColors==null)
-                RimValiCoreMod.Settings.savedColors = new List<Color>() {Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black};
+            //replace saved colors with black if missing at this point to prevent errors
+            RimValiCoreMod.Settings.savedColors = RimValiCoreMod.Settings.savedColors ?? new List<Color>() {Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black, Color.black};
         }
 
         /// <summary>
-        /// Recalculates the height and width of the inner scroll view for the color picking part
+        ///     Recalculates the height and width of the inner scroll view for the color picking part
         /// </summary>
         private void CalcInnerRect()
         {
@@ -104,7 +98,7 @@ namespace RimValiCore
 
             RectColorSelectInner = new Rect(RectColorSelectOuter)
             {
-                height = (colorSets.Count) * RectColorFieldHeight - 5f
+                height = colorSets.Count * RectColorFieldHeight - 5f
             };
 
             if (HasOpenColorField) RectColorSelectInner.height += RectColorFieldHeight * 3f;
