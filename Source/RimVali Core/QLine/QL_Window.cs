@@ -273,6 +273,20 @@ namespace RimValiCore.QLine
         }
 
         /// <summary>
+        ///     Places this window next to the <see cref="QL_Window"/>
+        /// </summary>
+        protected override void SetInitialSizeAndPosition()
+        {
+            base.SetInitialSizeAndPosition();
+            
+            if (Find.WindowStack.WindowOfType<QL_Window>() is QL_Window mainTabWindow)
+            {
+                windowRect.x = mainTabWindow.InitialSize.x + CommonMargin;
+                windowRect.y = UI.screenHeight - 35f - windowRect.height;
+            }
+        }
+
+        /// <summary>
         ///     Increases the space so that a debug button can fit
         /// </summary>
         /// <returns>true if space was increased, false otherwise</returns>
