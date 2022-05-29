@@ -223,7 +223,7 @@ namespace RimValiCore.QLine
             this.stage = stage;
             this.stageIndex = stageIndex;
             this.currentStage = currentStage;
-            questTexture = quest.Quest.texture;
+            questTexture = QuestBackgroundHandler.GetTexture(quest.Quest.texPath);
 
             doCloseX = true;
             forcePause = DoButtons;
