@@ -9,6 +9,7 @@ namespace RimValiCore
     {
         public bool expMode;
         public bool smartPawnScaling;
+        public bool QL_DecisionWindow_ShowDebug;
         public int textureSizeScaling;
         public int smallestTexSize;
         public List<Color> savedColors;
@@ -17,6 +18,7 @@ namespace RimValiCore
         {
             expMode = false;
             smartPawnScaling = true;
+            QL_DecisionWindow_ShowDebug = false;
             textureSizeScaling = 10;
             smallestTexSize = 200;
         }
@@ -25,6 +27,7 @@ namespace RimValiCore
         {
             Scribe_Values.Look(ref expMode, "mode", false, false);
             Scribe_Values.Look(ref smartPawnScaling, "SmartScale", true, false);
+            Scribe_Values.Look(ref QL_DecisionWindow_ShowDebug, "QL_DecisionWindow_ShowDebug", false, false);
             Scribe_Values.Look(ref textureSizeScaling, "texSS", 10, false);
             Scribe_Values.Look(ref smallestTexSize, "STS", 200, false);
             Scribe_Collections.Look(ref savedColors, "savedColors");

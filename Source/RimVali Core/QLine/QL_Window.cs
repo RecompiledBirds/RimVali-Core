@@ -125,7 +125,7 @@ namespace RimValiCore.QLine
 
                         if (Widgets.ButtonInvisible(rectQuestStage))
                         {
-                            Find.WindowStack.Add(new QL_DecisionWindow(questStage, j, quest.QuestWorker.CurrentStage));
+                            Find.WindowStack.Add(new QL_DecisionWindow(quest, questStage, j, quest.QuestWorker.CurrentStage));
                             SoundDefOf.TabOpen.PlayOneShotOnCamera();
                         }
                     }
@@ -222,19 +222,21 @@ namespace RimValiCore.QLine
         private readonly Rect rectLabel;
 
         //Description Box
-        private readonly Rect rectDescriptionBox;
-        private readonly Rect rectDecisionButtonBase;
+        private Rect rectDecisionButtonBase;
+        private Rect rectDescriptionBox;
 
         //Decision Button Space
-        private readonly Rect rectBottom;
+        private Rect rectBottom;
 
         //Variables
+        private readonly QL_Quest quest;
         private readonly QuestStage stage;
         private readonly int stageIndex;
         private readonly int currentStage;
 
         private const float CommonMargin = 5f;
         private const float DecisionButtonHeight = 25f;
+        private const float DecisionButtonSpace = DecisionButtonHeight + CommonMargin;
 
         private Vector2 labelScroll;
 
@@ -244,8 +246,9 @@ namespace RimValiCore.QLine
 
         protected override float Margin => 0f;
 
-        public QL_DecisionWindow(QuestStage stage, int stageIndex, int currentStage)
+        public QL_DecisionWindow(QL_Quest quest, QuestStage stage, int stageIndex, int currentStage)
         {
+            this.quest = quest;
             this.stage = stage;
             this.stageIndex = stageIndex;
             this.currentStage = currentStage;
@@ -260,25 +263,44 @@ namespace RimValiCore.QLine
 
             if (DoButtons)
             {
-                rectBottom = rectMain.BottomPartPixels(stage.buttons.Count * (DecisionButtonHeight + CommonMargin));
+                rectBottom = rectMain.BottomPartPixels(stage.buttons.Count * (DecisionButtonHeight + CommonMargin) - CommonMargin);
             }
 
-            rectDescriptionBox = new Rect(rectMain.x, rectMain.y + rectTop.height, rectMain.width, rectMain.height - rectTop.height - rectBottom.height - CommonMargin);
+            rectDescriptionBox = new Rect(rectMain.x, rectMain.y + rectTop.height, rectMain.width, rectMain.height - rectTop.height - rectBottom.height - (DoButtons ? CommonMargin : 0f));
+
+            IncreaseSpaceForDebugButton();
             rectDecisionButtonBase = rectBottom.TopPartPixels(DecisionButtonHeight);
+        }
+
+        /// <summary>
+        ///     Increases the space so that a debug button can fit
+        /// </summary>
+        /// <returns>true if space was increased, false otherwise</returns>
+        private bool IncreaseSpaceForDebugButton()
+        {
+            bool increaseSpace = RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug && DoButtons;
+            
+            if (increaseSpace)
+            {
+                rectDescriptionBox.yMax -= DecisionButtonSpace;
+                rectBottom.y -= DecisionButtonSpace;
+            }
+
+            return increaseSpace;
         }
 
         public override void DoWindowContents(Rect inRect)
         {
-            Text.Font = GameFont.Medium;
-            Widgets.Label(rectLabel, stage.LabelCap);
-            Text.Font = GameFont.Small;
+            DrawTopPart();
+            DrawDescription();
+            DrawDecisionButtons();
+        }
 
-            Widgets.DrawLineHorizontal(rectLabel.x, rectLabel.yMax, rectLabel.width);
-
-            Widgets.DrawBox(rectDescriptionBox);
-            Widgets.DrawLightHighlight(rectDescriptionBox);
-            Widgets.LabelScrollable(rectDescriptionBox.ContractedBy(CommonMargin), stage.description, ref labelScroll);
-
+        /// <summary>
+        ///     Draws the buttons that are used to make decisions
+        /// </summary>
+        private void DrawDecisionButtons()
+        {
             for (int i = 0; i < stage.buttons.Count; i++)
             {
                 QuestStageButtonDecision decision = stage[i];
@@ -289,6 +311,71 @@ namespace RimValiCore.QLine
                     Close();
                 });
             }
+
+            if (RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug)
+            {
+                Rect rectButton = rectDecisionButtonBase.MoveRect(new Vector2(0f, (rectDecisionButtonBase.height + CommonMargin) * stage.buttons.Count));
+                rectButton.DrawButtonText("DEBUG Skip Stage", () =>
+                {
+                    quest.QuestWorker.IncrementStage();
+                    Close();
+                });
+            }
+        }
+
+        /// <summary>
+        ///     Draws the stage description
+        /// </summary>
+        private void DrawDescription()
+        {
+            string debugString = RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug ? $"\n\nstage: {stage}\nstageIndex: {stageIndex}\ncurrentStage: {currentStage}\nDoButtons: {DoButtons}" : string.Empty;
+            string descriptionText = $"{stage.description}{debugString}";
+
+            Widgets.DrawBox(rectDescriptionBox);
+            Widgets.DrawLightHighlight(rectDescriptionBox);
+            Widgets.LabelScrollable(rectDescriptionBox.ContractedBy(CommonMargin), descriptionText, ref labelScroll);
+        }
+
+        /// <summary>
+        ///     Draws the title, and the horizontal line seperating it from the description
+        /// </summary>
+        private void DrawTopPart()
+        {
+            Text.Font = GameFont.Medium;
+            Widgets.Label(rectLabel, stage.LabelCap);
+            Text.Font = GameFont.Small;
+
+            Widgets.DrawLineHorizontal(rectLabel.x, rectLabel.yMax, rectLabel.width);
+
+            DrawDebugOptions();
+        }
+
+        /// <summary>
+        ///     Adds a debug checkbox to the window, inside the top part
+        /// </summary>
+        private void DrawDebugOptions()
+        {
+            if (!Prefs.DevMode) return;
+
+            bool previous = RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug;
+            Widgets.CheckboxLabeled(rectLabel.RightPartPixels(150f), "##Show Debug", ref RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug);
+
+            if (previous != RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug)
+            {
+                if (!IncreaseSpaceForDebugButton() && DoButtons)
+                {
+                    rectDescriptionBox.yMax += DecisionButtonSpace;
+                    rectBottom.y += DecisionButtonSpace;
+                }
+
+                rectDecisionButtonBase = rectBottom.TopPartPixels(DecisionButtonHeight);
+            }
+        }
+
+        public override void Close(bool doCloseSound = true)
+        {
+            RimValiCoreMod.Settings.Write();
+            base.Close(doCloseSound);
         }
     }
 }
