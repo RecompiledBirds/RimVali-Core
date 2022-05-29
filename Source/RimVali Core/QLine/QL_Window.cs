@@ -154,8 +154,11 @@ namespace RimValiCore.QLine
         private readonly Rect rectLabel;
 
         //Description Box
+        private Rect rectBackgroundImage = new Rect (0f, 0f, 223f, 223f);
         private Rect rectDecisionButtonBase;
         private Rect rectDescriptionBox;
+
+        private readonly Texture2D TriFeather = ContentFinder<Texture2D>.Get("Quest/TriFeather");
 
         //Decision Button Space
         private Rect rectBottom;
@@ -190,6 +193,7 @@ namespace RimValiCore.QLine
             doCloseX = true;
             forcePause = DoButtons;
             onlyOneOfTypeAllowed = true;
+            preventCameraMotion = false;
 
             rectMain = rectFull.ContractedBy(25f);
             rectTop = rectMain.TopPartPixels(35f);
@@ -234,6 +238,7 @@ namespace RimValiCore.QLine
                 rectBottom.y -= DecisionButtonSpace;
             }
 
+            rectBackgroundImage.center = rectDescriptionBox.center;
             return increaseSpace;
         }
 
@@ -313,12 +318,16 @@ namespace RimValiCore.QLine
         }
 
         /// <summary>
-        ///     Draws the stage description
+        ///     Draws the stage description and background image
         /// </summary>
         private void DrawDescription()
         {
             string debugString = RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug ? GetStageDebugString() : string.Empty;
             string descriptionText = $"{stage.description}{debugString}";
+
+            GUI.color = new Color(1f, 1f, 1f, 0.1f);
+            GUI.DrawTexture(rectBackgroundImage, TriFeather);
+            GUI.color = Color.white;
 
             Widgets.DrawBox(rectDescriptionBox);
             Widgets.DrawLightHighlight(rectDescriptionBox);
@@ -357,6 +366,7 @@ namespace RimValiCore.QLine
                     rectBottom.y += DecisionButtonSpace;
                 }
 
+                rectBackgroundImage.center = rectDescriptionBox.center;
                 rectDecisionButtonBase = rectBottom.TopPartPixels(DecisionButtonHeight);
             }
         }
