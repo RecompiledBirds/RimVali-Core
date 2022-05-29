@@ -192,7 +192,7 @@ namespace RimValiCore.QLine
         private Rect rectDecisionButtonBase;
         private Rect rectDescriptionBox;
 
-        private readonly Texture2D TriFeather = ContentFinder<Texture2D>.Get("Quest/TriFeather");
+        private Texture2D questTexture;
 
         //Decision Button Space
         private Rect rectBottom;
@@ -223,6 +223,7 @@ namespace RimValiCore.QLine
             this.stage = stage;
             this.stageIndex = stageIndex;
             this.currentStage = currentStage;
+            questTexture = quest.Quest.texture;
 
             doCloseX = true;
             forcePause = DoButtons;
@@ -359,9 +360,12 @@ namespace RimValiCore.QLine
             string debugString = RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug ? GetStageDebugString() : string.Empty;
             string descriptionText = $"{stage.description}{debugString}";
 
-            GUI.color = new Color(1f, 1f, 1f, 0.1f);
-            GUI.DrawTexture(rectBackgroundImage, TriFeather);
-            GUI.color = Color.white;
+            if (questTexture != null)
+            {
+                GUI.color = new Color(1f, 1f, 1f, 0.1f);
+                GUI.DrawTexture(rectBackgroundImage, questTexture);
+                GUI.color = Color.white;
+            }
 
             Widgets.DrawBox(rectDescriptionBox);
             Widgets.DrawLightHighlight(rectDescriptionBox);
