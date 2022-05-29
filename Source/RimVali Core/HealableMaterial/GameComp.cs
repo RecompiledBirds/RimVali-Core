@@ -2,106 +2,99 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Verse;
-
+using HarmonyLib;
 namespace RimValiCore.HealableMaterial
 {
+    [HarmonyPatch(typeof(Thing), "SpawnSetup")]
+    public static class HealableSpawnPatch
+    {
+        public static void Postfix(Thing __instance)
+        {
+            if (__instance.def.race == null && __instance.def.projectile == null)
+            {
+                HealStuff targ = HealableMats.FindThing(__instance);
+                if (targ != null)
+                {
+                    HealableGameComp.AddThing(__instance);
+                }
+            }
+        }
+    }
+
+    [HarmonyPatch(typeof(Thing), "DeSpawn")]
+    public static class HealableDeSpawnPatch
+    {
+        public static void Postfix(Thing __instance)
+        {
+            if (__instance.def.race == null && __instance.def.projectile == null)
+            {
+                HealStuff targ = HealableMats.FindThing(__instance);
+                if (targ != null)
+                {
+                    HealableGameComp.RemoveThing(__instance);
+                }
+            }
+        }
+    }
     public class HealableGameComp : WorldComponent
     {
-    
-
-        private void CleanupThing(Thing thing)
+       public static void AddThing(Thing thing)
         {
-            if (ticks.ContainsKey(thing))
+            HealStuff mat = HealableMats.FindThing(thing);
+            if (mat != null)
             {
+                things.Add(thing);
+                ticks.Add(thing, mat.ticks);
+                healStuff.Add(thing, mat);
+            }
+            
+        }
+
+        public static void RemoveThing(Thing thing)
+        {
+            if (things.Contains(thing))
+            {
+                things.Remove(thing);
                 ticks.Remove(thing);
-            }
-            things.Remove(thing);
-        }
-
-        private int refreshTick;
-        private readonly int refreshATTick = 480;
-
-        private List<Thing> GetThings
-        {
-            get
-            {
-                List<Thing> val = new List<Thing>();
-                foreach (Map map in Current.Game.Maps)
-                {
-                    foreach (Thing thing in map.spawnedThings)
-                    {
-                        if (thing.def.race == null && thing.def.projectile == null)
-                        {
-                            val.Add(thing);
-                        }
-                    }
-                }
-                return val;
+                healStuff.Remove(thing);
             }
         }
 
-        private readonly Dictionary<Thing, int> ticks = new Dictionary<Thing, int>();
-        private List<Thing> things = new List<Thing>();
-        private bool threadIsRunning;
+        private static List<Thing> things = new List<Thing>();
+        private static Dictionary<Thing, int> ticks = new Dictionary<Thing, int>();
+        private static Dictionary<Thing, HealStuff> healStuff = new Dictionary<Thing,HealStuff>();
 
         public HealableGameComp(World world) : base(world)
         {
             ticks = new Dictionary<Thing, int>();
-            refreshTick = refreshATTick - 2;
+            things = new List<Thing>();
+            healStuff = new Dictionary<Thing, HealStuff>();
         }
-        bool enabled = false;
         void Update()
         {
-            if (!enabled)
-                return;
-            if (!Current.Game.Maps.NullOrEmpty())
+
+            for (int i = 0; i < things.Count; i++)
             {
-                if (refreshTick == refreshATTick)
+                Thing thing = things[i];
+                if (thing != null && thing.Spawned)
                 {
-                    things = GetThings;
-                    refreshTick = 0;
-                }
-               
-                for (int i = 0; i < things.Count; i++)
-                {
-                    Thing thing = things[i];
-                    if (thing != null && thing.Spawned)
+                    HealStuff mat = healStuff[thing];
+                    if (ticks[thing] == 0)
                     {
-                        if (!ticks.ContainsKey(thing))
-                        {
-                            ticks.Add(thing, 0);
-                        }
-                        HealStuff targ = HealableMats.FindThing(thing);
-                        Log.Message($"{targ!=null}");
-                        if (targ != null && thing.HitPoints < thing.MaxHitPoints && targ.ticks == ticks[thing])
-                        {
-                            Log.Message(things.Count.ToString());
-                            int wantedHP = thing.HitPoints + targ.amount;
-                            thing.HitPoints = wantedHP > thing.MaxHitPoints ? thing.MaxHitPoints : wantedHP;
-                            ticks[thing] = 0;
-                        }
-                        ticks[thing]++;
+                        int wantedHP = thing.HitPoints + mat.amount;
+                        thing.HitPoints = wantedHP > thing.MaxHitPoints ? thing.MaxHitPoints : wantedHP;
+                        ticks[thing] = mat.ticks;
                     }
                     else
                     {
-                        CleanupThing(thing);
+                        ticks[thing]--;
                     }
                 }
-                refreshTick++;
             }
-            threadIsRunning = false;
         }
         public override void WorldComponentTick()
         {
-            
-            if (!threadIsRunning)
-            {
-            
-                threadIsRunning = true;
-                Update();
-                //Task task = new Task(update);
-               // task.Start();
-            }
+            Update();
         }
     }
 }

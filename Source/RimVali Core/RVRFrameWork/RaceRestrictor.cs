@@ -101,7 +101,9 @@ namespace RimValiCore.RVRFrameWork
         {
             RaceRestrictions restrictions = (race as RimValiRaceDef)?.restrictions;
             bool allowed = restrictions?.allowedDefsToUse.Contains(def) ?? false;
-            return restrictedDefs.Contains(def) || allowed|| notInLists;
+            if (restrictedDefs.Contains(def))
+                return allowed;
+            return (restrictions?.allowedDefsToUse.Contains(def) ?? notInLists)|| notInLists;
         }
 
         public static List<T> GetAllRestrictedDefs<T>(Type defType, ThingDef race) where T: Def
