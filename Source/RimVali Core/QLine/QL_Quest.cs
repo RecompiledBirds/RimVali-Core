@@ -39,11 +39,6 @@ namespace RimValiCore.QLine
             Log.Message($"PostLoading quest with defName: {defName}");
         }
 
-        public override void ResolveReferences()
-        {
-            if (texPath != null)
-                texture = QuestBackgroundHandler.GetTexture(texPath);
-        }
 
         public override IEnumerable<string> ConfigErrors()
         {
