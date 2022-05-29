@@ -32,7 +32,7 @@ namespace RimValiCore.QLine
         private readonly Rect rectTopPart;
         private readonly Rect rectTitle;
 
-        //consts
+        //Variables
         private const float CommonMargin = 5f;
         private const float ItemHeight = 30f;
         private const float ExpandCollapseIconSize = 18f;
@@ -70,6 +70,7 @@ namespace RimValiCore.QLine
 
         public override void DoWindowContents(Rect inRect)
         {
+            Text.Anchor = TextAnchor.MiddleLeft;
             Text.Font = GameFont.Medium;
 
             Widgets.Label(rectTitle, "##Quests:");
@@ -116,7 +117,7 @@ namespace RimValiCore.QLine
                     for (int j = 0; j < quest.QuestWorker.Stages.Count; j++)
                     {
                         QuestStage questStage = quest.QuestWorker.Stages[j];
-                        if (!quest.QuestWorker.IsStageCompletedOrCurrent(questStage)) break;
+                        if (!quest.QuestWorker.IsStageCompletedOrCurrent(questStage)) continue;
                         
                         displayedButtons++;
 
@@ -138,6 +139,8 @@ namespace RimValiCore.QLine
             }
 
             Widgets.EndScrollView();
+
+            Text.Anchor = TextAnchor.UpperLeft;
         }
     }
 
@@ -236,6 +239,8 @@ namespace RimValiCore.QLine
 
         public override void DoWindowContents(Rect inRect)
         {
+            KillSelfIfQLWindowMissing();
+
             DrawTopPart();
             DrawDescription();
             DrawDecisionButtons();
@@ -293,7 +298,7 @@ namespace RimValiCore.QLine
         /// <returns>A stage's debug string</returns>
         private string GetStageDebugString()
         {
-            return $"\n\nstage: {stage}\nstageIndex: {stageIndex}\ncurrentStage: {currentStage}\nisCompleted: {quest.QuestWorker.IsStageCompleted(stage)}\nDoButtons: {DoButtons}";
+            return $"\n\nstage: {stage}\nstageIndex: {stageIndex}\ncurrentStage: {currentStage}\namount of Stages: {quest.QuestWorker.Stages.Count}\nisCompleted: {quest.QuestWorker.IsStageCompleted(stage)}\nDoButtons: {DoButtons}";
         }
 
         /// <summary>
