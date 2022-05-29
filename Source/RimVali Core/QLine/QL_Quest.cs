@@ -33,8 +33,6 @@ namespace RimValiCore.QLine
             }
         }
 
-        public QuestWorker QWorker => qWorker;
-
         public override void PostLoad()
         {
             Log.Message($"PostLoading quest with defName: {defName}");
@@ -112,6 +110,13 @@ namespace RimValiCore.QLine
         /// <param name="stage">the given <see cref="QuestStage"/></param>
         /// <returns>true, if the <see cref="QuestStage"/> has been set as completed, false otherwise</returns>
         public bool IsStageCompleted(QuestStage stage) => IsStageCompleted(IndexOfStage(stage));
+
+        /// <summary>
+        ///     Checks if the given <see cref="QuestStage"/> is <see cref="IsStageCompleted(QuestStage)"/> or if it's <see cref="IndexOfStage(QuestStage)"/> == <see cref="curStage"/>
+        /// </summary>
+        /// <param name="stage">the <see cref="QuestStage"/> to be checked with</param>
+        /// <returns>true if the <see cref="QuestStage"/> is completed or the current stage, false otherwise</returns>
+        public bool IsStageCompletedOrCurrent(QuestStage stage) => IsStageCompleted(stage) || curStage == IndexOfStage(stage);
 
         /// <summary>
         ///     Checks if the <see cref="QuestStage"/> at the given <paramref name="stageIndex"/> is set as completed

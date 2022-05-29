@@ -44,7 +44,7 @@ namespace RimValiCore.QLine
 
         protected override float Margin => 0f;
 
-        public float RequiredHeightForInnerScrollRect => (ItemHeight + CommonMargin) * DefDatabase<QL_Quest>.AllDefsListForReading.Sum(def => 1 + (expandedQuests.Contains(def) ? def.QuestWorker.Stages.Count : 0));
+        public float RequiredHeightForInnerScrollRect => (ItemHeight + CommonMargin) * DefDatabase<QL_Quest>.AllDefsListForReading.Sum(def => 1 + (expandedQuests.Contains(def) ? def.QuestWorker.Stages.Sum(stage => def.QuestWorker.IsStageCompletedOrCurrent(stage) ? 1 : 0) : 0));
 
         public QL_Window()
         {
@@ -90,7 +90,7 @@ namespace RimValiCore.QLine
 
                 Widgets.DrawBox(rectQuestItem);
                 rectQuestItem.DoRectHighlight((i + count) % 2 == 1);
-                Widgets.Label(rectQuestItem.ContractedBy(CommonMargin), quest.LabelCap);
+                Widgets.Label(rectQuestItem.MoveRect(new Vector2(CommonMargin, 0f)), quest.LabelCap);
                 Widgets.DrawTextureFitted(rectExpandCollapseIcon, expandedQuests.Contains(quest) ? TexButton.Collapse : TexButton.Reveal, 1f);
                 Widgets.DrawHighlightIfMouseover(rectQuestItem);
                 
@@ -112,15 +112,17 @@ namespace RimValiCore.QLine
                 //Quest stage Listing
                 if (expandedQuests.Contains(quest))
                 {
+                    int displayedStages = 0;
                     for (int j = 0; j < quest.QuestWorker.Stages.Count; j++)
                     {
                         QuestStage questStage = quest.QuestWorker.Stages[j];
+                        if (!quest.QuestWorker.IsStageCompletedOrCurrent(questStage)) break;
                         count++;
 
-                        Rect rectQuestStage = new Rect(rectQuestStageBase).MoveRect(baseVector + new Vector2(0f, rectQuestBase.height + CommonMargin + (rectQuestBase.height + CommonMargin) * j));
+                        Rect rectQuestStage = new Rect(rectQuestStageBase).MoveRect(baseVector + new Vector2(0f, rectQuestBase.height + CommonMargin + (rectQuestBase.height + CommonMargin) * displayedStages));
                         Widgets.DrawBox(rectQuestStage);
                         rectQuestStage.DoRectHighlight((i + count) % 2 == 1);
-                        Widgets.Label(rectQuestStage, questStage.LabelCap);
+                        Widgets.Label(rectQuestStage.MoveRect(new Vector2(CommonMargin, 0f)), questStage.LabelCap);
                         Widgets.DrawHighlightIfMouseover(rectQuestStage);
 
                         if (Widgets.ButtonInvisible(rectQuestStage))
@@ -128,6 +130,8 @@ namespace RimValiCore.QLine
                             Find.WindowStack.Add(new QL_DecisionWindow(quest, questStage, j, quest.QuestWorker.CurrentStage));
                             SoundDefOf.TabOpen.PlayOneShotOnCamera();
                         }
+
+                        displayedStages++;
                     }
                 }
             }
@@ -318,6 +322,7 @@ namespace RimValiCore.QLine
 
         public override void Close(bool doCloseSound = true)
         {
+            if (Find.WindowStack.WindowOfType<QL_Window>() is QL_Window mainTabWindow) mainTabWindow.RefreshScrollRects();
             RimValiCoreMod.Settings.Write();
             base.Close(doCloseSound);
         }
