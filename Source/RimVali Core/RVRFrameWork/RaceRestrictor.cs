@@ -97,12 +97,11 @@ namespace RimValiCore.RVRFrameWork
                 AddModRestrictions(mod, race, validator);
         }
 
-        public static bool IsAllowed(Def def, ThingDef race, bool notInList = true)
+        public static bool IsAllowed(Def def, ThingDef race, bool notInLists = true)
         {
             RaceRestrictions restrictions = (race as RimValiRaceDef)?.restrictions;
-            if(restrictedDefs.Contains(def))
-                return restrictions?.allowedDefsToUse.Contains(def)??false;
-            return notInList;
+            bool allowed = restrictions?.allowedDefsToUse.Contains(def) ?? false;
+            return restrictedDefs.Contains(def) || allowed|| notInLists;
         }
 
         public static List<T> GetAllRestrictedDefs<T>(Type defType, ThingDef race) where T: Def
