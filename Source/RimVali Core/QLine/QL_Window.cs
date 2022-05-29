@@ -323,7 +323,7 @@ namespace RimValiCore.QLine
                 Rect rectButton = rectDecisionButtonBase.MoveRect(new Vector2(0f, (rectDecisionButtonBase.height + CommonMargin) * i));
                 rectButton.DrawButtonText(stage[i].ButtonText, () =>
                 {
-                    stage[i].Action();
+                    stage[i].ButtonAction();
                     Close();
                 });
             }

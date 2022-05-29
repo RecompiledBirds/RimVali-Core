@@ -29,21 +29,31 @@ namespace RimValiCore.QLine
 
     public class QuestStageButtonDecision
     {
-        public  QuestStageButtonDecision(string buttonText, Action action)
+        public QuestStageButtonDecision(string buttonText, Action buttonAction)
         {
             this.buttonText = buttonText;
-            this.action = action;
+            this.buttonAction = buttonAction;
+        }
+
+        public QuestStageButtonDecision(string buttonText, Action buttonAction, Func<bool> disableButtonFunc, Func<string> disableReason) : this(buttonText, buttonAction)
+        {
+            this.disableButtonFunc = disableButtonFunc;
+            this.disableReason = disableReason;
         }
 
         private string buttonText;
-        private Action action;
+        private Action buttonAction;
+        private Func<bool> disableButtonFunc;
+        private Func<string> disableReason;
 
         public string ButtonText { get => buttonText; set => buttonText = value; }
-        public Action Action { get => action; set => action = value; }
+        public Action ButtonAction { get => buttonAction; set => buttonAction = value; }
+        public Func<bool> DisableButtonFunc { get => disableButtonFunc; set => disableButtonFunc = value; }
+        public Func<string> DisableReason { get => disableReason; set => disableReason = value; }
 
         public override string ToString()
         {
-            return $"[QuestStageButtonDecision] buttonText: {buttonText}, hasAction: {action != null}";
+            return $"[QuestStageButtonDecision] buttonText: {buttonText}, hasAction: {buttonAction != null}";
         }
     }
 }
