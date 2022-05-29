@@ -90,7 +90,7 @@ namespace RimValiCore.QLine
 
                 Widgets.DrawBox(rectQuestItem);
                 rectQuestItem.DoRectHighlight((i + count) % 2 == 1);
-                Widgets.Label(rectQuestItem, quest.LabelCap);
+                Widgets.Label(rectQuestItem.ContractedBy(CommonMargin), quest.LabelCap);
                 Widgets.DrawTextureFitted(rectExpandCollapseIcon, expandedQuests.Contains(quest) ? TexButton.Collapse : TexButton.Reveal, 1f);
                 Widgets.DrawHighlightIfMouseover(rectQuestItem);
                 
@@ -114,16 +114,19 @@ namespace RimValiCore.QLine
                 {
                     for (int j = 0; j < quest.QuestWorker.Stages().Count; j++)
                     {
+                        QuestStage questStage = quest.QuestWorker.Stages()[j];
                         count++;
+
                         Rect rectQuestStage = new Rect(rectQuestStageBase).MoveRect(baseVector + new Vector2(0f, rectQuestBase.height + CommonMargin + (rectQuestBase.height + CommonMargin) * j));
                         Widgets.DrawBox(rectQuestStage);
                         rectQuestStage.DoRectHighlight((i + count) % 2 == 1);
-                        Widgets.Label(rectQuestStage, quest.QuestWorker.Stages()[j].LabelCap);
+                        Widgets.Label(rectQuestStage, questStage.LabelCap);
                         Widgets.DrawHighlightIfMouseover(rectQuestStage);
 
                         if (Widgets.ButtonInvisible(rectQuestStage))
                         {
-
+                            Find.WindowStack.Add(new QL_DecisionWindow(questStage, j, quest.QuestWorker.CurrentStage));
+                            SoundDefOf.TabOpen.PlayOneShotOnCamera();
                         }
                     }
                 }
@@ -206,6 +209,86 @@ namespace RimValiCore.QLine
             //Widgets.EndScrollView();
 
             #endregion
+        }
+    }
+
+    public class QL_DecisionWindow : Window
+    {
+        private readonly Rect rectFull = new Rect(0f, 0f, 660f, 440f);
+        private readonly Rect rectMain;
+
+        //Title
+        private readonly Rect rectTop;
+        private readonly Rect rectLabel;
+
+        //Description Box
+        private readonly Rect rectDescriptionBox;
+        private readonly Rect rectDecisionButtonBase;
+
+        //Decision Button Space
+        private readonly Rect rectBottom;
+
+        //Variables
+        private readonly QuestStage stage;
+        private readonly int stageIndex;
+        private readonly int currentStage;
+
+        private const float CommonMargin = 5f;
+        private const float DecisionButtonHeight = 25f;
+
+        private Vector2 labelScroll;
+
+        private bool DoButtons => stageIndex == currentStage;
+
+        public override Vector2 InitialSize => rectFull.size;
+
+        protected override float Margin => 0f;
+
+        public QL_DecisionWindow(QuestStage stage, int stageIndex, int currentStage)
+        {
+            this.stage = stage;
+            this.stageIndex = stageIndex;
+            this.currentStage = currentStage;
+
+            doCloseX = true;
+            forcePause = DoButtons;
+            onlyOneOfTypeAllowed = true;
+
+            rectMain = rectFull.ContractedBy(25f);
+            rectTop = rectMain.TopPartPixels(35f);
+            rectLabel = rectTop.TopPartPixels(30f);
+
+            if (DoButtons)
+            {
+                rectBottom = rectMain.BottomPartPixels(stage.buttons.Count * (DecisionButtonHeight + CommonMargin));
+            }
+
+            rectDescriptionBox = new Rect(rectMain.x, rectMain.y + rectTop.height, rectMain.width, rectMain.height - rectTop.height - rectBottom.height - CommonMargin);
+            rectDecisionButtonBase = rectBottom.TopPartPixels(DecisionButtonHeight);
+        }
+
+        public override void DoWindowContents(Rect inRect)
+        {
+            Text.Font = GameFont.Medium;
+            Widgets.Label(rectLabel, stage.LabelCap);
+            Text.Font = GameFont.Small;
+
+            Widgets.DrawLineHorizontal(rectLabel.x, rectLabel.yMax, rectLabel.width);
+
+            Widgets.DrawBox(rectDescriptionBox);
+            Widgets.DrawLightHighlight(rectDescriptionBox);
+            Widgets.LabelScrollable(rectDescriptionBox.ContractedBy(CommonMargin), stage.description, ref labelScroll);
+
+            for (int i = 0; i < stage.buttons.Count; i++)
+            {
+                QuestStageButtonDecision decision = stage[i];
+                Rect rectButton = rectDecisionButtonBase.MoveRect(new Vector2(0f, (rectDecisionButtonBase.height + CommonMargin) * i));
+                rectButton.DrawButtonText(stage[i].ButtonText, () =>
+                {
+                    stage[i].Action();
+                    Close();
+                });
+            }
         }
     }
 }
