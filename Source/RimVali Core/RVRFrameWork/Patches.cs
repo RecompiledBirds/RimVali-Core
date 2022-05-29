@@ -1054,7 +1054,7 @@ namespace RimValiCore.RVR
         public static void Constructable(Thing t, Pawn pawn, WorkTypeDef workType, bool forced, ref bool __result)
         {
             //Log.Message(t.def.ToString());
-            bool whitelisted = (bool)((pawn.def as RimValiRaceDef)?.restrictions.allowedDefsToUse.Contains(t.def));
+            bool whitelisted = (bool)((pawn.def as RimValiRaceDef)?.restrictions.allowedDefsToUse.Contains(t.def)??false);
             if (!RaceRestrictor.IsAllowed(t.def,pawn.def) && !whitelisted)
             {
                 __result = false;
