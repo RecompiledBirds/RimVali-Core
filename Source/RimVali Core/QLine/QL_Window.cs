@@ -10,39 +10,6 @@ using RimValiCore.Windows.GUIUtils;
 
 namespace RimValiCore.QLine
 {
-    public class OpenGUIWindow : MainButtonWorker
-    {
-        private static bool hasChecked = false;
-        private static bool hasQuests = false;
-        static bool isOpen = false;
-
-        public override bool Visible
-        {
-            get
-            {
-                if (!hasChecked)
-                    hasQuests = DefDatabase<QL_Quest>.DefCount > 0;
-                return hasQuests;
-            }
-        }
-
-        public override void Activate()
-        {
-            if (!isOpen)
-            {
-                Find.WindowStack.Add(new QL_Window());
-                isOpen = true;
-            }
-            else
-            {
-                if (Find.WindowStack.WindowOfType<QL_Window>() != null)
-                {
-                    Find.WindowStack.TryRemove(typeof(QL_Window));
-                }
-                isOpen = false;
-            }
-        }
-    }
     public class QL_Window : Window
     {
         /// <summary>
