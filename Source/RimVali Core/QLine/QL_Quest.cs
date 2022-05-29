@@ -12,7 +12,7 @@ namespace RimValiCore.QLine
     {
         public Type questAction;
         private QuestWorker qWorker;
-        
+        public bool repeatable;
         public QuestWorker QuestWorker
         {
             get
@@ -56,8 +56,9 @@ namespace RimValiCore.QLine
         }
     }
 
-    public abstract class QuestWorker
+    public abstract class QuestWorker : IExposable
     {
+
         private int curStage;
         private QL_Quest def;
 
@@ -79,7 +80,7 @@ namespace RimValiCore.QLine
 
         public void IncrementStage() => ChangeStage(1);
 
-        public virtual void ExposeData()
+        public void ExposeData()
         {
             Scribe_Values.Look(ref curStage, nameof(curStage));
             Scribe_Defs.Look(ref def, nameof(def));

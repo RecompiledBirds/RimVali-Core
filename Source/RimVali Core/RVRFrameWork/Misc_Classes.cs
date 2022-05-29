@@ -120,8 +120,20 @@ namespace RimValiCore.RVR
         }
     }
 
-    public class restrictions
+    public class RaceRestrictions
     {
+        public List<Def> allowedDefsToUse = new List<Def>();
+
+        public void AllowDef(Def def)
+        {
+            allowedDefsToUse.Add(def);
+        }
+
+        public void AllowDefs(IEnumerable<Def> defs)
+        {
+            allowedDefsToUse.AddRange(defs);
+        }
+
         public List<ResearchProjectDef> researchProjectDefs = new List<ResearchProjectDef>();
 
         //ThingDefs
@@ -176,9 +188,9 @@ namespace RimValiCore.RVR
         public List<string> modBuildingRestrictions = new List<string>();
     }
 
-    public class Main
+    public class MainRaceSettings
     {
-        public restrictions restrictions = new restrictions();
+        public RaceRestrictions restrictions = new RaceRestrictions();
 
         public List<BodyTypeDef> bodyTypeDefs = new List<BodyTypeDef>();
     }

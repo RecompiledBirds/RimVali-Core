@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using RimValiCore.RVRFrameWork;
 using RimWorld;
 using System;
 using System.Collections;
@@ -66,10 +67,6 @@ namespace RimValiCore.RVR
     public static class Restrictions
     {
         public static Hashtable expRes = new Hashtable();
-        public static bool CheckRestrictions<T, V>(Dictionary<T, List<V>> pairs, T item, V race, bool keyNotInReturn = true, bool raceNotFound = false) where V : Def where T : Def
-        {
-            return pairs.ContainsKey(item) ? pairs[item] is List<V> ? !pairs[item].NullOrEmpty() && pairs[item].Contains(race) : false : keyNotInReturn;
-        }
 
         // Token: 0x060000EA RID: 234 RVA: 0x00006D2C File Offset: 0x00004F2C
         public static bool AddRestriction<T, V>(ref Dictionary<T, List<V>> pairs, T item, V race) where T : Def where V : Def
@@ -181,175 +178,7 @@ namespace RimValiCore.RVR
 
         internal static void InitRestrictions()
         {
-            List<RimValiRaceDef> raceDefs = DefDatabase<RimValiRaceDef>.AllDefsListForReading;
-            int raceCount = raceDefs.Count;
-            for (int race = 0; race < raceCount; race++)
-            {
-                Log.Message($"[RimVali Core]: Setting up race {race}/{raceCount}");
-                RimValiRaceDef raceDef = raceDefs[race];
-                if (raceDef.restrictions.buildables.Count > 0)
-                {
-                    foreach (ThingDef item in raceDef.restrictions.buildables)
-                    {
-                        AddRestriction(ref buildingRestrictions, item, raceDef);
-                    }
-                }
-
-                if (raceDef.restrictions.consumables.Count > 0)
-                {
-                    foreach (ThingDef item2 in raceDef.restrictions.consumables)
-                    {
-                        AddRestriction(ref consumableRestrictions, item2, raceDef);
-                    }
-                }
-
-                if (raceDef.restrictions.equippables.Count > 0)
-                {
-                    foreach (ThingDef item3 in raceDef.restrictions.equippables)
-                    {
-                        AddRestriction(ref equipmentRestrictions, item3, raceDef);
-                    }
-                }
-
-                if (raceDef.restrictions.researchProjectDefs.Count > 0)
-                {
-                    foreach (ResearchProjectDef item4 in raceDef.restrictions.researchProjectDefs)
-                    {
-                        AddRestriction(ref researchRestrictions, item4, raceDef);
-                    }
-                }
-
-                if (raceDef.restrictions.traits.Count > 0)
-                {
-                    foreach (TraitDef item5 in raceDef.restrictions.traits)
-                    {
-                        AddRestriction(ref traitRestrictions, item5, raceDef);
-                    }
-                }
-                if (raceDef.restrictions.thoughtDefs.Count > 0)
-                {
-                    foreach (ThoughtDef item6 in raceDef.restrictions.thoughtDefs)
-                    {
-                        AddRestriction(ref thoughtRestrictions, item6, raceDef);
-                    }
-                }
-                if (raceDef.restrictions.equippablesWhitelist.Count > 0)
-                {
-                    foreach (ThingDef item7 in raceDef.restrictions.equippablesWhitelist)
-                    {
-                        AddRestriction(ref equipabblbleWhiteLists, item7, raceDef);
-                    }
-                }
-
-                if (raceDef.restrictions.bedDefs.Count > 0)
-                {
-                    foreach (ThingDef item8 in raceDef.restrictions.bedDefs)
-                    {
-                        AddRestriction(ref bedRestrictions, item8, raceDef);
-                    }
-                }
-
-                if (raceDef.restrictions.bodyTypes.Count > 0)
-                {
-                    foreach (BodyTypeDef item9 in raceDef.restrictions.bodyTypes)
-                    {
-
-                        AddRestriction(ref bodyTypeRestrictions, item9, raceDef);
-                    }
-                }
-                foreach (string id in raceDef.restrictions.modContentRestrictionsApparelWhiteList)
-                {
-                    ModContentPack mod = GetPackByID(id);
-                    if (mod != null)
-                    {
-                        foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef && (thingDef.IsApparel)))
-                        {
-                            AddRestriction(ref equipabblbleWhiteLists, def, raceDef);
-                        }
-                    }
-                }
-                foreach (string id in raceDef.restrictions.modContentRestrictionsApparelList)
-                {
-                    ModContentPack mod = GetPackByID(id);
-                    if (mod != null)
-                    {
-                        foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef && (thingDef.IsApparel)))
-                            AddRestriction(ref equipmentRestrictions, def, raceDef);
-                    }
-                }
-
-                foreach (string id in raceDef.restrictions.modResearchRestrictionsList)
-                {
-                    ModContentPack mod = GetPackByID(id);
-                    if (mod != null)
-                    {
-                        foreach (ResearchProjectDef def in mod.AllDefs.Where(x => x is ResearchProjectDef))
-                            AddRestriction(ref researchRestrictions, def, raceDef);
-                    }
-                }
-
-
-                foreach (string id in raceDef.restrictions.modTraitRestrictions)
-                {
-                    ModContentPack mod = GetPackByID(id);
-                    if (mod != null)
-                    {
-                        foreach (TraitDef def in mod.AllDefs.Where(x => x is TraitDef))
-                            AddRestriction(ref traitRestrictions, def, raceDef);
-                    }
-                }
-
-                foreach (string id in raceDef.restrictions.modBuildingRestrictions)
-                {
-                    ModContentPack mod = GetPackByID(id);
-                    if (mod != null)
-                    {
-                        foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef && !thingDef.IsApparel))
-                            AddRestriction(ref buildingRestrictions, def, raceDef);
-                    }
-                }
-
-                foreach (string id in raceDef.restrictions.modConsumables)
-                {
-                    ModContentPack mod = GetPackByID(id);
-                    if (mod != null)
-                    {
-                        foreach (ThingDef def in mod.AllDefs.Where(x => x is ThingDef thingDef))
-                            AddRestriction(ref consumableRestrictions, def, raceDef);
-                    }
-                }
-                foreach (BodyTypeDef bodyType in raceDef.bodyTypes)
-                {
-                    AddRestriction(ref bodyDefs, raceDef, bodyType);
-                }
-
-                bool useHumanRecipes = raceDef.useHumanRecipes;
-                if (useHumanRecipes)
-                {
-                    foreach (RecipeDef recipeDef in Enumerable.Where(DefDatabase<RecipeDef>.AllDefsListForReading, (RecipeDef x) => x.recipeUsers != null && x.recipeUsers.Contains(ThingDefOf.Human)))
-                    {
-                        recipeDef.recipeUsers.Add(raceDef);
-                        recipeDef.recipeUsers.RemoveDuplicates();
-                    }
-                    if (raceDef.recipes == null)
-                    {
-                        raceDef.recipes = new List<RecipeDef>();
-                    }
-                    List<BodyPartDef> list = new List<BodyPartDef>();
-                    foreach (BodyPartRecord bodyPartRecord in raceDef.race.body.AllParts)
-                    {
-                        list.Add(bodyPartRecord.def);
-                    }
-                    foreach (RecipeDef recipeDef2 in Enumerable.Where(ThingDefOf.Human.recipes, (RecipeDef recipe) => recipe.targetsBodyPart || !recipe.appliedOnFixedBodyParts.NullOrEmpty()))
-                    {
-                        foreach (BodyPartDef bodyPartDef in Enumerable.Intersect(recipeDef2.appliedOnFixedBodyParts, list))
-                        {
-                            raceDef.recipes.Add(recipeDef2);
-                        }
-                    }
-                    raceDef.recipes.RemoveDuplicates();
-                }
-            }
+            
             Log.Message("[RimVali Core/RVR]: Setting up faction restrictions.");
             List<FactionResearchRestrictionDef> factionDefs = DefDatabase<FactionResearchRestrictionDef>.AllDefsListForReading;
             int factionResDefCount = factionDefs.Count;
@@ -680,8 +509,11 @@ namespace RimValiCore.RVR
         public static IEnumerable<BodyTypeDef> BodyTypes(Pawn p)
         {
             List<BodyTypeDef> getAllAvalibleBodyTypes = new List<BodyTypeDef>();
-            if (Restrictions.bodyDefs.ContainsKey(p.def)) { getAllAvalibleBodyTypes.AddRange(Restrictions.bodyDefs[p.def]); }
-            if (getAllAvalibleBodyTypes.NullOrEmpty()) { getAllAvalibleBodyTypes.AddRange(new List<BodyTypeDef> { BodyTypeDefOf.Fat, BodyTypeDefOf.Hulk, BodyTypeDefOf.Thin }); }
+                getAllAvalibleBodyTypes.AddRange(RaceRestrictor.GetAllRestrictedDefs<BodyTypeDef>(typeof(BodyTypeDef),p.def));
+            if (getAllAvalibleBodyTypes.NullOrEmpty())
+            {
+                getAllAvalibleBodyTypes.AddRange(new List<BodyTypeDef> { BodyTypeDefOf.Fat, BodyTypeDefOf.Hulk, BodyTypeDefOf.Thin });
+            }
             getAllAvalibleBodyTypes.AddRange(getAllAvalibleBodyTypes.NullOrEmpty() ? new List<BodyTypeDef> { BodyTypeDefOf.Fat, BodyTypeDefOf.Hulk, BodyTypeDefOf.Thin } : new List<BodyTypeDef>());
             getAllAvalibleBodyTypes.Add(p.gender == Gender.Female ? BodyTypeDefOf.Female : BodyTypeDefOf.Male);
 
@@ -749,7 +581,7 @@ namespace RimValiCore.RVR
         [HarmonyPostfix]
         public static void BedPostfix(ref bool __result, Pawn p, ThingDef bedDef)
         {
-            __result = __result && Restrictions.CheckRestrictions(Restrictions.bedRestrictions, bedDef, p.def);
+            __result = __result && RaceRestrictor.IsAllowed(bedDef, p.def);
         }
     }
 
@@ -766,112 +598,14 @@ namespace RimValiCore.RVR
             //Log.Message("test");
             if (Find.ResearchManager.currentProj != null)
             {
-                // Log.Message($"Is blacklisted: {(Restrictions.factionResearchBlacklist.ContainsKey(pawn.Faction.def) && Restrictions.factionResearchBlacklist[pawn.Faction.def].Any(res => res.proj == Find.ResearchManager.currentProj))}");
-                if (!Restrictions.CheckRestrictions(Restrictions.researchRestrictions, Find.ResearchManager.currentProj, pawn.def) || (Restrictions.factionResearchRestrictions.ContainsKey(pawn.Faction.def) && !Restrictions.factionResearchRestrictions[pawn.Faction.def].Any(res => res.proj == Find.ResearchManager.currentProj)) || (Restrictions.factionResearchBlacklist.ContainsKey(pawn.Faction.def) && Restrictions.factionResearchBlacklist[pawn.Faction.def].Any(res => res.proj == Find.ResearchManager.currentProj)))
-                {
-                    bool isHacked;
-                    isHacked = !Restrictions.hackedProjects.EnumerableNullOrEmpty() && !(Restrictions.hackedProjects.ContainsKey(Find.ResearchManager.currentProj) || Restrictions.hackedProjects[Find.ResearchManager.currentProj] == false);
-                    if (!isHacked)
-                    {
-                        __result = false;
-                    }
-                }
-                __result = true && __result;
+                __result = RaceRestrictor.IsAllowed(Find.ResearchManager.currentProj,pawn.def) && __result;
             }
         }
     }
 
     #endregion Research restriction patch
 
-    #region Pawnkind replacement
-
-    [HarmonyPatch(typeof(PawnGenerator), "GeneratePawn", new Type[] { typeof(PawnGenerationRequest) })]
-    public static class GeneratorPatch
-    {
-        [HarmonyPrefix]
-        public static void GeneratePawn(ref PawnGenerationRequest request)
-        {
-            if (request.KindDef != null)
-            {
-                PawnKindDef pawnKindDef = request.KindDef;
-                IEnumerable<RimValiRaceDef> races = DefDatabase<RimValiRaceDef>.AllDefsListForReading;
-                for (int raceIndex = 0; raceIndex < races.Count() - 1; raceIndex++)
-                {
-                    RimValiRaceDef race = races.ToList()[raceIndex];
-                    RVRRaceInsertion inserter = race.raceInsertion;
-                    if (Rand.Range(0, 100) < inserter.globalChance)
-                    {
-                        if (pawnKindDef == PawnKindDefOf.Slave)
-                        {
-                            foreach (Entry entry in inserter.entries)
-                            {
-                                if (entry.isSlave && Rand.Range(0, 100) < entry.chance)
-                                {
-                                    if (entry.pawnkind != null)
-                                    {
-                                        pawnKindDef = entry.pawnkind;
-                                        request.KindDef = pawnKindDef;
-                                        request.ForceBodyType = race.bodyTypes.RandomElement();
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                        else if (pawnKindDef == PawnKindDefOf.Villager)
-                        {
-                            foreach (Entry entry in inserter.entries)
-                            {
-                                if (entry.isVillager && Rand.Range(0, 100) < entry.chance)
-                                {
-                                    if (entry.pawnkind != null)
-                                    {
-                                        pawnKindDef = entry.pawnkind;
-                                        request.KindDef = pawnKindDef;
-                                        race.bodyTypes.RandomElement();
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                        else if (pawnKindDef == PawnKindDefOf.SpaceRefugee)
-                        {
-                            foreach (Entry entry in inserter.entries)
-                            {
-                                if (entry.isRefugee && Rand.Range(0, 100) < entry.chance)
-                                {
-                                    if (entry.pawnkind != null)
-                                    {
-                                        pawnKindDef = entry.pawnkind;
-                                        request.KindDef = pawnKindDef;
-                                        race.bodyTypes.RandomElement();
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                        else if (pawnKindDef == PawnKindDefOf.Drifter)
-                        {
-                            foreach (Entry entry in inserter.entries)
-                            {
-                                if (entry.isWanderer && Rand.Range(0, 100) < entry.chance)
-                                {
-                                    if (entry.pawnkind != null)
-                                    {
-                                        pawnKindDef = entry.pawnkind;
-                                        request.KindDef = pawnKindDef;
-                                        race.bodyTypes.RandomElement();
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    #endregion Pawnkind replacement
+   
 
     #region Apparel gen patch
 
@@ -905,8 +639,8 @@ namespace RimValiCore.RVR
         public static bool TraitGain(Trait trait, TraitSet __instance)
         {
             Pawn pawn = Traverse.Create(__instance).Field("pawn").GetValue<Pawn>();
-            bool value = pawn.def is RimValiRaceDef rDef ? (!rDef.restrictions.disabledTraits.NullOrEmpty() && rDef.restrictions.disabledTraits.Contains(trait.def)) || Restrictions.CheckRestrictions(Restrictions.traitRestrictions, trait.def, pawn.def) : Restrictions.CheckRestrictions(Restrictions.traitRestrictions, trait.def, pawn.def);
-            return value;
+            bool result = pawn.def is RimValiRaceDef rDef ? (rDef.restrictions.disabledTraits.NullOrEmpty() || !rDef.restrictions.disabledTraits.Contains(trait.def)) && RaceRestrictor.IsAllowed(trait.def, pawn.def) : RaceRestrictor.IsAllowed(trait.def, pawn.def);
+            return result;
         }
     }
 
@@ -1115,7 +849,7 @@ namespace RimValiCore.RVR
         [HarmonyPostfix]
         public static void CanGetPatch(Pawn pawn, ThoughtDef def, bool checkIfNullified, ref bool __result)
         {
-            __result = __result && (pawn.def is RimValiRaceDef rDef ? rDef.canHavethoughts && !(!rDef.restrictions.thoughtBlacklist.NullOrEmpty() && rDef.restrictions.thoughtBlacklist.Contains(def)) : Restrictions.CheckRestrictions(Restrictions.thoughtRestrictions, def, pawn.def));
+            __result = __result && (pawn.def is RimValiRaceDef rDef ? rDef.canHavethoughts && !(!rDef.restrictions.thoughtBlacklist.NullOrEmpty() && rDef.restrictions.thoughtBlacklist.Contains(def)) : RaceRestrictor.IsAllowed(def,pawn.def));
         }
     }
 
@@ -1271,7 +1005,8 @@ namespace RimValiCore.RVR
             {
                 pawn = cachedDefs[__instance];
             }
-            bool canEat = pawn != null && (Restrictions.CheckRestrictions(Restrictions.consumableRestrictions, t, pawn) || Restrictions.CheckRestrictions(Restrictions.consumableRestrictionsWhiteList, t, pawn,false));
+            bool isWhitelisted = (pawn as RimValiRaceDef)?.restrictions.allowedDefsToUse.Contains(t) ?? false;
+            bool canEat = pawn != null && RaceRestrictor.IsAllowed(t,pawn)|| isWhitelisted;
             if (!canEat)
             {
                 JobFailReason.Is($"{pawn.label} {"CannotEatRVR".Translate(pawn.label.Named("RACE"))}");
@@ -1289,13 +1024,9 @@ namespace RimValiCore.RVR
     {
         public static bool CanWear(ThingDef def, ThingDef race)
         {
-            bool whiteListed = (Restrictions.equipabblbleWhiteLists.ContainsKey(def) && Restrictions.equipabblbleWhiteLists[def].Contains(race));
-            bool blackListed = Restrictions.equipmentRestrictions.ContainsKey(def) && Restrictions.equipmentRestrictions[def].Contains(race);
-            bool isRestrictedToOnlyApprovedClothes = race is RimValiRaceDef rimValiRace && rimValiRace.restrictions.canOnlyUseApprovedApparel;
-            bool itemIsRestricted = !isRestrictedToOnlyApprovedClothes && !Restrictions.equipmentRestrictions.ContainsKey(def);
-            
-            bool result = blackListed || whiteListed || itemIsRestricted;
-            return result;
+            bool canOnlyWearApprovedApparel = (race as RimValiRaceDef)?.restrictions.canOnlyUseApprovedApparel ?? false;
+            bool isAllowed = RaceRestrictor.IsAllowed(def, race,!canOnlyWearApprovedApparel); 
+            return isAllowed;
         }
 
         public static void Equipable(ref bool __result, Thing thing, Pawn pawn, ref string cantReason)
@@ -1323,7 +1054,8 @@ namespace RimValiCore.RVR
         public static void Constructable(Thing t, Pawn pawn, WorkTypeDef workType, bool forced, ref bool __result)
         {
             //Log.Message(t.def.ToString());
-            if (!Restrictions.CheckRestrictions(Restrictions.buildingRestrictions, t.def.entityDefToBuild, pawn.def))
+            bool whitelisted = (bool)((pawn.def as RimValiRaceDef)?.restrictions.allowedDefsToUse.Contains(t.def));
+            if (!RaceRestrictor.IsAllowed(t.def,pawn.def) && !whitelisted)
             {
                 __result = false;
                 JobFailReason.Is(pawn.def.label + " " + "CannotBuildRVR".Translate(pawn.def.label.Named("RACE")));

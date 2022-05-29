@@ -43,7 +43,7 @@ namespace RimValiCore.RVRFrameWork
 
         public static bool ShouldSwitchPawnkindBased(PawnGenerationRequest request)
         {
-            return (DefDatabase<RaceSwapDef>.AllDefs.Any(x=>x.targetRaces.Contains(request.KindDef.race))) && request.KindDef.RaceProps.Humanlike;
+            return (DefDatabase<RaceSwapDef>.AllDefsListForReading.Count != 0 && DefDatabase<RaceSwapDef>.AllDefs.Any(x=>x.targetRaces.Contains(request.KindDef.race))) && request.KindDef.RaceProps.Humanlike;
         }
         public static bool ShouldSwitch(PawnGenerationRequest request)
         {
@@ -52,12 +52,12 @@ namespace RimValiCore.RVRFrameWork
 
         public static bool CanSwapRace(ThingDef def)
         {
-            return !DefDatabase<ExcludedShuffleDef>.AllDefsListForReading.Any(x => x.excludedRaces.Contains(def));
+            return DefDatabase<ExcludedShuffleDef>.AllDefsListForReading.Count !=0 &&!DefDatabase<ExcludedShuffleDef>.AllDefsListForReading.Any(x =>x.excludedRaces.Count>0 && x.excludedRaces.Contains(def));
         }
 
         public static bool CanSwapPawnkind(PawnKindDef def)
         {
-            return !DefDatabase<ExcludedShuffleDef>.AllDefsListForReading.Any(x => x.excludedPawnKinds.Contains(def));
+            return DefDatabase<ExcludedShuffleDef>.AllDefsListForReading.Count != 0 && !DefDatabase<ExcludedShuffleDef>.AllDefsListForReading.Any(x => x.excludedPawnKinds.Count > 0 && x.excludedPawnKinds.Contains(def));
         }
 
         public static Thing GetHumanoidRace(PawnGenerationRequest request)

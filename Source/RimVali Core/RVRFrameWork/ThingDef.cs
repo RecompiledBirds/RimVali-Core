@@ -30,8 +30,9 @@ namespace RimValiCore.RVR
         public List<RenderableDef> renderableDefs = new List<RenderableDef>();
         public raceColors graphics = new raceColors();
         public bool hasHair = false;
-        public restrictions restrictions = new restrictions();
-        public Main mainSettings = new Main();
+        public RaceRestrictions restrictions = new RaceRestrictions();
+        public MainRaceSettings mainSettings = new MainRaceSettings();
+
         public bool useHumanRecipes = true;
         public RVRRaceInsertion raceInsertion = new RVRRaceInsertion();
 

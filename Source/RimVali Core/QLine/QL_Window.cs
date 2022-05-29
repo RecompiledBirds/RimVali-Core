@@ -160,7 +160,6 @@ namespace RimValiCore.QLine
             //     if (Dismissquest)
             //     {
             //         dismissQuest?.Invoke();
-            //         tracker.RemoveQuest(quest);
             //     }
 
             //     bool AcceptQuest = Widgets.ButtonText(accept, "Accept quest");
@@ -203,17 +202,7 @@ namespace RimValiCore.QLine
             //Text.Font = prevFont;
             //Text.Anchor = textAnchor;
             //pos += 40;
-            //foreach (QL_Quest q in tracker.Quests)
-            //{
-            //    label = new Rect(new Vector2(0, pos), new Vector2(list.width, 30));
-            //    Widgets.Label(label, q.label);
-            //    bool button = Widgets.ButtonInvisible(label);
-            //    if (button)
-            //    {
-            //        quest = q;
-            //    }
-            //    pos += 30;
-            //}
+           
             //Widgets.EndScrollView();
 
             #endregion

@@ -1,11 +1,10 @@
 ﻿using RimValiCore.CompatiblityPatches;
+using RimValiCore.RVR;
+using RimValiCore.RVRFrameWork;
 using System;
-using System.Collections.Generic;
+
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
 using Verse;
 
 namespace RimValiCore
@@ -124,7 +123,9 @@ namespace RimValiCore
             Log.Message("[RimVali Core]: Loading RVR Framework..");
             stage = RimValiCore_Stage.RVR;
             Log.Message("[RimVali Core]: Intializing RVR.");
-            RVR.Restrictions.InitRestrictions();
+            Log.Message("[RimVali Core]: Starting restriction setup.");
+            RaceRestrictor.RunRestrictions();
+            Restrictions.InitRestrictions();
             RVR.RVR.DoPatches();
             Log.Message("[RimVali Core]: Launching ships!");
             stage = RimValiCore_Stage.Ships;
@@ -143,7 +144,6 @@ namespace RimValiCore
             RVCCompatiblityPatches.DoPatches();
             Log.Message("[RimVali Core]: Finished compatiblity patches.");
             Log.Message("[RimVali Core]: Asking QLine to tell a story.");
-            stage = RimValiCore_Stage.QLine;
             //todo
             Log.Message("[RimVali Core]: Finished listening to the story!");
             stage = RimValiCore_Stage.Loaded;
