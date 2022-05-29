@@ -379,13 +379,13 @@ namespace RimValiCore.QLine
 
             Widgets.DrawLineHorizontal(rectLabel.x, rectLabel.yMax, rectLabel.width);
 
-            DrawDebugOptions();
+            DrawDebugCheckbox();
         }
 
         /// <summary>
         ///     Adds a debug checkbox to the window, inside the top part
         /// </summary>
-        private void DrawDebugOptions()
+        private void DrawDebugCheckbox()
         {
             if (!Prefs.DevMode) return;
 
