@@ -247,6 +247,17 @@ namespace RimValiCore.QLine
         }
 
         /// <summary>
+        ///     Closes this window if <see cref="QL_Window"/> is closed
+        /// </summary>
+        private void KillSelfIfQLWindowMissing()
+        {
+            if (Find.WindowStack.WindowOfType<QL_Window>() is null)
+            {
+                Close();
+            }
+        }
+
+        /// <summary>
         ///     Draws the buttons that are used to make decisions
         /// </summary>
         private void DrawDecisionButtons()
