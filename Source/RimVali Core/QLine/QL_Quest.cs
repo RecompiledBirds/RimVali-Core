@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RimWorld;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -129,11 +130,15 @@ namespace RimValiCore.QLine
             CompleteStage(curStage);
             try
             {
-                tracker.FinishQuest(tracker.Quests.First(quest => quest.Worker == this));
+                if (tracker.Quests.First(quest => quest.Worker == this) is QLine qline)
+                {
+                    tracker.FinishQuest(qline);
+                    Messages.Message($"##Quest has been finished: {qline.Quest.LabelCap}!", MessageTypeDefOf.TaskCompletion);
+                }
             }
             catch
             {
-                Log.Message("Quest not tracked?");
+                Log.Error("Quest not tracked?");
             }
         }
 
