@@ -11,14 +11,12 @@ namespace RimValiCore.QLine
 {
     public class Quest_Tracker : WorldComponent
     {
-        private HashSet<QLine> finishedQuests = new HashSet<QLine>();
-        private HashSet<QLine> quests = new HashSet<QLine>();
+        private List<QLine> finishedQuests = new List<QLine>();
+        private List<QLine> quests = new List<QLine>();
 
-        public HashSet<QLine> Quests => quests;
+        public List<QLine> Quests => quests;
 
-        public List<QLine> QuestsAsList => quests.ToList();
-
-        public HashSet<QLine> FinishedQuests => finishedQuests;
+        public List<QLine> FinishedQuests => finishedQuests;
 
         public Quest_Tracker(World world) : base(world)
         {
@@ -48,7 +46,7 @@ namespace RimValiCore.QLine
             QueueQuest(DefDatabase<QL_Quest>.GetRandom());
         }
 
-        public bool QueueQuest(QLine quest) => quests.Add(quest);
+        public void QueueQuest(QLine quest) => quests.Add(quest);
 
         public override void ExposeData()
         {
