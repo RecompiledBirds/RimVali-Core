@@ -60,6 +60,7 @@
     <Compile Include="HealableMaterial\GameComp.cs" />
     <Compile Include="HealableMaterial\HealableComp.cs" />
     <Compile Include="QLine\PrototypeWorker_0.cs" />
+    <Compile Include="QLine\QuestBackgroundHandler.cs" />
     <Compile Include="QLine\QuestMaker.cs" />
     <Compile Include="QLine\QuestStage.cs" />
     <Compile Include="RVCInitalizer.cs" />

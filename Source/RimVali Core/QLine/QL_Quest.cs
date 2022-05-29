@@ -13,6 +13,8 @@ namespace RimValiCore.QLine
         public Type questAction;
         private QuestWorker qWorker;
         public bool repeatable;
+        public string texPath;
+        public Texture2D texture;
         public QuestWorker QuestWorker
         {
             get
@@ -34,6 +36,8 @@ namespace RimValiCore.QLine
 
         public override void PostLoad()
         {
+            if(texPath != null)
+                texture=QuestBackgroundHandler.GetTexture(texPath);
             Log.Message($"PostLoading quest with defName: {defName}");
         }
 
