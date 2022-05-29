@@ -43,6 +43,10 @@ namespace RimValiCore.QLine
 
         public void QueueQuest(QL_Quest quest) => QueueQuest(QuestMaker.MakeQuest(quest));
 
+        public void QueueRandomQuest()
+        {
+            QueueQuest(DefDatabase<QL_Quest>.GetRandom());
+        }
 
         public bool QueueQuest(QLine quest) => quests.Add(quest);
 
@@ -53,6 +57,12 @@ namespace RimValiCore.QLine
             base.ExposeData();
         }
     }
+    public static class DebugActions
+    {
+        [DebugAction("RimVali", "Add Random Quest", allowedGameStates = AllowedGameStates.Playing)]
+        public static void AddRandomQuest()
+        {
+            Find.World.GetComponent<Quest_Tracker>().QueueRandomQuest();
         }
     }
 }
