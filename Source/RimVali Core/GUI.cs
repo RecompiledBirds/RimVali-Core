@@ -10,7 +10,7 @@ using Verse;
 using HarmonyLib;
 using RimValiCore.RVR;
 using Verse.Sound;
-using RimValiCore.GUIUtils;
+using RimValiCore.Windows.GUIUtils;
 
 namespace RimValiCore
 {

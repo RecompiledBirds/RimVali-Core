@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using Verse;
+using RimValiCore.Windows.GUIUtils;
 
 namespace RimValiCore.QLine
 {

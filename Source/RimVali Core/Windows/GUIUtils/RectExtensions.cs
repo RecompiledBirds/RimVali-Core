@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Verse;
 
-namespace RimValiCore.GUIUtils
+namespace RimValiCore.Windows.GUIUtils
 {
     public static class RectExtensions
     {
