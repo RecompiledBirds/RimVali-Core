@@ -13,6 +13,7 @@ namespace RimValiCore.QLine
         public Type questAction;
         private QuestWorker qWorker;
         public bool repeatable;
+        
         public QuestWorker QuestWorker
         {
             get
@@ -31,6 +32,8 @@ namespace RimValiCore.QLine
                 return qWorker;
             }
         }
+
+        public QuestWorker QWorker => qWorker;
 
         public override void PostLoad()
         {
