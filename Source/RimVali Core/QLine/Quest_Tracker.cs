@@ -36,7 +36,7 @@ namespace RimValiCore.QLine
         }
         public HashSet<QLine> FinishedQuests => finishedQuests;
         
-        public List<QLine> QuestsLists =>quests.ToList();
+        public List<QLine> QuestsLists => quests.ToList();
  
         public void RemoveQuest(QLine quest) => quests.Remove(quest);
 
@@ -48,7 +48,6 @@ namespace RimValiCore.QLine
 
             if (quests.Contains(quest))
                 RemoveQuest(quest);
-
         }
 
         public void QueueQuest(QL_Quest quest)=>QueueQuest(QuestMaker.MakeQuest(quest));
