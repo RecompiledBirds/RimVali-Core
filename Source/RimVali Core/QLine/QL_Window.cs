@@ -1,12 +1,9 @@
-﻿using RimWorld;
-using System;
+﻿using RimValiCore.Windows.GUIUtils;
+using RimWorld;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 using Verse;
-using RimValiCore.Windows.GUIUtils;
 using Verse.Sound;
 
 namespace RimValiCore.QLine
@@ -16,7 +13,7 @@ namespace RimValiCore.QLine
         /// <summary>
         ///     Stores what quests are expanded
         /// </summary>
-        private static readonly HashSet<QL_Quest> expandedQuests = new HashSet<QL_Quest>();
+        private static readonly HashSet<QLine> expandedQuests = new HashSet<QLine>();
 
         private readonly Rect rectFull = new Rect(0f, 0f, 240f, 440f);
         private readonly Rect rectMain;
@@ -32,7 +29,7 @@ namespace RimValiCore.QLine
         private readonly Rect rectTopPart;
         private readonly Rect rectTitle;
 
-        //consts
+        //Variables
         private const float CommonMargin = 5f;
         private const float ItemHeight = 30f;
         private const float ExpandCollapseIconSize = 18f;
@@ -40,11 +37,13 @@ namespace RimValiCore.QLine
         //
         private Vector2 listScroll;
 
+        private List<QLine> Quests => Find.World.GetComponent<Quest_Tracker>().Quests;
+
         public override Vector2 InitialSize => rectFull.size;
 
         protected override float Margin => 0f;
 
-        public float RequiredHeightForInnerScrollRect => (ItemHeight + CommonMargin) * DefDatabase<QL_Quest>.AllDefsListForReading.Sum(def => 1 + (expandedQuests.Contains(def) ? def.QuestWorker.Stages().Count : 0));
+        public float RequiredHeightForInnerScrollRect => (ItemHeight + CommonMargin) * Quests.Sum(quest => 1 + (expandedQuests.Contains(quest) ? quest.Worker.Stages.Sum(stage => quest.Worker.IsStageCompletedOrCurrent(stage) ? 1 : 0) : 0));
 
         public QL_Window()
         {
@@ -58,6 +57,12 @@ namespace RimValiCore.QLine
             RefreshScrollRects();
         }
 
+        public override void DoWindowContents(Rect inRect)
+        {
+            DrawTitleBar();
+            DrawQuestList();
+        }
+
         /// <summary>
         ///     This function refreshes the height of <see cref="rectContentPartInner"/>, so that the scrollbar doesn't end up too short/long
         /// </summary>
@@ -68,147 +73,108 @@ namespace RimValiCore.QLine
             rectQuestStageBase = new Rect(rectContentPartInner.x + CommonMargin * 2f, rectContentPartInner.y, rectContentPartInner.width - CommonMargin * 2f, ItemHeight);
         }
 
-        public override void DoWindowContents(Rect inRect)
+        /// <summary>
+        ///     Lists all quests
+        /// </summary>
+        private void DrawQuestList()
         {
+            Widgets.BeginScrollView(rectContentPartOuter, ref listScroll, rectContentPartInner);
+
+            int displayedButtons = 0;
+            for (int i = 0; i < Quests.Count; i++)
+            {
+                QLine quest = Quests[i];
+                Vector2 baseVector = new Vector2(0f, (rectQuestBase.height + CommonMargin) * (i + displayedButtons));
+                Rect rectQuestItem = new Rect(rectQuestBase).MoveRect(baseVector);
+
+                DrawExpandAndUnexpandQuestButton(quest, rectQuestItem, (i + displayedButtons) % 2 == 1);
+                DrawStageListing(ref displayedButtons, i, quest, baseVector);
+            }
+
+            Widgets.EndScrollView();
+
+            Text.Anchor = TextAnchor.UpperLeft;
+        }
+
+        /// <summary>
+        ///     Lists every <see cref="QuestStage"/> of the given <paramref name="quest"/>
+        /// </summary>
+        /// <param name="displayedButtons">The number of buttons displayed, used for determining the correct highlighting</param>
+        /// <param name="i">the current quest iterator, used for determining the correct highlighting</param>
+        /// <param name="quest">the current quest</param>
+        /// <param name="baseVector">the vector by which the base button is moved by</param>
+        private void DrawStageListing(ref int displayedButtons, int i, QLine quest, Vector2 baseVector)
+        {
+            if (!expandedQuests.Contains(quest)) return;
+
+            int displayedStages = 0;
+            for (int j = 0; j < quest.Worker.Stages.Count; j++)
+            {
+                QuestStage questStage = quest.Worker.Stages[j];
+                if (!quest.Worker.IsStageCompletedOrCurrent(questStage)) continue;
+
+                displayedButtons++;
+
+                Rect rectQuestStage = new Rect(rectQuestStageBase).MoveRect(baseVector + new Vector2(0f, rectQuestBase.height + CommonMargin + (rectQuestBase.height + CommonMargin) * displayedStages));
+                Widgets.DrawBox(rectQuestStage);
+                rectQuestStage.DoRectHighlight((i + displayedButtons) % 2 == 1);
+                Widgets.Label(rectQuestStage.MoveRect(new Vector2(CommonMargin, 0f)), questStage.LabelCap);
+                Widgets.DrawHighlightIfMouseover(rectQuestStage);
+
+                if (Widgets.ButtonInvisible(rectQuestStage))
+                {
+                    Find.WindowStack.Add(new QL_DecisionWindow(quest, questStage, j, quest.Worker.CurrentStage));
+                    SoundDefOf.TabOpen.PlayOneShotOnCamera();
+                }
+
+                displayedStages++;
+            }
+        }
+
+        /// <summary>
+        ///     Draws a button that expands and unexpands a <see cref="QLine"/> <paramref name="quest"/> inside a <see cref="Rect"/> <paramref name="rectQuestItem"/>
+        /// </summary>
+        /// <param name="quest">the <see cref="QLine"/> to be expanded or unexpanded</param>
+        /// <param name="rectQuestItem">the <see cref="Rect"/> the button is drawn in</param>
+        /// <param name="doLightHighlight">determines if the button should have a light or normal highlight</param>
+        private void DrawExpandAndUnexpandQuestButton(QLine quest, Rect rectQuestItem, bool doLightHighlight)
+        {
+            Rect rectExpandCollapseIcon = rectQuestItem.RightPartPixels(ExpandCollapseIconSize).BottomPartPixels(ExpandCollapseIconSize).MoveRect(new Vector2(-CommonMargin, -CommonMargin));
+
+            Widgets.DrawBox(rectQuestItem);
+            rectQuestItem.DoRectHighlight(doLightHighlight);
+            Widgets.Label(rectQuestItem.MoveRect(new Vector2(CommonMargin, 0f)), quest.Quest.LabelCap);
+            Widgets.DrawTextureFitted(rectExpandCollapseIcon, expandedQuests.Contains(quest) ? TexButton.Collapse : TexButton.Reveal, 1f);
+            Widgets.DrawHighlightIfMouseover(rectQuestItem);
+
+            if (Widgets.ButtonInvisible(rectQuestItem))
+            {
+                if (expandedQuests.Add(quest))
+                {
+                    SoundDefOf.TabOpen.PlayOneShotOnCamera();
+                }
+                else
+                {
+                    expandedQuests.Remove(quest);
+                    SoundDefOf.TabClose.PlayOneShotOnCamera();
+                }
+
+                RefreshScrollRects();
+            }
+        }
+
+        /// <summary>
+        ///     Draws the title and the line beneath it
+        /// </summary>
+        private void DrawTitleBar()
+        {
+            Text.Anchor = TextAnchor.MiddleLeft;
             Text.Font = GameFont.Medium;
 
             Widgets.Label(rectTitle, "##Quests:");
             Widgets.DrawLineHorizontal(rectTitle.x, rectTitle.yMax, rectTitle.width);
 
             Text.Font = GameFont.Small;
-
-            //Quest Listing
-            Widgets.BeginScrollView(rectContentPartOuter, ref listScroll, rectContentPartInner);
-
-            int count = 0;
-            for (int i = 0; i < DefDatabase<QL_Quest>.AllDefsListForReading.Count; i++)
-            {
-                QL_Quest quest = DefDatabase<QL_Quest>.AllDefsListForReading[i];
-                Vector2 baseVector = new Vector2(0f, (rectQuestBase.height + CommonMargin) * (i + count));
-                Rect rectQuestItem = new Rect(rectQuestBase).MoveRect(baseVector);
-                Rect rectExpandCollapseIcon = rectQuestItem.RightPartPixels(ExpandCollapseIconSize).BottomPartPixels(ExpandCollapseIconSize).MoveRect(new Vector2(- CommonMargin, - CommonMargin));
-
-                Widgets.DrawBox(rectQuestItem);
-                rectQuestItem.DoRectHighlight((i + count) % 2 == 1);
-                Widgets.Label(rectQuestItem.ContractedBy(CommonMargin), quest.LabelCap);
-                Widgets.DrawTextureFitted(rectExpandCollapseIcon, expandedQuests.Contains(quest) ? TexButton.Collapse : TexButton.Reveal, 1f);
-                Widgets.DrawHighlightIfMouseover(rectQuestItem);
-                
-                if (Widgets.ButtonInvisible(rectQuestItem))
-                {
-                    if (expandedQuests.Add(quest))
-                    {
-                        SoundDefOf.TabOpen.PlayOneShotOnCamera();
-                    }
-                    else
-                    {
-                        expandedQuests.Remove(quest);
-                        SoundDefOf.TabClose.PlayOneShotOnCamera();
-                    }
-
-                    RefreshScrollRects();
-                }
-
-                //Quest stage Listing
-                if (expandedQuests.Contains(quest))
-                {
-                    for (int j = 0; j < quest.QuestWorker.Stages().Count; j++)
-                    {
-                        QuestStage questStage = quest.QuestWorker.Stages()[j];
-                        count++;
-
-                        Rect rectQuestStage = new Rect(rectQuestStageBase).MoveRect(baseVector + new Vector2(0f, rectQuestBase.height + CommonMargin + (rectQuestBase.height + CommonMargin) * j));
-                        Widgets.DrawBox(rectQuestStage);
-                        rectQuestStage.DoRectHighlight((i + count) % 2 == 1);
-                        Widgets.Label(rectQuestStage, questStage.LabelCap);
-                        Widgets.DrawHighlightIfMouseover(rectQuestStage);
-
-                        if (Widgets.ButtonInvisible(rectQuestStage))
-                        {
-                            Find.WindowStack.Add(new QL_DecisionWindow(questStage, j, quest.QuestWorker.CurrentStage));
-                            SoundDefOf.TabOpen.PlayOneShotOnCamera();
-                        }
-                    }
-                }
-            }
-
-            Widgets.EndScrollView();
-
-
-            // Quest_Tracker tracker = Find.World.GetComponent<Quest_Tracker>();
-            #region quest info
-            // //COMPILED BY NESGUI
-            // //Prepare varibles
-
-            // GameFont prevFont = Text.Font;
-            // TextAnchor textAnchor = Text.Anchor;
-
-            // //Rect pass
-
-            // Rect list = new Rect(new Vector2(1f, 5f), new Vector2(130f, 460f));
-            // Rect listViewRect = new Rect(new Vector2(5f, 5f), new Vector2(160f, 460f));
-            // Rect PawnsListRect = new Rect(new Vector2(5, 5), new Vector2(160, 460 + (tracker.Quests.Count * 2f)));
-            // Rect questtitle = new Rect(new Vector2(165f, 10f), new Vector2(560f, 50f));
-            // Rect questdesc = new Rect(new Vector2(165f, 65f), new Vector2(560f, 345f));
-            // Rect delete = new Rect(new Vector2(555f, 400f), new Vector2(170f, 55f));
-            // Rect accept = new Rect(new Vector2(375f, 400f), new Vector2(170f, 55f));
-
-            // //Button pass
-
-            // if (quest != null)
-            // {
-            //     Text.Font = GameFont.Small;
-            //     Text.Anchor = TextAnchor.MiddleCenter;
-            //     bool Dismissquest = Widgets.ButtonText(delete, "Dismiss quest");
-            //     if (Dismissquest)
-            //     {
-            //         dismissQuest?.Invoke();
-            //     }
-
-            //     bool AcceptQuest = Widgets.ButtonText(accept, "Accept quest");
-            //     if (AcceptQuest)
-            //     {
-            //         acceptQuest?.Invoke();
-            //     }
-            //     Text.Font = prevFont;
-            //     Text.Anchor = textAnchor;
-            //     Widgets.Label(questdesc, quest.description);
-            //     Text.Font = GameFont.Medium;
-            //     Text.Anchor = TextAnchor.MiddleLeft;
-            //     Widgets.Label(questtitle, quest.label);
-            //     Text.Font = prevFont;
-            //     Text.Anchor = textAnchor;
-            // }
-            // else
-            // {
-            //     Text.Font = GameFont.Medium;
-            //     Text.Anchor = TextAnchor.MiddleLeft;
-            //     Widgets.Label(questtitle, "No quest selected");
-            //     Text.Font = prevFont;
-            //     Text.Anchor = textAnchor;
-            // }
-            // Widgets.DrawLine(new Vector2(questtitle.xMin, questtitle.yMax), new Vector2(questtitle.xMax, questtitle.yMax), Color.white, 1);
-
-
-
-            // //END NESGUI CODE
-            #endregion
-
-            #region quest select
-            //Widgets.BeginScrollView(listViewRect, ref scrollPos, list);
-            //int pos = 30;
-            //Rect label = new Rect(new Vector2(0, pos), new Vector2(list.width, 30));
-            //Text.Font = GameFont.Medium;
-            //Text.Anchor = TextAnchor.MiddleLeft;
-            //Widgets.Label(label, "Quests");
-            //Widgets.DrawLine(new Vector2(label.xMin, label.yMax), new Vector2(label.xMax, label.yMax),Color.white,1);
-            //Text.Font = prevFont;
-            //Text.Anchor = textAnchor;
-            //pos += 40;
-           
-            //Widgets.EndScrollView();
-
-            #endregion
         }
     }
 
@@ -222,20 +188,27 @@ namespace RimValiCore.QLine
         private readonly Rect rectLabel;
 
         //Description Box
-        private readonly Rect rectDescriptionBox;
-        private readonly Rect rectDecisionButtonBase;
+        private Rect rectBackgroundImage = new Rect (0f, 0f, 223f, 223f);
+        private Rect rectDecisionButtonBase;
+        private Rect rectDescriptionBox;
+
+        private Texture2D questTexture;
 
         //Decision Button Space
-        private readonly Rect rectBottom;
+        private Rect rectBottom;
 
         //Variables
+        private readonly QLine quest;
         private readonly QuestStage stage;
         private readonly int stageIndex;
         private readonly int currentStage;
 
         private const float CommonMargin = 5f;
         private const float DecisionButtonHeight = 25f;
+        private const float DecisionButtonSpace = DecisionButtonHeight + CommonMargin;
 
+        private string debugStageSelectorBuffer;
+        private int debugStageSelector;
         private Vector2 labelScroll;
 
         private bool DoButtons => stageIndex == currentStage;
@@ -244,15 +217,18 @@ namespace RimValiCore.QLine
 
         protected override float Margin => 0f;
 
-        public QL_DecisionWindow(QuestStage stage, int stageIndex, int currentStage)
+        public QL_DecisionWindow(QLine quest, QuestStage stage, int stageIndex, int currentStage)
         {
+            this.quest = quest;
             this.stage = stage;
             this.stageIndex = stageIndex;
             this.currentStage = currentStage;
+            questTexture = quest.Quest.texture;
 
             doCloseX = true;
             forcePause = DoButtons;
             onlyOneOfTypeAllowed = true;
+            preventCameraMotion = false;
 
             rectMain = rectFull.ContractedBy(25f);
             rectTop = rectMain.TopPartPixels(35f);
@@ -260,25 +236,72 @@ namespace RimValiCore.QLine
 
             if (DoButtons)
             {
-                rectBottom = rectMain.BottomPartPixels(stage.buttons.Count * (DecisionButtonHeight + CommonMargin));
+                rectBottom = rectMain.BottomPartPixels(stage.buttons.Count * (DecisionButtonHeight + CommonMargin) - CommonMargin);
             }
 
-            rectDescriptionBox = new Rect(rectMain.x, rectMain.y + rectTop.height, rectMain.width, rectMain.height - rectTop.height - rectBottom.height - CommonMargin);
+            rectDescriptionBox = new Rect(rectMain.x, rectMain.y + rectTop.height, rectMain.width, rectMain.height - rectTop.height - rectBottom.height - (DoButtons ? CommonMargin : 0f));
+
+            IncreaseSpaceForDebugButton();
             rectDecisionButtonBase = rectBottom.TopPartPixels(DecisionButtonHeight);
         }
 
         public override void DoWindowContents(Rect inRect)
         {
-            Text.Font = GameFont.Medium;
-            Widgets.Label(rectLabel, stage.LabelCap);
-            Text.Font = GameFont.Small;
+            KillSelfIfQLWindowMissing();
 
-            Widgets.DrawLineHorizontal(rectLabel.x, rectLabel.yMax, rectLabel.width);
+            DrawTitleBar();
+            DrawDescription();
+            DrawDecisionButtons();
+        }
 
-            Widgets.DrawBox(rectDescriptionBox);
-            Widgets.DrawLightHighlight(rectDescriptionBox);
-            Widgets.LabelScrollable(rectDescriptionBox.ContractedBy(CommonMargin), stage.description, ref labelScroll);
+        /// <summary>
+        ///     Places this window next to the <see cref="QL_Window"/>
+        /// </summary>
+        protected override void SetInitialSizeAndPosition()
+        {
+            base.SetInitialSizeAndPosition();
+            
+            if (Find.WindowStack.WindowOfType<QL_Window>() is QL_Window mainTabWindow)
+            {
+                windowRect.x = mainTabWindow.InitialSize.x + CommonMargin;
+                windowRect.y = UI.screenHeight - 35f - windowRect.height;
+            }
+        }
 
+        /// <summary>
+        ///     Increases the space so that a debug button can fit
+        /// </summary>
+        /// <returns>true if space was increased, false otherwise</returns>
+        private bool IncreaseSpaceForDebugButton()
+        {
+            bool increaseSpace = RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug && DoButtons;
+            
+            if (increaseSpace)
+            {
+                rectDescriptionBox.yMax -= DecisionButtonSpace;
+                rectBottom.y -= DecisionButtonSpace;
+            }
+
+            rectBackgroundImage.center = rectDescriptionBox.center;
+            return increaseSpace;
+        }
+
+        /// <summary>
+        ///     Closes this window if <see cref="QL_Window"/> is closed
+        /// </summary>
+        private void KillSelfIfQLWindowMissing()
+        {
+            if (Find.WindowStack.WindowOfType<QL_Window>() is null)
+            {
+                Close();
+            }
+        }
+
+        /// <summary>
+        ///     Draws the buttons that are used to make decisions
+        /// </summary>
+        private void DrawDecisionButtons()
+        {
             for (int i = 0; i < stage.buttons.Count; i++)
             {
                 QuestStageButtonDecision decision = stage[i];
@@ -289,6 +312,108 @@ namespace RimValiCore.QLine
                     Close();
                 });
             }
+
+            DrawDebugButton();
+        }
+
+        /// <summary>
+        ///     Draws debug buttons
+        /// </summary>
+        private void DrawDebugButton()
+        {
+            if (RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug)
+            {
+                Rect rectButton = rectDecisionButtonBase.MoveRect(new Vector2(0f, (rectDecisionButtonBase.height + CommonMargin) * stage.buttons.Count));
+
+                if (currentStage == quest.Worker.Stages.Count - 1)
+                {
+                    rectButton.DrawButtonText("DEBUG Finish Quest", () =>
+                    {
+                        quest.Worker.FinishQuest();
+                        Close();
+                    });
+
+                    return;
+                }
+
+                Widgets.TextFieldNumeric(rectButton.RightHalf(), ref debugStageSelector, ref debugStageSelectorBuffer, currentStage + 1, quest.Worker.Stages.Count - 1);
+
+                rectButton.LeftHalf().DrawButtonText("DEBUG Skip Stage", () =>
+                {
+                    quest.Worker.ChangeStage(debugStageSelector - currentStage);
+                    Close();
+                });
+            }
+        }
+
+        /// <returns>A stage's debug string</returns>
+        private string GetStageDebugString()
+        {
+            return $"\n\nstage: {stage}\nstageIndex: {stageIndex}\ncurrentStage: {currentStage}\namount of Stages: {quest.Worker.Stages.Count}\nisCompleted: {quest.Worker.IsStageCompleted(stage)}\nDoButtons: {DoButtons}";
+        }
+
+        /// <summary>
+        ///     Draws the stage description and background image
+        /// </summary>
+        private void DrawDescription()
+        {
+            string debugString = RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug ? GetStageDebugString() : string.Empty;
+            string descriptionText = $"{stage.description}{debugString}";
+
+            if (questTexture != null)
+            {
+                GUI.color = new Color(1f, 1f, 1f, 0.1f);
+                GUI.DrawTexture(rectBackgroundImage, questTexture);
+                GUI.color = Color.white;
+            }
+
+            Widgets.DrawBox(rectDescriptionBox);
+            Widgets.DrawLightHighlight(rectDescriptionBox);
+            Widgets.LabelScrollable(rectDescriptionBox.ContractedBy(CommonMargin), descriptionText, ref labelScroll);
+        }
+
+        /// <summary>
+        ///     Draws the title, and the horizontal line seperating it from the description
+        /// </summary>
+        private void DrawTitleBar()
+        {
+            Text.Font = GameFont.Medium;
+            Widgets.Label(rectLabel, stage.LabelCap);
+            Text.Font = GameFont.Small;
+
+            Widgets.DrawLineHorizontal(rectLabel.x, rectLabel.yMax, rectLabel.width);
+
+            DrawDebugCheckbox();
+        }
+
+        /// <summary>
+        ///     Adds a debug checkbox to the window, inside the top part
+        /// </summary>
+        private void DrawDebugCheckbox()
+        {
+            if (!Prefs.DevMode) return;
+
+            bool previous = RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug;
+            Widgets.CheckboxLabeled(rectLabel.RightPartPixels(150f), "Show Debug", ref RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug);
+
+            if (previous != RimValiCoreMod.Settings.QL_DecisionWindow_ShowDebug)
+            {
+                if (!IncreaseSpaceForDebugButton() && DoButtons)
+                {
+                    rectDescriptionBox.yMax += DecisionButtonSpace;
+                    rectBottom.y += DecisionButtonSpace;
+                }
+
+                rectBackgroundImage.center = rectDescriptionBox.center;
+                rectDecisionButtonBase = rectBottom.TopPartPixels(DecisionButtonHeight);
+            }
+        }
+
+        public override void Close(bool doCloseSound = true)
+        {
+            if (Find.WindowStack.WindowOfType<QL_Window>() is QL_Window mainTabWindow) mainTabWindow.RefreshScrollRects();
+            RimValiCoreMod.Settings.Write();
+            base.Close(doCloseSound);
         }
     }
 }
