@@ -1,7 +1,9 @@
-﻿using System;
+﻿using RimWorld;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Verse;
+using Verse.Sound;
 
 namespace RimValiCore.Windows.GUIUtils
 {
@@ -70,10 +72,16 @@ namespace RimValiCore.Windows.GUIUtils
         /// <param name="action">The <see cref="Action"/> that is executed</param>
         public static void DrawButtonText(this Rect rect, string label, Action action, bool disable = false)
         {
-            if (disable) return;
             if (Widgets.ButtonText(rect, label))
             {
-                action();
+                if (disable)
+                {
+                    SoundDefOf.ClickReject.PlayOneShotOnCamera();
+                }
+                else
+                {
+                    action();
+                }
             }
         }
 

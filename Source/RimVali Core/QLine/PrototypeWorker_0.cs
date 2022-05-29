@@ -20,11 +20,11 @@ namespace RimValiCore.QLine
                 description = "TestDescription_0",
                 buttons = new List<QuestStageButtonDecision>
                 {
-                    new QuestStageButtonDecision ("DoSomething_0", () => Messages.Message("PressedButton_0", MessageTypeDefOf.NeutralEvent, false)),
+                    new QuestStageButtonDecision("DoSomething_0", () => Messages.Message("PressedButton_0", MessageTypeDefOf.NeutralEvent, false), () => true, () => "You can never activate me :3"),
 
                     new QuestStageButtonDecision("GoToStage_1", () => 
                     {
-                        IncrementStage(); 
+                        IncrementStage();
                     })
                 }
             },

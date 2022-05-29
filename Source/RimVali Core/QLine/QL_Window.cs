@@ -319,13 +319,23 @@ namespace RimValiCore.QLine
         {
             for (int i = 0; i < stage.buttons.Count; i++)
             {
-                QuestStageButtonDecision decision = stage[i];
                 Rect rectButton = rectDecisionButtonBase.MoveRect(new Vector2(0f, (rectDecisionButtonBase.height + CommonMargin) * i));
-                rectButton.DrawButtonText(stage[i].ButtonText, () =>
+                Rect rectIcon = rectButton.LeftPartPixels(rectButton.height).ContractedBy(4f);
+                QuestStageButtonDecision button = stage[i];
+                bool buttonDisabled = button.DisableButtonFunc();
+
+                rectButton.DrawButtonText(button.ButtonText, () =>
                 {
-                    stage[i].ButtonAction();
+                    button.ButtonAction();
                     Close();
-                });
+                }, buttonDisabled);
+
+                if (buttonDisabled)
+                {
+                    TooltipHandler.TipRegion(rectButton, button.DisableReason());
+                }
+
+                GUI.DrawTexture(rectIcon, buttonDisabled ? Widgets.CheckboxOffTex : Widgets.CheckboxOnTex);
             }
 
             DrawDebugButton();

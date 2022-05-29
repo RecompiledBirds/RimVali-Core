@@ -43,8 +43,8 @@ namespace RimValiCore.QLine
 
         private string buttonText;
         private Action buttonAction;
-        private Func<bool> disableButtonFunc;
-        private Func<string> disableReason;
+        private Func<bool> disableButtonFunc = () => false;
+        private Func<string> disableReason = () => "No Reason Given";
 
         public string ButtonText { get => buttonText; set => buttonText = value; }
         public Action ButtonAction { get => buttonAction; set => buttonAction = value; }
