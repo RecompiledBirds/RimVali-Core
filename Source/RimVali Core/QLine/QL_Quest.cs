@@ -88,22 +88,45 @@ namespace RimValiCore.QLine
             curStage = value;
         }
 
-        public bool CompleteStage(QuestStage stage)
-        {
-            return CompleteStage(IndexOfStage(stage));
-        }
+        /// <summary>
+        ///     Sets the given <paramref name="stage"/> as completed
+        /// </summary>
+        /// <param name="stage">The <see cref="QuestStage"/> to be set as completed</param>
+        /// <returns>true if the stage wasn't set as completed before, false otherwise</returns>
+        public bool CompleteStage(QuestStage stage) => CompleteStage(IndexOfStage(stage));
 
-        public bool CompleteStage(int i)
-        {
-            return completedStages.Add(i);
-        }
 
+        /// <summary>
+        ///     Sets the <see cref="QuestStage"/> at the given <paramref name="stageIndex"/> as completed
+        /// </summary>
+        /// <param name="stageIndex">The index of the <see cref="QuestStage"/> to be set as completed</param>
+        /// <returns>true if the stage wasn't set as completed before, false otherwise</returns>
+        public bool CompleteStage(int stageIndex) => completedStages.Add(stageIndex);
+
+        /// <summary>
+        ///     Checks if the <see cref="QuestStage"/> is set as completed
+        /// </summary>
+        /// <param name="stage">the given <see cref="QuestStage"/></param>
+        /// <returns>true, if the <see cref="QuestStage"/> has been set as completed, false otherwise</returns>
         public bool IsStageCompleted(QuestStage stage) => IsStageCompleted(IndexOfStage(stage));
 
-        public bool IsStageCompleted(int i) => completedStages.Contains(i);
+        /// <summary>
+        ///     Checks if the <see cref="QuestStage"/> at the given <paramref name="stageIndex"/> is set as completed
+        /// </summary>
+        /// <param name="stageIndex">the given index as <see cref="int"/></param>
+        /// <returns>true, if the <see cref="QuestStage"/> has been set as completed, false otherwise</returns>
+        public bool IsStageCompleted(int stageIndex) => completedStages.Contains(stageIndex);
 
+        /// <summary>
+        ///     Shortcut of <see cref="List{T}.IndexOf"/> for <see cref="Stages"/>
+        /// </summary>
+        /// <param name="stage">the <see cref="QuestStage"/> the index is to be found of</param>
+        /// <returns>-1 if the <see cref="QuestStage"/> is not part of this worker, it's index otherwise</returns>
         public int IndexOfStage(QuestStage stage) => Stages.IndexOf(stage);
 
+        /// <summary>
+        ///     Increments the <see cref="curStage"/> by 1
+        /// </summary>
         public void IncrementStage() => ChangeStage(1);
 
         public void ExposeData()
