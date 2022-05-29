@@ -11,9 +11,29 @@ using System.Linq;
 namespace RimValiCore.RimValiPlants
 {
 
-	public static class RimValiPlantsSeasonTranspiler
+    public class RVPlantCompProperties : CompProperties
     {
-        [HarmonyPatch(typeof(Plant), "get_GrowthRateFactor_Temperature")]
+        public float minPreferredTemp;
+        public float maxPreferredTemp;
+        public RVPlantCompProperties()
+        {
+            this.compClass = typeof(RVPlantComp);
+        }
+    }
+
+    public class RVPlantComp : ThingComp
+    {
+        public RVPlantCompProperties Props
+        {
+            get
+            {
+                return this.props as RVPlantCompProperties;
+            }
+        }
+    }
+    [HarmonyPatch(typeof(Plant), "get_GrowthRateFactor_Temperature")]
+    public static class RimValiPlantsSeasonTranspiler
+    {
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
 
@@ -22,9 +42,11 @@ namespace RimValiCore.RimValiPlants
             {
                 if (codes[a].opcode == OpCodes.Call && codes[a].operand == AccessTools.Method(typeof(PlantUtility), "GrowthRateFactorFor_Temperature"))
                 {
+                    /*
                     yield return new CodeInstruction(OpCodes.Ldarg_0);
                     yield return new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(Thing), "get_Map"));
                     yield return new CodeInstruction(OpCodes.Ldobj, typeof(Map));
+                    */
                 }
                 else
                 {
@@ -34,11 +56,11 @@ namespace RimValiCore.RimValiPlants
             }
         }
 
-        public static bool IsGrowthSeason(IntVec3 vec, Map map)
+        public static float IsGrowthSeason(IntVec3 vec, Map map, Plant plant)
         {
             float temperature = GridsUtility.GetTemperature(vec,map);
-
-            return temperature > 0;
+           // if()
+            return temperature;
         }
     }
 	
