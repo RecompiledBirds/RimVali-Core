@@ -1025,7 +1025,7 @@ namespace RimValiCore.RVR
         public static bool CanWear(ThingDef def, ThingDef race)
         {
             bool canOnlyWearApprovedApparel = (race as RimValiRaceDef)?.restrictions.canOnlyUseApprovedApparel ?? false;
-            bool isAllowed = RaceRestrictor.IsAllowed(def, race,!canOnlyWearApprovedApparel);
+            bool isAllowed = RaceRestrictor.IsAllowed(def, race, !canOnlyWearApprovedApparel);
             return isAllowed;
         }
 

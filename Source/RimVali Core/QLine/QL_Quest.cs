@@ -13,11 +13,15 @@ namespace RimValiCore.QLine
     {
         public Type questAction;
         public bool repeatable;
+        public string texPath;
+        public Texture2D texture;
 
         public QuestWorker QuestWorker => (QuestWorker)Activator.CreateInstance(questAction, this);
 
         public override void PostLoad()
         {
+            if(texPath != null)
+                texture=QuestBackgroundHandler.GetTexture(texPath);
             Log.Message($"PostLoading quest with defName: {defName}");
         }
 
