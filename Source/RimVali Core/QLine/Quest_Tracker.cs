@@ -21,28 +21,28 @@ namespace RimValiCore.QLine
             Scribe_Collections.Look(ref finishedQuests, "finishedQuests");
             base.ExposeData();
         }
-        private HashSet<QL_Quest> finishedQuests =  new HashSet<QL_Quest>();
-        private HashSet<QL_Quest> quests = new HashSet<QL_Quest>();
-        public HashSet<QL_Quest> Quests => quests;
+        private HashSet<QLine> finishedQuests =  new HashSet<QLine>();
+        private HashSet<QLine> quests = new HashSet<QLine>();
+        public HashSet<QLine> Quests => quests;
             
-        public bool IsFinished(QL_Quest quest)
+        public bool IsFinished(QLine quest)
         {
             return finishedQuests.Contains(quest);
         }
 
-        public bool IsQueued(QL_Quest quest)
+        public bool IsQueued(QLine quest)
         {
             return quests.Contains(quest);
         }
-        public HashSet<QL_Quest> FinishedQuests => finishedQuests;
+        public HashSet<QLine> FinishedQuests => finishedQuests;
         
-        public List<QL_Quest> QuestsLists =>quests.ToList();
+        public List<QLine> QuestsLists =>quests.ToList();
  
-        public void RemoveQuest(QL_Quest quest) => quests.Remove(quest);
+        public void RemoveQuest(QLine quest) => quests.Remove(quest);
 
-        public void FinishQuest(QL_Quest quest)
+        public void FinishQuest(QLine quest)
         {
-            if (!quest.repeatable)
+            if (!quest.Quest.repeatable)
                 finishedQuests.Add(quest);
 
 
@@ -51,7 +51,9 @@ namespace RimValiCore.QLine
 
         }
 
-        public void QueueQuest(QL_Quest quest)
+        public void QueueQuest(QL_Quest quest)=>QueueQuest(QuestMaker.MakeQuest(quest));
+
+        public void QueueQuest(QLine quest)
         {
             if(!IsQueued(quest))
                 quests.Add(quest);

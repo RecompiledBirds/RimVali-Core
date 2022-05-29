@@ -8,9 +8,10 @@ namespace RimValiCore.QLine
 {
     public class QuestStage
     {
-        public virtual void ExposeData()
-        {
+        public string label;
+        public string description;
+        public List<QuestStageButtonDecision> buttons;
 
-        }
+        public string LabelCap => label.CapitalizeFirst();
     }
 }

@@ -59,6 +59,7 @@
     <Compile Include="HealableMaterial\Finder.cs" />
     <Compile Include="HealableMaterial\GameComp.cs" />
     <Compile Include="HealableMaterial\HealableComp.cs" />
+    <Compile Include="QLine\QuestMaker.cs" />
     <Compile Include="QLine\QuestStage.cs" />
     <Compile Include="RVCInitalizer.cs" />
     <Compile Include="Mod.cs" />

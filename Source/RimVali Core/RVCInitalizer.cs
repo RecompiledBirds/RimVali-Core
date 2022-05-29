@@ -144,7 +144,6 @@ namespace RimValiCore
             RVCCompatiblityPatches.DoPatches();
             Log.Message("[RimVali Core]: Finished compatiblity patches.");
             Log.Message("[RimVali Core]: Asking QLine to tell a story.");
-            stage = RimValiCore_Stage.QLine;
             //todo
             Log.Message("[RimVali Core]: Finished listening to the story!");
             stage = RimValiCore_Stage.Loaded;

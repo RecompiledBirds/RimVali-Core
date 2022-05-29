@@ -1025,8 +1025,7 @@ namespace RimValiCore.RVR
         public static bool CanWear(ThingDef def, ThingDef race)
         {
             bool canOnlyWearApprovedApparel = (race as RimValiRaceDef)?.restrictions.canOnlyUseApprovedApparel ?? false;
-            bool whitelisted = (race as RimValiRaceDef)?.restrictions.allowedDefsToUse.Contains(def) ?? false;
-            bool isAllowed = RaceRestrictor.IsAllowed(def, race, !canOnlyWearApprovedApparel) || whitelisted;
+            bool isAllowed = RaceRestrictor.IsAllowed(def, race,!canOnlyWearApprovedApparel); 
             return isAllowed;
         }
 
@@ -1055,7 +1054,8 @@ namespace RimValiCore.RVR
         public static void Constructable(Thing t, Pawn pawn, WorkTypeDef workType, bool forced, ref bool __result)
         {
             //Log.Message(t.def.ToString());
-            if (RaceRestrictor.IsAllowed(t.def,pawn.def))
+            bool whitelisted = (bool)((pawn.def as RimValiRaceDef)?.restrictions.allowedDefsToUse.Contains(t.def));
+            if (!RaceRestrictor.IsAllowed(t.def,pawn.def) && !whitelisted)
             {
                 __result = false;
                 JobFailReason.Is(pawn.def.label + " " + "CannotBuildRVR".Translate(pawn.def.label.Named("RACE")));

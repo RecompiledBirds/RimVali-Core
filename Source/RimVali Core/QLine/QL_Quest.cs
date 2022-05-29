@@ -35,8 +35,9 @@ namespace RimValiCore.QLine
 
     }
 
-    public abstract class QuestWorker
+    public abstract class QuestWorker : IExposable
     {
+
         private int curStage;
         public int CurrentStage
         {
@@ -45,25 +46,23 @@ namespace RimValiCore.QLine
                 return curStage;
             }
         }
-        public virtual List<QuestStage> stages
-        {
-            get
-            {
-                return new List<QuestStage>();
-            }
-        }
-        
+
+        /// <summary>
+        /// This is overriden to define the stages in a quest.
+        /// </summary>
+        public abstract List<QuestStage> Stages();
+
         public void ChangeStage(int amount)
         {
             int value = amount+curStage;
-            Mathf.Clamp(value, 0, this.stages.Count - 1);
+            Mathf.Clamp(value, 0, this.Stages().Count - 1);
             curStage = value;
 
         }
 
         public void IncrementStage() => ChangeStage(1);
 
-        public virtual void ExposeData()
+        public void ExposeData()
         {
             Scribe_Values.Look(ref curStage, nameof(curStage));
         }
