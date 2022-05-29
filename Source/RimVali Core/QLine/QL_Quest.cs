@@ -11,27 +11,9 @@ namespace RimValiCore.QLine
     public class QL_Quest : Def
     {
         public Type questAction;
-        private QuestWorker qWorker;
         public bool repeatable;
-        
-        public QuestWorker QuestWorker
-        {
-            get
-            {
-                if (qWorker == null && questAction != null)
-                {
-                    qWorker = (QuestWorker)Activator.CreateInstance(questAction, this);
-                }
 
-                if (qWorker == null)
-                {
-                    string errorString = $"qWorker for defName: {defName} is null after request!";
-                    Log.ErrorOnce(errorString, errorString.GetHashCode());
-                }
-
-                return qWorker;
-            }
-        }
+        public QuestWorker QuestWorker => (QuestWorker)Activator.CreateInstance(questAction, this);
 
         public override void PostLoad()
         {
