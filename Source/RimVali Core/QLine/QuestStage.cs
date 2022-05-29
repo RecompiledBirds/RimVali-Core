@@ -13,6 +13,12 @@ namespace RimValiCore.QLine
         public string description;
         public List<QuestStageButtonDecision> buttons;
 
+        public QuestStageButtonDecision this[int index] 
+        { 
+            get => buttons[index]; 
+            set => buttons[index] = value; 
+        }
+
         public string LabelCap => label.CapitalizeFirst();
     }
 
