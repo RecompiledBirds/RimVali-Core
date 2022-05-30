@@ -43,7 +43,8 @@ namespace RimValiCore.QLine
 
         public void QueueRandomQuest()
         {
-            QueueQuest(DefDatabase<QL_Quest>.GetRandom());
+
+            QueueQuest(DefDatabase<QL_Quest>.AllDefsListForReading.Where(x=>x.QuestWorker.CanBeShuffled&& !finishedQuests.Any(y=>y.Quest==x)||x.repeatable).RandomElementByWeight(new Func<QL_Quest, float>(z=>z.QuestWorker.GetWeight)));
         }
 
         public void QueueQuest(QLine quest) => quests.Add(quest);
