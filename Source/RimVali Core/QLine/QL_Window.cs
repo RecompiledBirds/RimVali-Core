@@ -322,7 +322,7 @@ namespace RimValiCore.QLine
                 Rect rectButton = rectDecisionButtonBase.MoveRect(new Vector2(0f, (rectDecisionButtonBase.height + CommonMargin) * i));
                 Rect rectIcon = rectButton.LeftPartPixels(rectButton.height).ContractedBy(4f);
                 QuestStageButtonDecision button = stage[i];
-                bool buttonDisabled = button.DisableButtonFunc();
+                bool buttonDisabled = button.Disabled;
 
                 rectButton.DrawButtonText(button.ButtonText, () =>
                 {
@@ -332,7 +332,7 @@ namespace RimValiCore.QLine
 
                 if (buttonDisabled)
                 {
-                    TooltipHandler.TipRegion(rectButton, button.DisableReason());
+                    TooltipHandler.TipRegion(rectButton, button.DisableReason);
                 }
 
                 GUI.DrawTexture(rectIcon, buttonDisabled ? Widgets.CheckboxOffTex : Widgets.CheckboxOnTex);
