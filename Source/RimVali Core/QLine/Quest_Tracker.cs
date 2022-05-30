@@ -27,11 +27,15 @@ namespace RimValiCore.QLine
             base.WorldComponentTick();
         }
 
-        public bool IsFinished(QLine quest) => finishedQuests.Contains(quest);
+        public bool IsFinished(QL_Quest quest)=>finishedQuests.Any(x=>x.Quest==quest) && !quest.repeatable;
+
+        public bool IsFinished(QLine quest) => finishedQuests.Contains(quest) && !quest.Quest.repeatable;
 
         public bool IsQueued(QLine quest) => quests.Contains(quest);
 
         public bool RemoveQuest(QLine quest) => quests.Remove(quest);
+
+        public bool RemoveQuest(QL_Quest quest)=>RemoveQuest(QuestMaker.MakeQuest(quest));
 
         public void FinishQuest(QLine quest)
         {
@@ -44,7 +48,7 @@ namespace RimValiCore.QLine
         public void QueueRandomQuest()
         {
 
-            QueueQuest(DefDatabase<QL_Quest>.AllDefsListForReading.Where(x=>x.QuestWorker.CanBeShuffled&& !finishedQuests.Any(y=>y.Quest==x)||x.repeatable).RandomElementByWeight(new Func<QL_Quest, float>(z=>z.QuestWorker.GetWeight)));
+            QueueQuest(DefDatabase<QL_Quest>.AllDefsListForReading.Where(x=>x.QuestWorker.CanBeShuffled&&!IsFinished(x)).RandomElementByWeight(new Func<QL_Quest, float>(z=>z.QuestWorker.GetWeight)));
         }
 
         public void QueueQuest(QLine quest) => quests.Add(quest);

@@ -49,7 +49,7 @@ namespace RimValiCore.QLine
         private List<QuestStage> stages;
 
         private int curStage;
-        private QL_Quest def;
+        public QL_Quest def;
 
         public int CurrentStage => curStage;
 
@@ -66,9 +66,9 @@ namespace RimValiCore.QLine
         ///     Creates a list of <see cref="QuestStage"/>s to be used and saved in this worker
         /// </summary>
         /// <returns>a list of <see cref="QuestStage"/>s</returns>
-        protected abstract List<QuestStage> CreateStages();
+        protected abstract IEnumerable<QuestStage> CreateStages();
 
-        public List<QuestStage> Stages => stages ?? (stages = CreateStages());
+        public List<QuestStage> Stages => stages ?? (stages = CreateStages().ToList());
 
         public void ChangeStage(int amount)
         {
