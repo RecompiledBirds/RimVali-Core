@@ -47,9 +47,9 @@ namespace RimValiCore.QLine
 
         public string ButtonText { get => buttonText; set => buttonText = value; }
 
-        public bool Disabled => !disableReasons.NullOrEmpty() && DisableReasons.Any(reason => reason.ShouldDisable());
+        public bool Disabled => !disableReasons.NullOrEmpty() && DisableReasons.Any(reason => reason.ShouldDisable);
 
-        public string DisableReason => DisableReasons.Join(reason => $"{reason.Reason()}: {reason.ShouldDisable()}", "\n");
+        public string DisableReason => DisableReasons.Join(reason => $"{reason.Reason}: {reason.ShouldDisable}", "\n");
 
         public Action ButtonAction { get => buttonAction; set => buttonAction = value; }
         
@@ -60,8 +60,8 @@ namespace RimValiCore.QLine
 
     public class DisableReason
     {
-        private Func<bool> shouldDisable = () => false;
-        private Func<string> reason = () => "No Reason Given";
+        private readonly Func<bool> shouldDisable = () => false;
+        private readonly Func<string> reason = () => "No Reason Given";
 
         public DisableReason(Func<bool> shouldDisable, Func<string> reason)
         {
@@ -69,8 +69,8 @@ namespace RimValiCore.QLine
             this.shouldDisable = shouldDisable;
         }
 
-        public Func<bool> ShouldDisable { get => shouldDisable; set => shouldDisable = value; }
+        public bool ShouldDisable => shouldDisable();
 
-        public Func<string> Reason { get => reason; set => reason = value; }
+        public string Reason => reason();
     }
 }
