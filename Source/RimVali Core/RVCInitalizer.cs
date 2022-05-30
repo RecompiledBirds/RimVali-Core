@@ -29,10 +29,7 @@ namespace RimValiCore
         public abstract class RVCPostLoad
         {
             public Action start;
-            public virtual void InitAction()
-            {
-
-            }
+            public abstract void InitAction();
             public void Init()
             {
                 start = InitAction;
@@ -45,13 +42,10 @@ namespace RimValiCore
         }
 
 
-        public class RVCPreLoad
+        public abstract class RVCPreLoad
         {
             public Action start;
-            public virtual void InitAction()
-            {
-
-            }
+            public abstract void InitAction();
             public void Init()
             {
                 start = InitAction;

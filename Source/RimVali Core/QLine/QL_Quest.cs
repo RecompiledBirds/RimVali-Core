@@ -58,6 +58,10 @@ namespace RimValiCore.QLine
             this.def = def;
         }
 
+        public virtual bool CanBeShuffled => true;
+
+        public virtual float GetWeight => 100f;
+
         /// <summary>
         ///     Creates a list of <see cref="QuestStage"/>s to be used and saved in this worker
         /// </summary>
