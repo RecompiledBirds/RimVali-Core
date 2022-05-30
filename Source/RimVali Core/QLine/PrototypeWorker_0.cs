@@ -20,11 +20,21 @@ namespace RimValiCore.QLine
                 description = "TestDescription_0",
                 buttons = new List<QuestStageButtonDecision>
                 {
-                    new QuestStageButtonDecision ("DoSomething_0", () => Messages.Message("PressedButton_0", MessageTypeDefOf.NeutralEvent, false)),
+                    new QuestStageButtonDecision("DoSomething_0", () => Messages.Message("PressedButton_0", MessageTypeDefOf.NeutralEvent, false), new List<DisableReason>
+                    {
+                        new DisableReason(() => true, () => "Does NOT have a lot of garbage lying around"),
+                        new DisableReason(() => false, () => "Does NOT have Nesi killed"),
+                        new DisableReason(() => false, () => "Does have a good friend"),
+                        new DisableReason(() => true, () => "Does NOT pretend to be gay for financial benefits"),
+                        new DisableReason(() => true, () => "Does NOT say <color=red>UwU</color> occasionally when pretending to be gay"),
+                    }),
 
                     new QuestStageButtonDecision("GoToStage_1", () => 
                     {
-                        IncrementStage(); 
+                        IncrementStage();
+                    }, new List<DisableReason>
+                    {
+                        new DisableReason(() => true, () => "Does want to see a single reason that disables this button"),
                     })
                 }
             },

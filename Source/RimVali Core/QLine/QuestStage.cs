@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using HarmonyLib;
 using Verse;
 
 namespace RimValiCore.QLine
@@ -29,21 +30,47 @@ namespace RimValiCore.QLine
 
     public class QuestStageButtonDecision
     {
-        public  QuestStageButtonDecision(string buttonText, Action action)
+        private string buttonText;
+        private Action buttonAction;
+        private List<DisableReason> disableReasons;
+
+        public QuestStageButtonDecision(string buttonText, Action buttonAction)
         {
             this.buttonText = buttonText;
-            this.action = action;
+            this.buttonAction = buttonAction;
         }
 
-        private string buttonText;
-        private Action action;
+        public QuestStageButtonDecision(string buttonText, Action buttonAction, List<DisableReason> disableReasons) : this(buttonText, buttonAction)
+        {
+            this.disableReasons = disableReasons;
+        }
 
         public string ButtonText { get => buttonText; set => buttonText = value; }
-        public Action Action { get => action; set => action = value; }
 
-        public override string ToString()
+        public bool Disabled => !disableReasons.NullOrEmpty() && DisableReasons.Any(reason => reason.ShouldDisable);
+
+        public string DisableReason => DisableReasons.Join(reason => $"{reason.Reason}: {reason.ShouldDisable}", "\n");
+
+        public Action ButtonAction { get => buttonAction; set => buttonAction = value; }
+        
+        public List<DisableReason> DisableReasons { get => disableReasons; set => disableReasons = value; }
+
+        public override string ToString() => $"[QuestStageButtonDecision] buttonText: {buttonText}, hasAction: {buttonAction != null}";
+    }
+
+    public class DisableReason
+    {
+        private readonly Func<bool> shouldDisable = () => false;
+        private readonly Func<string> reason = () => "No Reason Given";
+
+        public DisableReason(Func<bool> shouldDisable, Func<string> reason)
         {
-            return $"[QuestStageButtonDecision] buttonText: {buttonText}, hasAction: {action != null}";
+            this.reason = reason;
+            this.shouldDisable = shouldDisable;
         }
+
+        public bool ShouldDisable => shouldDisable();
+
+        public string Reason => reason();
     }
 }

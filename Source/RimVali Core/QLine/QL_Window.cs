@@ -1,5 +1,6 @@
 ﻿using RimValiCore.Windows.GUIUtils;
 using RimWorld;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -33,6 +34,7 @@ namespace RimValiCore.QLine
         private const float CommonMargin = 5f;
         private const float ItemHeight = 30f;
         private const float ExpandCollapseIconSize = 18f;
+        private int savedQuestCount;
 
         //
         private Vector2 listScroll;
@@ -54,13 +56,27 @@ namespace RimValiCore.QLine
             rectTitle = new Rect(rectTopPart.x, rectTopPart.y, rectTopPart.width, rectTopPart.height - 5f);
 
             rectContentPartOuter = new Rect(rectMain.x, rectMain.y + rectTopPart.height, rectMain.width, rectMain.height - rectTopPart.height);
+            savedQuestCount = Quests.Count;
             RefreshScrollRects();
         }
 
         public override void DoWindowContents(Rect inRect)
         {
+            RefreshScrollRectsIfNeeded();
+
             DrawTitleBar();
             DrawQuestList();
+        }
+
+        /// <summary>
+        ///     Refreshes the scroll rects if the amount of quests has changed
+        /// </summary>
+        private void RefreshScrollRectsIfNeeded()
+        {
+            if (savedQuestCount == Quests.Count) return;
+
+            savedQuestCount = Quests.Count;
+            RefreshScrollRects();
         }
 
         /// <summary>
@@ -304,13 +320,26 @@ namespace RimValiCore.QLine
         {
             for (int i = 0; i < stage.buttons.Count; i++)
             {
-                QuestStageButtonDecision decision = stage[i];
                 Rect rectButton = rectDecisionButtonBase.MoveRect(new Vector2(0f, (rectDecisionButtonBase.height + CommonMargin) * i));
-                rectButton.DrawButtonText(stage[i].ButtonText, () =>
+                Rect rectIcon = rectButton.LeftPartPixels(rectButton.height).ContractedBy(4f);
+                QuestStageButtonDecision button = stage[i];
+                bool buttonDisabled = button.Disabled;
+
+                if (buttonDisabled)
                 {
-                    stage[i].Action();
+                    GUI.color = new Color(0.6f, 0.6f, 0.6f);
+                }
+
+                rectButton.DrawButtonText(button.ButtonText, () =>
+                {
+                    button.ButtonAction();
                     Close();
-                });
+                }, buttonDisabled);
+
+                GUI.color = Color.white;
+                rectButton.MakeToolTip(windowRect.position, button.DisableReasons);
+
+                GUI.DrawTexture(rectIcon, buttonDisabled ? Widgets.CheckboxOffTex : Widgets.CheckboxOnTex);
             }
 
             DrawDebugButton();
