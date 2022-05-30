@@ -324,11 +324,18 @@ namespace RimValiCore.QLine
                 QuestStageButtonDecision button = stage[i];
                 bool buttonDisabled = button.Disabled;
 
+                if (buttonDisabled)
+                {
+                    GUI.color = new Color(0.6f, 0.6f, 0.6f);
+                }
+
                 rectButton.DrawButtonText(button.ButtonText, () =>
                 {
                     button.ButtonAction();
                     Close();
                 }, buttonDisabled);
+
+                GUI.color = Color.white;
 
                 if (buttonDisabled)
                 {
