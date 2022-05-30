@@ -47,7 +47,7 @@ namespace RimValiCore.QLine
 
         public string ButtonText { get => buttonText; set => buttonText = value; }
 
-        public bool Disabled => DisableReasons.Any(reason => reason.ShouldDisable());
+        public bool Disabled => !disableReasons.NullOrEmpty() && DisableReasons.Any(reason => reason.ShouldDisable());
 
         public string DisableReason => DisableReasons.Join(reason => $"{reason.Reason()}: {reason.ShouldDisable()}", "\n");
 
