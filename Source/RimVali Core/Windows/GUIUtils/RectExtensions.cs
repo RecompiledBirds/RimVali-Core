@@ -1,5 +1,7 @@
-﻿using RimWorld;
+﻿using RimValiCore.QLine;
+using RimWorld;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using Verse;
@@ -129,5 +131,44 @@ namespace RimValiCore.Windows.GUIUtils
         /// <param name="rect">the rect to be flipped</param>
         /// <returns>A flipped rect</returns>
         public static Rect FlipHorizontal(this Rect rect) => new Rect(rect.x + rect.width, rect.y, rect.width * -1, rect.height);
+
+        /// <summary>
+        ///     Creates a window that displays all <see cref="DisableReason"/>s that determine why a button may be enabled or disabled.
+        ///     Doesn't display anything if <paramref name="disableReasons"/> is <see cref="GenList.NullOrEmpty{T}(IList{T})"/>
+        /// </summary>
+        /// <param name="toolTipArea">The <see cref="Rect"/> in which the window is created, if the mouse is over it</param>
+        /// <param name="outerWindowPos">A <see cref="Vector2"/> that modifies the position of the window</param>
+        /// <param name="disableReasons">The <see cref="DisableReason"/>s the window displays</param>
+        public static void MakeToolTip(this Rect toolTipArea, Vector2 outerWindowPos, List<DisableReason> disableReasons)
+        {
+            if (disableReasons.NullOrEmpty() || !Mouse.IsOver(toolTipArea)) return;
+
+            string requirementsString = "<color=green>##Requirements:</color>";
+            const float RowHeight = 25f;
+            const float CommonMargin = 5f;
+
+            Rect rectToolTip = new Rect(Event.current.mousePosition + outerWindowPos + new Vector2(CommonMargin, CommonMargin), new Vector2(RowHeight + 25f, 20f));
+            rectToolTip.height += (disableReasons.Count + 1) * (RowHeight + 2f) - 2f;
+            rectToolTip.width += Math.Max(Text.CalcSize(requirementsString).x, disableReasons.Max(reason => Text.CalcSize(reason.Reason).x));
+            rectToolTip.y = Math.Min(rectToolTip.y, UI.screenHeight - rectToolTip.height);
+
+            Find.WindowStack.ImmediateWindow("help I'm Dying".GetHashCode(), rectToolTip, WindowLayer.Super, () =>
+            {
+                Rect rectLine = rectToolTip.AtZero().TopPartPixels(RowHeight).MoveRect(new Vector2(10f, 10f));
+                rectLine.xMax -= 20f;
+
+                Text.Anchor = TextAnchor.MiddleLeft;
+                Widgets.Label(rectLine, requirementsString);
+
+                for (int j = 0; j < disableReasons.Count; j++)
+                {
+                    rectLine = rectLine.MoveRect(new Vector2(0f, rectLine.height + 2f));
+                    GUI.DrawTexture(rectLine.LeftPartPixels(rectLine.height).ContractedBy(4f), disableReasons[j].ShouldDisable ? Widgets.CheckboxOffTex : Widgets.CheckboxOnTex);
+                    Widgets.Label(rectLine.RightPartPixels(rectLine.width - rectLine.height), disableReasons[j].Reason);
+                }
+
+                Text.Anchor = TextAnchor.UpperLeft;
+            });
+        }
     }
 }

@@ -337,34 +337,7 @@ namespace RimValiCore.QLine
                 }, buttonDisabled);
 
                 GUI.color = Color.white;
-
-                if (buttonDisabled && Mouse.IsOver(rectButton))
-                {
-                    Rect rectToolTip = new Rect(Event.current.mousePosition + windowRect.position + new Vector2(CommonMargin, CommonMargin), new Vector2(DecisionButtonHeight + 25f, 20f));
-                    rectToolTip.height += (button.DisableReasons.Count + 1) * (DecisionButtonHeight + 2f) - 2f;
-                    rectToolTip.width += Math.Max(Text.CalcSize("##Requirements:").x, button.DisableReasons.Max(reason => Text.CalcSize(reason.Reason).x));
-                    rectToolTip.y = Math.Min(rectToolTip.y, UI.screenHeight - rectToolTip.height);
-
-                    Find.WindowStack.ImmediateWindow("helpI'mDying".GetHashCode(), rectToolTip, WindowLayer.Super, () => 
-                    {
-                        Rect rectLine = rectToolTip.AtZero().TopPartPixels(DecisionButtonHeight).MoveRect(new Vector2(10f, 10f));
-                        rectLine.xMax -= 20f;
-
-                        Text.Anchor = TextAnchor.MiddleLeft;
-                        Widgets.Label(rectLine, "<color=green>##Requirements:</color>");
-
-                        for (int j = 0; j < button.DisableReasons.Count; j++)
-                        {
-                            rectLine = rectLine.MoveRect(new Vector2(0f, rectLine.height + 2f));
-                            GUI.DrawTexture(rectLine.LeftPartPixels(rectLine.height).ContractedBy(4f), button.DisableReasons[j].ShouldDisable ? Widgets.CheckboxOffTex : Widgets.CheckboxOnTex);
-                            Widgets.Label(rectLine.RightPartPixels(rectLine.width - rectLine.height), button.DisableReasons[j].Reason);
-                        }
-
-                        Text.Anchor = TextAnchor.UpperLeft;
-                    });
-
-                    //TooltipHandler.TipRegion(rectButton, button.DisableReason);
-                }
+                rectButton.MakeToolTip(windowRect.position, button.DisableReasons);
 
                 GUI.DrawTexture(rectIcon, buttonDisabled ? Widgets.CheckboxOffTex : Widgets.CheckboxOnTex);
             }
