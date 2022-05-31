@@ -88,12 +88,11 @@ namespace RimValiCore.RimValiPlants
     }
 
     [HarmonyPatch(typeof(PlantUtility), "GrowthSeasonNow")]
-    public static class RimValiPlantsSeasonGrowthSeasonNowTranspiler
+    public static class RimValiPlantsSeasonGrowthSeasonNowPrefix
     {
-        public static bool Prefix(IntVec3 c, Map map, ref bool __result, bool forSowing = false)
+        public static bool Prefix(IntVec3 c, Map map, ref bool __result, Plant __instance,bool forSowing = false)
         {
-            Plant plant = (Plant)map.thingGrid.ThingAt(c, ThingCategory.Plant);
-            RVPlantComp plantComp = plant.TryGetComp<RVPlantComp>();
+            RVPlantComp plantComp = __instance.TryGetComp<RVPlantComp>();
             if (plantComp != null)
             {
                 float temperature = GridsUtility.GetTemperature(c, map);
@@ -101,6 +100,22 @@ namespace RimValiCore.RimValiPlants
                 return false;
             }
 
+            return true;
+        }
+    }
+
+    [HarmonyPatch(typeof(Plant), "get_LeaflessTemperatureThresh")]
+    public static class RimValiPlantsLeaflessPrefix
+    {
+        public static bool Prefix(Plant __instance, ref float __result)
+        {
+            RVPlantComp plantComp = __instance.TryGetComp<RVPlantComp>();
+            if(plantComp != null)
+            {
+                float num = plantComp.Props.minPreferredTemp+8;
+                __result =  __instance.HashOffset() * 0.01f % num - num + -2f;
+                return false;
+            }
             return true;
         }
     }
