@@ -34,6 +34,7 @@ namespace RimValiCore.RVR
             Harmony harmony = new Harmony("RimVali.Core");
             try
             {
+                Harmony.DEBUG = true;
                 harmony.PatchAll();
                 harmony.Patch(AccessTools.Method(typeof(EquipmentUtility), "CanEquip", new[] { typeof(Thing), typeof(Pawn), typeof(string).MakeByRefType(), typeof(bool) }), postfix: new HarmonyMethod(typeof(ApparelPatch), "Equipable"));
                 Log.Message($"[RimVali Core] Patches completed. {harmony.GetPatchedMethods().EnumerableCount()} methods patched.");
