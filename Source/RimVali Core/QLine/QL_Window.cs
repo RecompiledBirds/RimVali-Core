@@ -11,6 +11,18 @@ using Verse.Sound;
 
 namespace RimValiCore.QLine
 {
+    /// <summary>
+    /// Old steam build compat.
+    /// </summary>
+    public class OpenGUIWindow : MainButtonWorker
+    {
+        public override void Activate()
+        {
+           
+        }
+
+        public override bool Visible => false;
+    }
     public class QL_Window : MainTabWindow
     {
         /// <summary>

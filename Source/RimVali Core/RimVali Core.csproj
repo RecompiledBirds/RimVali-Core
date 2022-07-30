@@ -62,6 +62,7 @@
     <Compile Include="QLine\PrototypeWorker_0.cs" />
     <Compile Include="QLine\QuestMaker.cs" />
     <Compile Include="QLine\QuestStage.cs" />
+    <Compile Include="RimworldDate.cs" />
     <Compile Include="RVCInitalizer.cs" />
     <Compile Include="Mod.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

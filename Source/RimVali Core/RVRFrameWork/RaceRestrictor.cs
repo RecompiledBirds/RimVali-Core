@@ -13,9 +13,36 @@ namespace RimValiCore.RVRFrameWork
     {
         public static HashSet<Def> restrictedDefs = new HashSet<Def>();
 
-        private static ModContentPack GetPackByID(string id)
+        private static ModContentPack GetPackByID(string id, out bool exists)
         {
-            return LoadedModManager.RunningModsListForReading.Find(x => x.Name == id || x.PackageId.ToLower() == id.ToLower() || x.PackageId == $"{id.ToLower()}_steam");
+            id = id.ToLower();
+            ModContentPack pack = null;
+            foreach (ModContentPack mp in LoadedModManager.RunningMods)
+            {
+                string clearedID = mp.PackageId.ToLower();
+                if (mp.Name == id)
+                {
+                    pack = mp;
+                    break;
+                }
+                if (clearedID.Contains("_steam"))
+                {
+                    int index = clearedID.IndexOf("_steam");
+                    clearedID.Remove(index, "_steam".Count());
+                }
+                if (clearedID.Contains("_copy"))
+                {
+                    int index = clearedID.IndexOf("_copy");
+                    clearedID.Remove(index, "_copy".Count());
+                }
+                if (clearedID == id||clearedID==$"{id}_steam"|| clearedID == $"{id}_copy")
+                {
+                    pack = mp;
+                    break;
+                }
+            }
+            exists = pack != null;
+            return pack;
         }
 
         public static void AllowRaceToUseItem<T>(T def, RimValiRaceDef race) where T : Def
@@ -29,8 +56,8 @@ namespace RimValiCore.RVRFrameWork
 
         public static void AllowRaceToUseModItems<T>(Type defType,string modName, RimValiRaceDef race, Func<T,bool> validator=null) where T : Def
         {
-            ModContentPack mod = GetPackByID(modName);
-            if (mod != null)
+            ModContentPack mod = GetPackByID(modName, out bool exists);
+            if (exists)
             {
                 AllowRaceToUseItems(DefDatabase<T>.AllDefsListForReading.Where(x => x.modContentPack == mod && (validator == null || validator.Invoke(x))).ToList(), race);
             }
@@ -77,8 +104,8 @@ namespace RimValiCore.RVRFrameWork
         /// <param name="validator">A validator to check items</param>
         public static void AddModRestrictions<T>(string modName, RimValiRaceDef race, Func<T,bool> validator = null) where T : Def
         {
-            ModContentPack mod = GetPackByID(modName);
-            if (mod != null)
+            ModContentPack mod = GetPackByID(modName, out bool exists);
+            if (exists)
             {
                 AddRestrictions(DefDatabase<T>.AllDefsListForReading.Where(x=>x.modContentPack==mod && (validator==null || validator.Invoke(x))),race);
             }
@@ -131,7 +158,7 @@ namespace RimValiCore.RVRFrameWork
                 AddMultipleModRestrictions(def.restrictions.modContentRestrictionsApparelList, def, new Func<ThingDef, bool>(x => x.IsApparel));
                 AddMultipleModRestrictions<ResearchProjectDef>(def.restrictions.modResearchRestrictionsList, def);
                 AddMultipleModRestrictions<TraitDef>(def.restrictions.modTraitRestrictions, def);
-                AddMultipleModRestrictions(def.restrictions.modBuildingRestrictions, def, new Func<ThingDef, bool>(x => !x.IsApparel));
+                AddMultipleModRestrictions(def.restrictions.modBuildingRestrictions, def, new Func<ThingDef, bool>(x => x.BuildableByPlayer));
                 AddMultipleModRestrictions(def.restrictions.modConsumables, def, new Func<ThingDef, bool>(x => x.IsIngestible));
 
                 AllowRaceToUseItems(def.restrictions.buildablesWhitelist,def);
